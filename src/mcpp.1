@@ -1,0 +1,90 @@
+.TH MCPP "1" "August 2004" "Matsui CPP" "User Commands"
+.SH NAME
+mcpp \- Matsui CPP, a CPP implementation
+.SH SYNOPSIS
+.B cpp [\fIoptions\fR] [\fI<infile> \fR[\fI<outfile>\fR]]
+.SH DESCRIPTION
+
+MCPP is the C/C++ preprocessor which implements ISO C90, C99 and C++98
+standards.  It is useful to check portability or conformance of
+your program.
+
+.SH OPTIONS
+
+The C preprocessor expects two file names as arguments, \fI<infile>\fR and
+\&\fI<outfile>\fR.  If not specified, \fI<infile>\fR defaults to standard input
+and \fI<outfile>\fR defaults to standard output.
+.PP
+It takes following options.
+.IP "\fB\-a\fR, \fB\-lang\-asm\fR, \fB\-x\fR assembler-with-cpp"
+Process "assembler" source (the "traditional" preprocessing).
+
+.IP \fB\-b\fR
+Output #line lines in C source style.
+.IP \fB\-C\fR
+Output also comments.
+.IP \fB\-E\fR
+Ignore non-fatal errors.
+.IP \fB\-c\fR
+Expand recursive macro more than Standard (compatible to GNU C).
+.IP "\fB\-D\fR <macro>[=<value>]"
+Define <macro> as <value> (default:1).
+.IP "\fB\-D\fR <macro(args)>[=<replace>]"
+Define <macro(args)> as <replace>.
+.IP "\fB\-h\fR <n>"
+Re-define the pre-defined macro __STDC_HOSTED__ as <n>.
+.IP "\fB\-I\fR <directory>"
+Add <directory> to the #include search list.
+.IP "\fB\-nostdinc\fR"
+Unset system or site specific include directories.
+.IP "\fB\-include\fR <file>"
+Include the <file> prior to the main input file.
+.IP \fB\-j\fR
+Do not output the source line in diagnostics.
+.IP "\fB\-M\fR, \fB\-MM\fR, \fB\-MD\fR, \fB\-MMD\fR, \fB\-MP\fR, \fB\-MQ\fR target, \fB\-MT\fR target, \fB\-MF\fR file"
+Output source file dependency line for Makefile.
+.IP "\fB-m\fR <encoding>"
+Change the default multi-byte character encoding to one of:
+euc_jp (euc), gb2312, ksc5601, bigfive (big5), sjis, iso2022_jp, or utf8.
+.IP "\fB\-N\fR, \fB\-undef\fR"
+Don't predefine any non-standard macros.
+.IP "\fB\-o\fR <file>"
+Output to <file>.
+.IP \fB\-P\fR
+Don't output #line lines.
+.IP \fB\-Q\fR
+Output diagnostics to "cpp.err" (default:stderr).
+.IP "\fB\-pedantic\fR, \fB\-pedantic\-errors\fR, \fB\-lang\-c89\fR"
+Same as \fB\-S1\fR.
+.IP "\fB\-std=\fR<STANDARD>"
+Specify the standard to which the code should conform.
+<STANDARD> may be one of: c90, c99, iso9899:1990, iso14882, etc.
+iso9899:<n>, iso14882:<n> : Same as \fB\-V\fR <n> (long in decimals).
+.IP "\fB\-S\fR <n>"
+Redefine __STDC__ to <n>, undefine old style macros.
+.IP "\fB\-U\fR <macro>"
+Undefine <macro>.
+.IP \fB\-v\fR
+Show version of cpp.
+.IP "\fB\-V\fR <n>"
+Redefine __STDC_VERSION__ or __cplusplus to <n>.
+.PP C with \fB\-V199901L\fR specifies C99 mode.
+.PP C++ with \fB\-V199901L\fR specifies C99 compatible mode (including _Pragma).
+.IP "\fB\-W\fR <level>"
+Set warning level to <level> (OR of {0,1,2,4,8,16}, default:1).
+.IP \fB\-w\fR
+Same as \fB\-W0\fR.
+.IP \fB\-z\fR
+Don't output the included file, only defining macros.
+.IP "\fB\-2\fR, \fB\-digraphs\fR"
+Enable digraphs.
+.IP "\fB\-3\fR, \fB\-trigraphs\fR"
+Enable trigraphs.
+.IP "-+, \fB\-lang\-c\fR++, \fB\-x\fR c++"
+Process C++ source.
+.SH "VERSION"
+MCPP V.2.4.1 (2004/03) STANDARD mode for GNU C compiled by GNU C V.386-linux-gcc (GCC) 3.386
+.SH "SEE ALSO"
+The full documentation for
+.B mcpp
+is maintained as a text.  Please see /usr/share/doc/mcpp/*.

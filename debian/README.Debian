@@ -1,0 +1,18 @@
+mcpp for Debian
+---------------
+
+MCPP is a portable C preprocessor developed by Kiyoshi Matsui.
+Please hava a look at: URL: http://www.m17n.org/mcpp/
+
+Installation on Debian changes its executable name to "mcpp"
+(originally, "cpp_std"), and only installs "standard" version.
+
+MCPP has other three variants, K&R, pre ANSI standard, and post
+standard version.  Those variants are not supported in this release.
+Possibly, those will be supported in future release.
+
+MCPP could be used as a replacement of GCC's cpp. This installation is
+not the replacement installation, but the installation as a stand
+alone program, /usr/bin/mcpp.
+
+ -- NIIBE Yutaka <gniibe@localhost>, Mon May 17 17:55:25 2004

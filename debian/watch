@@ -1,0 +1,3 @@
+# Site		Directory		Pattern			Version	Script
+version=2
+opts=pasv ftp://ftp.m17n.org/pub/mcpp/mcpp-(.*)\.tar\.gz	debian	uupdate
