@@ -1,5 +1,5 @@
 # mkfile for PLAN9 PCC to mk MCPP
-# 		2004/02	kamtsui
+# 		2004/02, 2005/02	kamtsui
 
 </$objtype/mkfile
 
@@ -8,7 +8,7 @@ LD=pcc
 PREPROCESSED=0
 CFLAGS= -DPREPROCESSED=$PREPROCESSED -c -FVw
 
-TARG=cpp_std
+TARG=mcpp_std
 
 OFILES=main.$O\
 	control.$O\
@@ -27,9 +27,9 @@ BIN=/$objtype/bin
 </sys/src/cmd/mkone
 
 preprocessed:V:
-	cpp_std preproc.c cpp.H
+	mcpp_std preproc.c mcpp.H
 	mk all
 
 clean:V:
-	rm -f *.$O $O.out cpp.H
+	rm -f *.$O $O.out mcpp.H
 

@@ -1,35 +1,36 @@
-# makefile to compile MCPP version 2.* for Turbo C, Borland C / TC, BC make
-#		1998/08, 2003/11, 2004/02 	kmatsui
+# makefile to compile MCPP version 2.* for Turbo C, Borland C / BC make
+#		1998/08, 2003/11, 2004/02, 2005/03 	kmatsui
 # To compile MCPP using resident cpp do
 #		make
 # To re-compile MCPP using compiled MCPP do
 #		make -DPREPROCESSED
 # To specify the preprocessor to compile MCPP
-#		make -DCPP=cpp32_std
-# To generate MCPP of modes other than STANDARD mode do as
-#		make -DMODE=POST_STANDARD -DNAME=cpp32_poststd
+#		make -DCPP=mcpp32_std
+# To generate MCPP of PRE_STANDARD mode do as
+#		make -DMODE=PRE_STANDARD -DNAME=mcpp32_prestd
 # To link malloc() package of kmatsui do
 #		make [-DPREPROCESSED] -DKMMALLOC
 # To compile MCPP with C++, rename *.c other than lib.c and preproc.c to *.cpp,
-#   then do
+#	then do
 #		make -DCPLUS
 # To compile with bcc32
 #		make -DWIN32
-# To use Turbo C (rather than Borland C) edit this makefile.
+# To compile MCPP for MS-DOS / Borland C by WIN32 / Borland C
+#		make -DWIN32
 
 !if 	!$d( NAME)
 !if 	$d( WIN32)
-NAME = cpp32_std
+NAME = mcpp32_std
 !else
-NAME = cpp_std
+NAME = mcpp_std
 !endif
 !endif
 
 !if 	!$d( CPP)
 !if 	$d( WIN32)
-CPP = cpp32_std
+CPP = mcpp32_std
 !else
-CPP = cpp_std
+CPP = mcpp_std
 !endif
 !endif
 
@@ -41,9 +42,9 @@ LINKFLAGS = -e$(NAME)
 #	for Borland C V.5.5
 CFLAGS = $(CFLAGS) -Oi
 BINDIR = \BCC55\BIN
-#	for Turbo C V.2.0
-# BINDIR = \TC2
-#	to make cpp for LSI C-86 V.3.3		# Don't use -DPREPROCESSED
+#	for Borland C V.4.0
+# BINDIR = \BC4\BIN
+#	to make mcpp for LSI C-86 V.3.3		# Don't use -DPREPROCESSED
 # BINDIR = \LSIC86\BIN
 
 !if 	$d( CPLUS)
@@ -84,8 +85,8 @@ MEM_MACRO =
 MEMLIB =
 !endif
 
-OBJS = main.obj control.obj eval.obj expand.obj support.obj system.obj  \
-    mbchar.obj lib.obj
+OBJS = main.obj control.obj eval.obj expand.obj support.obj system.obj	\
+	mbchar.obj lib.obj
 
 $(NAME).exe : $(OBJS)
 	$(CC) $(MEM) $(LINKFLAGS) $(OBJS) $(MEMLIB)
@@ -93,9 +94,9 @@ $(NAME).exe : $(OBJS)
 !if 	$d( PREPROCESSED)
 CMACRO =
 # Make a "pre-preprocessed" header file to recompile MCPP with MCPP.
-cpp.H	: system.H noconfig.H internal.H
-	$(CPP) $(LANG) $(CPPFLAGS) $(MEM_MACRO) $(MEM) preproc.c cpp.H
-$(OBJS) : cpp.H
+mcpp.H	: system.H noconfig.H internal.H
+	$(CPP) $(LANG) $(CPPFLAGS) $(MEM_MACRO) $(MEM) preproc.c mcpp.H
+$(OBJS) : mcpp.H
 !else
 CMACRO = $(MEM_MACRO)
 main.obj control.obj eval.obj expand.obj support.obj system.obj mbchar.obj:	\
@@ -129,7 +130,7 @@ clean	:
 	-del *.obj
 	-del $(NAME).exe
 	-del *.bak
-	-del cpp.H
+	-del mcpp.H
 	-del *.i
 	-del *.tds
 

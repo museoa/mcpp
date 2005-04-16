@@ -9,7 +9,7 @@
 /* { dg-options "-ansi -pedantic -Wall" }   */
 
 /* w.2.1:   Negative number converted to positive in #if expression.    */
-#if     -1 < 0U     /* { dg-warning "converted to positive" }   */
+#if     -1 < 0U     /* { dg-warning "changes sign when promoted| converted to positive" }   */
 #endif
 
 /* w.2.2:   Out of range of unsigned type (wraps around and never overflow)

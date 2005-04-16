@@ -9,5 +9,5 @@
  * before macro definition or macro expansion, a comment is never generated
  * by macro.
  */
-    _VARIANT_BOOL bool; /* { dg-error "does not give a valid preprocessing token | Not a valid preprocessing token" }   */
+    _VARIANT_BOOL bool; /* { dg-error "does not give a valid preprocessing token| Not a valid preprocessing token" }   */
 

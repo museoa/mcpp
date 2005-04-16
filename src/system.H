@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1998, 2002-2004 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2005 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * Some parts of this code are derived from the public domain software
@@ -62,6 +62,11 @@
  *              Removed settings on VMS, DEC C and OS-9/09.     by kmatsui
  * 2004/02      MCPP Version 2.4 release / system.H
  *              Extended multi-byte character handling.         by kmatsui
+ * 2005/03      MCPP Version 2.5 / system.H
+ *              Absorbed POST_STANDARD mode into STANDARD mode and made
+ *                  available through -@post option.
+ *              Made OLD_PREPROCESSOR configuration available through -@old
+ *                  option in PRE_STANDARD mode.                by kmatsui
  */
 
 #define SYSTEM_H
@@ -95,9 +100,11 @@
  */
 
 /*
- * MODE     specifies the mode of preprocessing -- i.e. handling of trans-
- *      lation phases; handling of some preprocessing tokens; availability
- *      of some directives; mode of macro expansion; -- as follows.
+ * MODE     specifies the mode of preprocessing as one of STANDARD or
+ *      PRE_STANDARD.  Those two modes have many differences each other --
+ *      i.e. handling of translation phases; handling of some preprocessing
+ *      tokens; availability of some directives; mode of macro expansion;
+ *      -- as follows.
  *
  * PRE_STANDARD     Actual arguments of a macro are expanded (after
  *      substitution) with rest of the replacement text and the subsequent
@@ -109,7 +116,9 @@
  *      separately.
  *          # has no significance to cpp.  The following token is expanded.
  *          Directly or intermediately recursive macro call causes an error.
- *          PRE_STANDARD corresponds to the "K&R 1st." preprocessing.
+ *          PRE_STANDARD corresponds to the "K&R 1st." and "Reiser model"
+ *      preprocessing (the latter can be specified by -@old option).
+ *
  * STANDARD     <backslash><newline> sequence is always deleted after trigraph
  *      conversion and before tokenization.
  *          Digraph sequences are recognized as tokens.
@@ -126,7 +135,9 @@
  *      a space.
  *          An expanded macro is surrounded by spaces to prevent unintended
  *      token merging.
- * POST_STANDARD    Simplifies the behavior of STANDARD mode as follows.
+ *
+ *          -@post option specifies "post-Standard" behavior in STANDARD mode.    
+ *      "post-Standard" mode simplifies the behavior of STD mode as follows.
  *          1. Digraph sequences are converted in translation phase 1, as
  *      alternate characters rather than as tokens.
  *          2. A space is inserted as a token separator between any tokens in
@@ -145,11 +156,14 @@
  *          7. '$' or so are not treated specially in #define directive.
  *          8. Trigraphs, UCN (universal-character name) are not recognized.
  *          9. Multi-byte characters in an identifier are not recognized.
+ *          10. #if sizeof (type) is disallowed as the Standards says
+ *      (although STD mode with OK_SIZE configuration permits this).
  *
- * The following specifications are available when MODE >= STANDARD.
+ * The following specifications are available when MODE == STANDARD.
  *      preprocessing number token, digraphs,
- *      #pragma (#pragma __put_defines, #pragma __once, #pragma __include_next
- *          , #pragma __warning_cpp, #pragma __debug_cpp) directive,
+ *      #pragma (#pragma MCPP put_defines, #pragma MCPP once
+ *          , #pragma MCPP include_next, #pragma MCPP warning
+ *          , #pragma MCPP debug) directive,
  *      #error directive,
  *      #if defined operator, #elif directive,
  *      predefined macros __FILE__, __LINE__, __DATE__, __TIME__
@@ -163,7 +177,8 @@
  *      'S<n>' option (re-defines __STDC__ as <n>, unpredefine some macros),
  *      'V<n>' option (re-defines __STDC_VERSION__ or __cplusplus as <n>),
  *      'h<n>' option (re-defines __STDC_HOSTED__ as <n>).
- * The following specifications are available only in STANDARD mode.
+ * The following specifications are available only in STANDARD and not "post-
+ *          Standard" mode.
  *      Trigraphs and UCN,
  *      Multi-byte characters in an identifier.
  * The following specifications are available only in PRE_STANDARD mode.
@@ -173,90 +188,33 @@
  *          of [1,32767].
  */
 #define PRE_STANDARD        0
-#define STANDARD            3
-#define POST_STANDARD       9
+#define STANDARD            1
 
 /* MODE         Specify the preprocessing mode. */
 #ifndef MODE
 #define MODE                STANDARD
 #endif
 
-#if     MODE >= STANDARD
-#define COMMENT_INVISIBLE   FALSE
-#define STRING_FORMAL       FALSE
-#define OK_IF_JUNK          FALSE
-#define OK_SIZE             FALSE
-#define OK_UNTERM_STRING    FALSE
-#endif
+/* POST_STD, OLD_PREP are the values of 'mode'. */
+#define STD                 0   /* Default of STANDARD          */
+#define POST_STD            2   /* Special mode of STANDARD     */
+#define KR                  0   /* Default of PRE_STANDARD      */
+#define OLD_PREP            1   /* Special mode of PRE_STANDARD */
 
-#if     MODE >= STANDARD
-#define OLD_PREPROCESSOR    FALSE
-#endif
-
-#if     MODE >= STANDARD && ! CAN_CONCAT_STRINGS
+#if     MODE == STANDARD && ! CAN_CONCAT_STRINGS
 #define CONCAT_STRINGS      TRUE
 #else
 #define CONCAT_STRINGS      FALSE
 #endif
-
-#if     MODE == PRE_STANDARD
-/*
- * OLD_PREPROCESSOR Forces several parameters to a state consistant
- *              with the Reiser cpp preprocessor.
- */
-#ifndef OLD_PREPROCESSOR
-#define OLD_PREPROCESSOR    FALSE   /* TRUE for "Reiser" model cpp  */
-#endif
-#if     OLD_PREPROCESSOR
-#define OK_IF_JUNK          TRUE
-#define COMMENT_INVISIBLE   TRUE
-#define STRING_FORMAL       TRUE
-#define OK_UNTERM_STRING    TRUE
-#endif
-
-/*
- * COMMENT_INVISIBLE may be defined to allow "old-style" comment
- * processing, whereby the comment becomes a zero-length token
- * separator.  This permitted tokens to be concatenated in macro
- * expansions.  This is disallowed by the Standard.
- */
-#ifndef COMMENT_INVISIBLE
-#define COMMENT_INVISIBLE   FALSE
-#endif
-
-/*
- * OK_IF_JUNK   should be set TRUE to allow text after #else and
- *              #endif.  This is needed for compatiblity with old
- *              preprocessors, but is disallowed by the Standard.
- */
-#ifndef OK_IF_JUNK
-#define OK_IF_JUNK          FALSE
-#endif
-
-/*
- * STRING_FORMAL may be defined to allow recognition of macro parameters in
- * string literals and character constant in replacement text.
- * This was removed from the Standard.
- */
-#ifndef STRING_FORMAL
-#define STRING_FORMAL       FALSE
-#endif
-
-/*
- * OK_UNTERM_STRING ebables implicit closing of quote by end of line.
- */
-#ifndef OK_UNTERM_STRING
-#define OK_UNTERM_STRING    FALSE
-#endif
-
-#endif  /* MODE == PRE_STANDARD */
 
 /*
  * OK_SIZE permits sizeof operator in #if expression.
  * See definitions of S_CHAR, etc. in eval.c.
  * This is disallowed by the Standard.
  */
-#ifndef OK_SIZE
+#if     MODE == STANDARD
+#define OK_SIZE             FALSE
+#else
 #define OK_SIZE             TRUE
 #endif
 
@@ -285,7 +243,7 @@
  * EXPR_MAX should be defined to the maximum value of uexpr_t,
  *              or maximum value of expr_t in case of !HAVE_UNSIGNED_LONG.
  */
-#if     MODE >= STANDARD
+#if     MODE == STANDARD
 #define OK_DIGRAPHS         TRUE
 #if     OK_DIGRAPHS
 #define DIGRAPHS_INIT       FALSE
@@ -294,14 +252,11 @@
 #ifndef EXPAND_PRAGMA
 #define EXPAND_PRAGMA       FALSE
 #endif
-#endif
-
-#if     MODE == STANDARD
 #define OK_UCN              TRUE
 #define OK_MBIDENT          FALSE
 #endif
 
-#if     MODE >= STANDARD
+#if     MODE == STANDARD
 #if     HAVE_INTMAX_T
 #if     HAVE_STDINT_H
 #include    "stdint.h"
@@ -330,16 +285,18 @@ typedef long    uexpr_t;
 typedef long    expr_t;
 #endif  /* HAVE_LONG_LONG   */
 #endif  /* HAVE_INTMAX_T    */
-#else   /* MODE < STANDARD  */
+#endif  /* MODE == STANDARD */
+
+#if     MODE == PRE_STANDARD
 typedef long    expr_t;
 #if     HAVE_UNSIGNED_LONG
 typedef unsigned long   uexpr_t;
 #else
 typedef long    uexpr_t;
-#endif  /* HAVE_UNSIGNED_LONG   */
-#endif  /* MODE >= STANDARD */
+#endif
+#endif
 
-#if     MODE >= STANDARD
+#if     MODE == STANDARD
 #if     HAVE_INTMAX
 #define EXPR_MAX            UINTMAX_MAX
 #else
@@ -353,7 +310,9 @@ typedef long    uexpr_t;
 #endif
 #endif
 #endif
-#else   /* MODE < STANDARD  */
+#endif  /* MODE == STANDARD */
+
+#if     MODE == PRE_STANDARD
 #if     HAVE_UNSIGNED_LONG
 #define EXPR_MAX            4294967295UL
 #else
@@ -370,26 +329,13 @@ typedef long    uexpr_t;
 #endif
 
 /*
- * TOP_SPACE    specifies handling of line top white spaces (including
- *              comment) as follows:
- *      TRUE:  squeeze to one space
- *      FALSE: delete
- */
-#if     MODE == POST_STANDARD
-#define TOP_SPACE           FALSE
-#endif
-#ifndef TOP_SPACE
-#define TOP_SPACE           TRUE
-#endif
-
-/*
  * OK_MAKE      implement -M* options to put source file dependency line
  *              for 'make'.
  */
 #define OK_MAKE             TRUE
 
 /*
- * For #pragma __debug_cpp, #debug.
+ * For #pragma MCPP debug, #debug.
  */
 #define DEBUG               TRUE    /* for debugging of cpp */
 #define DEBUG_EVAL          TRUE    /* for debug of cpp #if expression      */
@@ -463,7 +409,7 @@ typedef long    uexpr_t;
 #define BLK_NEST            0x100
 #endif
 #ifndef NINCLUDE
-#define NINCLUDE            0x20
+#define NINCLUDE            0x40
 #endif
 #ifndef RESCAN_LIMIT
 #define RESCAN_LIMIT        0x40
@@ -500,7 +446,7 @@ typedef long    uexpr_t;
     error  <<SBSIZE must be a power of 2 !>>
 #endif
 
-#if     MODE >= STANDARD
+#if     MODE == STANDARD
 /*
  * Translation limits required by the Standard.
  *
@@ -552,7 +498,7 @@ typedef long    uexpr_t;
 /*
  * STDC     might be set to 1, if COMPILER conforms to the Standard, else
  *      be set to 0.
- *      This macro is used for the predefined __STDC__, when MODE >=
+ *      This macro is used for the predefined __STDC__, when MODE ==
  *      STANDARD.
  *          (STDC >= 1) disables predefined macros not beginning with '_'.
  * STDC_VERSION     is used for the value of __STDC_VERSION__.
@@ -589,5 +535,5 @@ typedef long    uexpr_t;
  */
 #define CPLUS               1       /* 199711L for C++ Standard     */
 
-#endif  /* MODE >= STANDARD */
+#endif  /* MODE == STANDARD */
 

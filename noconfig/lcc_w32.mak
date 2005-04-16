@@ -1,5 +1,5 @@
 # makefile to compile MCPP version 2.* for LCC-Win32 / LCC make
-#		2002/08, 2003/11, 2004/02 	kmatsui
+#		2002/08, 2003/11, 2004/02, 2005/03 	kmatsui
 # To compile MCPP do
 #		make
 # To re-compile MCPP using compiled MCPP, edit this makefile and do
@@ -7,8 +7,8 @@
 # To link malloc() package of kmatsui, edit this makefile and do
 #		make
 
-NAME = cpp_std.exe
-CPP = cpp_std.exe
+NAME = mcpp_std.exe
+CPP = mcpp_std.exe
 CC = lcc
 CFLAGS = -A
 LINKFLAGS = -s -o $(NAME)
@@ -37,9 +37,9 @@ main.obj control.obj eval.obj expand.obj support.obj system.obj mbchar.obj: \
 #		uncomment the next 5 lines.
 #PREPROCESSED = 1
 #CMACRO =
-#cpp.H : system.H noconfig.H internal.H
-#	$(BINDIR)\$(CPP) $(CPPFLAGS) $(MEM_MACRO) preproc.c cpp.H
-#$(OBJS) : cpp.H
+#mcpp.H : system.H noconfig.H internal.H
+#	$(BINDIR)\$(CPP) $(CPPFLAGS) $(MEM_MACRO) preproc.c mcpp.H
+#$(OBJS) : mcpp.H
 
 CPPFLAGS = -DPREPROCESSED=$(PREPROCESSED) -DMODE=STANDARD
 .c.obj	:
@@ -55,6 +55,6 @@ install :
 clean	:
 	-del *.obj
 	-del *.exe
-	-del cpp.H
+	-del mcpp.H
 	-del _*.c
 

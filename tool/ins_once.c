@@ -1,11 +1,13 @@
 /*
  * ins_once.c
- *  Quick and dirty program to insert '#pragma __once' into the header files.
+ *  Quick and dirty program to insert '#pragma once' into the header files.
  *  1998/08     kmatsui
  *  2002/08     kmatsui
  *      Added -p, -o, -g option, removed -s option.
  *      Compile with -DPATH_DELIM='x' option, if the path-delimiter is any
  *          other than '/'.
+ *  2004/11     kmatsui
+ *      Changed '#pragma __once' to '#pragma once'.
  */
 
 #include    "stdio.h"
@@ -25,8 +27,8 @@
 #define IF          0x101
 #define PRAGMA      0x102
 #define DEFINED     0x103
-#define __MCPP      0x110
-#define __ONCE      0x111
+#define _MCPP       0x110
+#define _ONCE       0x111
 
 void    usage( void);
 void    test_a_file( char *);
@@ -42,17 +44,17 @@ int     test;
 int     pre_ansi;
 /*
  * If TRUE, insert 9 lines for the old pre-ansi preprocessors.
- * If FALSE insert only '#pragma __once' line for the preprocessors
+ * If FALSE insert only '#pragma once' line for the preprocessors
  * which can accept #pragma.
  */
 int     prepend;
 /*
- * If TRUE, prepend '#pragma __once' line to the file.
+ * If TRUE, prepend '#pragma once' line to the file.
  * If FALSE, insert the line after the first #ifndef line.
  */
 int     gcc;
 /*
- * If TRUE, do not insert '#pragma __once' line to "stddef.h".
+ * If TRUE, do not insert '#pragma once' line to "stddef.h".
  * This is the option for GCC family.
  */
 
@@ -120,7 +122,7 @@ skip:   fprintf( stderr, "Skipped %s\n", *ep);
 void    usage( void)
 {
     static char     *mes[] = {
-   "ins_once: Insert '#pragma __once' to header files except \"assert.h\"\n",
+   "ins_once: Insert '#pragma once' to header files except \"assert.h\"\n",
    "            and \"stddef.h\" (for GNU C).\n",
    "Usage: ins_once [-DPATH_DELIM=\\] [-t|-p|-o|-g] [header1.h [header2.h [...]]]\n",
    "    -t : Only test files whether beginning with #ifndef or #if !defined.\n",
@@ -175,7 +177,7 @@ void    test_a_file( fname)
 void    conv_a_file( fname)
     char    *fname;
 /*
- * Insert '#pragma __once' line to seemingly apropriate place according
+ * Insert '#pragma once' line to seemingly apropriate place according
  * the command-line options.
  */
 {
@@ -203,7 +205,7 @@ void    insert_once( fp_in, fp_out, fname)
     FILE    *fp_in, *fp_out;
     char    *fname;
 /*
- * Insert '#pragma __once' line after the first directive line, if the
+ * Insert '#pragma once' line after the first directive line, if the
  * directive is #ifndef or #if !defined, else append the line at the end
  * of the file.
  */
@@ -241,7 +243,7 @@ void    insert_once( fp_in, fp_out, fname)
 void    prepend_once( fp_in, fp_out)
     FILE    *fp_in, *fp_out;
 /*
- * Prepend the '#pragma __once' line at the top of the file.
+ * Prepend the '#pragma once' line at the top of the file.
  */
 {
     char    buf[ BUFSIZ];
@@ -256,7 +258,7 @@ void    prepend_once( fp_in, fp_out)
 int     look_directive( fp)
     FILE    *fp;
 /*
- * Look whether the next line is '#pragma __once'.
+ * Look whether the next line is '#pragma once'.
  */
 {
     char    buf[ BUFSIZ];
@@ -269,10 +271,10 @@ int     look_directive( fp)
     cp = buf;
     if (fgets( buf, BUFSIZ, fp) && buf[ 0] == '\n'
             && fgets( buf, BUFSIZ, fp) && get_token( &cp) == '#') {
-        if (!pre_ansi && get_token( &cp) == PRAGMA && get_token( &cp) == __ONCE)
+        if (!pre_ansi && get_token( &cp) == PRAGMA && get_token( &cp) == _ONCE)
             res = 1;
         else if (pre_ansi && get_token( &cp) == IF
-                && get_token( &cp) == __MCPP)
+                && get_token( &cp) == _MCPP)
             res = 1;
     }
     fseek( fp, pos, SEEK_SET);
@@ -300,11 +302,11 @@ int     get_token( cpp)
     } else if (memcmp( cp, "defined", 7) == 0) {
         token = DEFINED;
         cp += 7;
-    } else if (memcmp( cp, "__MCPP", 11) == 0) {
-        token = __MCPP;
+    } else if (memcmp( cp, "__MCPP", 6) == 0) {
+        token = _MCPP;
         cp += 11;
-    } else if (memcmp( cp, "__once", 6) == 0) {
-        token = __ONCE;
+    } else if (memcmp( cp, "once", 6) == 0) {
+        token = _ONCE;
         cp += 6;
     } else {
         token = *cp++;
@@ -321,10 +323,10 @@ void    ins_once( fp)
         "\n",
         "#if     __MCPP >= 2\n",
         "#ifdef  __STDC__\n",
-        "#pragma __once\n",
+        "#pragma once\n",
         "#else\n",
         "#ifdef  __cplusplus\n",
-        "#pragma __once\n",
+        "#pragma once\n",
         "#endif\n",
         "#endif\n",
         "#endif\n",
@@ -332,7 +334,7 @@ void    ins_once( fp)
          NULL,
     };
     static char     *once_only[] = {
-        "\n#pragma __once\n\n",
+        "\n#pragma once\n\n",
         NULL,
     };
     static char    **cpp;

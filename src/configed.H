@@ -10,7 +10,7 @@
  *      differs from TARGET, you must edit this file here and there.
  */
 
-#define     DATE            "2004/03"               /* Date of mcpp     */
+#define     DATE            "2005/03"               /* Date of mcpp     */
 
 /*
  *  'Target' means the O.S. and the compiler to which cpp is implemented.
@@ -127,8 +127,10 @@
  *
  * C_INCLUDE_DIR1, C_INCLUDE_DIR2   may be defined if you have a compiler-
  *              specific include directory which is to be searched *before*
- * CPLUS_INCLUDE_DIR1, CPLUS_INCLUDE_DIR2   are for C++ include directory
- *              which exist other than C include directory.
+ *              the operating-system specific directories (e.g. /usr/include).
+ * CPLUS_INCLUDE_DIR1, CPLUS_INCLUDE_DIR2, CPLUS_INCLUDE_DIR3
+ *      , CPLUS_INCLUDE_DIR4     are for C++ include directory which exist
+ *              other than C include directory.
  * ENV_C_INCLUDE_DIR    may be defined to the name of environment-variable for
  *              C include directory.
  * ENV_CPLUS_INCLUDE_DIR    is name of environment-variable for C++ include
@@ -170,12 +172,12 @@
 #if     SYSTEM == SYS_FREEBSD
 #define SYSTEM_EXT          "__FreeBSD__"
 #else   /* SYSTEM == SYS_LINUX  */
-#define SYSTEM_EXT        "__linux__"
+#define SYSTEM_EXT          "__linux__"
 #endif  /* SYSTEM == SYS_LINUX  */
 #endif  /* SYSTEM == SYS_FREEBSD || SYSTEM == SYS_LINUX */
 
 #if     SYSTEM == SYS_CYGWIN
-#define SYSTEM_EXT         "__CYGWIN__"
+#define SYSTEM_EXT          "__CYGWIN__"
 #define SYSTEM_EX2          "__CYGWIN32__"
 #ifndef MBCHAR
 #define MBCHAR              SJIS
@@ -203,11 +205,14 @@
 #endif
 /*
  * __SIZE_TYPE__, __PTRDIFF_TYPE__ and __WCHAR_TYPE__ are the predefines of
- * GNU C / cpp.
+ * GNU C / cpp and undocumented in GNU C 2..
  */
+#if     __GNUC__ == 2
 #define COMPILER_SP1        "__SIZE_TYPE__"
 #define COMPILER_SP2        "__PTRDIFF_TYPE__"
 #define COMPILER_SP3        "__WCHAR_TYPE__"
+#endif
+
 #define CMP_NAME            "GNU C"
 #endif  /* COMPILER == GNUC */
 
@@ -310,14 +315,6 @@
 #endif
 #endif
 #endif  /* HAVE_LIMITS_H    */
-
-/*
- * FOLD_CASE    should be set TRUE if upper-case and lower-case letters are
- *              not distinguished by O.S. in the options handed to cpp.
- */
-#ifndef FOLD_CASE
-#define FOLD_CASE           FALSE
-#endif
 
 /*
  * Define MBCHAR (multi-byte character encoding) to SJIS, EUC_JP or other.
@@ -471,7 +468,7 @@ extern void     exit();
 #endif
 
 #if     HOST_HAVE_TIME_H
-#include    "time.h"        /* For MODE >= STANDARD */
+#include    "time.h"        /* For MODE == STANDARD */
 #else
 #if     ! HOST_HAVE_TIME_T
 typedef long    time_t;
@@ -491,10 +488,14 @@ extern "C" {
 }
 #else   /* #ifndef __cplusplus  */
 extern int      getopt( int argc, char * const * argv, const char * opts);
+extern int      optind;
+extern char *   optarg;
 extern char *   stpcpy( char * dest, const char * src);
 #endif
 #else   /* ! PROTO  */
 extern int      getopt();
+extern int      optind;
+extern char *   optarg;
 extern char *   stpcpy();
 #endif
 

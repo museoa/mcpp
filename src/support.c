@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1998, 2002-2004 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2005 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * Some parts of this code are derived from the public domain software
@@ -96,6 +96,13 @@
  */
 
 /*
+ * MCPP Version 2.5
+ * 2005/03      kmatsui
+ *      Absorbed POST_STANDARD into STANDARD and OLD_PREPROCESSOR into
+ *          PRE_STANDARD.
+ */
+
+/*
  * The common routines used by several source files are placed here.
  */
 
@@ -131,7 +138,7 @@
  */
 
 #if PREPROCESSED
-#include    "cpp.H"
+#include    "mcpp.H"
 #else
 #include    "system.H"
 #include    "internal.H"
@@ -151,13 +158,11 @@ static char *   get_line( int in_comment);
 static void     at_eof( int in_comment);
 static void     do_msg( const char * severity, const char * format
         , const char * arg1, long arg2, const char * arg3);
-#if MODE == PRE_STANDARD || TOP_SPACE
 static char *   cat_line( int del_bsl);
-#endif
 #if BSL_IN_MBCHAR
 static int      last_is_mbchar( const char * in, int len);
 #endif
-#if COMMENT_INVISIBLE
+#if MODE == PRE_STANDARD
 static void     put_line( char * out, FILE * fp);
 #endif
 #if DEBUG
@@ -177,13 +182,11 @@ static char *   read_a_comment();   /* Read over a comment          */
 static char *   get_line();         /* Get a logical line from file */
 static void     at_eof();           /* Check erroneous end of file  */
 static void     do_msg();           /* Putout diagnostic message    */
-#if MODE == PRE_STANDARD || TOP_SPACE
 static char *   cat_line();         /* Splice the line              */
-#endif
 #if BSL_IN_MBCHAR
 static int      last_is_mbchar();   /* The line ends with MBCHAR ?  */
 #endif
-#if COMMENT_INVISIBLE
+#if PRE_STANDARD
 static void     put_line();         /* Put out a logical line       */
 #endif
 #if DEBUG
@@ -231,7 +234,7 @@ get_unexpandable( c, diag)
             cwarn( "Macro \"%s\" is expanded to 0 token"    /* _W1_ */
                     , defp->name, 0L, NULLST);
             if (! no_source_line)
-                dump_a_def( "    macro", defp, FALSE, FALSE, fp_err);
+                dump_a_def( "    macro", defp, FALSE, FALSE, TRUE, fp_err);
         }
     }
 
@@ -241,7 +244,7 @@ get_unexpandable( c, diag)
     }
 
     if (diag && fp == NULL && defp && token_type == NAM) {
-#if MODE >= STANDARD
+#if MODE == STANDARD
         if (str_eq( identifier, "defined") && (warn_level & 1))
             cwarn( "Macro \"%s\" is expanded to \"defined\""        /* _W1_ */
                     , defp->name, 0L, NULLST);
@@ -265,7 +268,7 @@ skip_nl()
  * Skip to the end of the current input line.
  */
 {
-#if MODE == POST_STANDARD
+#if MODE == STANDARD
     insert_sep = NO_SEP;
 #endif
     while (infile && infile->fp == NULL) {  /* Stacked text         */
@@ -284,6 +287,7 @@ skip_ws()
 #endif
 /*
  * Skip over whitespaces other than <newline>.
+ * Note: POST_STD mode does not use TOK_SEP, and KR mode does not use COM_SEP.
  */
 {
     register int            c;
@@ -294,25 +298,20 @@ skip_ws()
 #if MODE == STANDARD
     while (c == ' ' || c == TOK_SEP);
 #else
-#if COMMENT_INVISIBLE
     while (c == ' ' || c == COM_SEP);
-#else
-    while (c == ' ');
 #endif
-#endif  /* MODE != STANDARD */
     return  c;
 }
 
-#if MODE >= STANDARD
+#if MODE == STANDARD
 /*
  * The following macros are defined locally for scan_token(), scan_id(),
- * scan_quote(), scan_number(), scan_ucn() and scan_op() in STANDARD or
- * POST_STANDARD * mode to simpify tokenization.  Any token cannot cross
- * "file"s.
+ * scan_quote(), scan_number(), scan_ucn() and scan_op() in STANDARD mode to
+ * simpify tokenization.  Any token cannot cross "file"s.
  */
 #define get()   (*infile->bptr++ & UCHARMAX)
 #define unget() (infile->bptr--)
-#endif  /* MODE >= STANDARD */
+#endif  /* MODE == STANDARD */
 
 int
 #if PROTO
@@ -332,7 +331,7 @@ scan_token( c, out_pp, out_end)
  *   If 'c' is token separator, then return SEP.
  *   If 'c' is not the first character of any known token and not a token
  * separator, return SPE.
- *   POST_STANDARD inserts token separator (a space) between any tokens of
+ *   In POST_STD mode, inserts token separator (a space) between any tokens of
  * source.
  */
 {
@@ -347,7 +346,7 @@ scan_token( c, out_pp, out_end)
     switch (ch_type) {
     case LET:                           /* An identifier            */
         switch (c) {
-#if MODE >= STANDARD
+#if MODE == STANDARD
         case 'L':
             ch = get();
             if (type[ ch] & QUO) {      /* type[ ch] == QUO         */
@@ -400,7 +399,7 @@ operat: out = scan_op( c, out);         /* Operator or punctuator   */
     default:
 #if MODE == STANDARD
 #if OK_UCN
-        if (c == '\\' && stdc2) {
+        if (mode == STD && c == '\\' && stdc2) {
             ch = get();
             unget();
             if (ch == 'U' || ch == 'u')
@@ -408,7 +407,7 @@ operat: out = scan_op( c, out);         /* Operator or punctuator   */
         }
 #endif
 #if OK_MBIDENT
-        if ((type[ c] & mbstart) && stdc3) {
+        if (mode == STD && (type[ c] & mbstart) && stdc3) {
             char *  bptr = infile->bptr;
             mb_read( c, &infile->bptr, &out);
             infile->bptr = bptr;
@@ -439,8 +438,8 @@ operat: out = scan_op( c, out);         /* Operator or punctuator   */
     if (debug & TOKEN)
         dump_token( token_type, *out_pp);
 #endif
-#if MODE == POST_STANDARD
-    if (token_type != SEP && infile->fp != NULL
+#if MODE == STANDARD
+    if (mode == POST_STD && token_type != SEP && infile->fp != NULL
             && (type[ *infile->bptr & UCHARMAX] & SPA) == 0)
         insert_sep = INSERT_SEP;    /* Insert token separator       */
 #endif
@@ -481,7 +480,7 @@ scan_id( c)
             *bp++ = c;
 #if MODE == STANDARD
 #if OK_UCN
-        if (c == '\\' && stdc2) {
+        if (mode == STD && c == '\\' && stdc2) {
             int     cnt;
             char *  tp = bp;
             
@@ -507,7 +506,7 @@ scan_id( c)
         }
 #endif  /* OK_UCN   */
 #if OK_MBIDENT
-        if ((type[ c] & mbstart) && stdc3) {
+        if (mode == STD && (type[ c] & mbstart) && stdc3) {
             len = mb_read( c, &infile->bptr, &bp);
             if (len & MB_ERROR) {
                 if (infile->fp)
@@ -527,10 +526,10 @@ next_c:
     } while ((type[ c] & (LET | DIG))           /* Letter or digit  */
 #if MODE == STANDARD
 #if OK_UCN
-            || (c == '\\' && stdc2)
+            || (mode == STD && c == '\\' && stdc2)
 #endif
 #if OK_MBIDENT
-            || ((type[ c] & mbstart) && stdc3)
+            || (mode == STD && (type[ c] & mbstart) && stdc3)
 #endif
 #endif  /* MODE == STANDARD */
         );
@@ -543,20 +542,20 @@ next_c:
                 , identifier, 0L, NULLST);
 
     len = bp - identifier;
-#if MODE >= STANDARD && IDMAX > IDLEN90MIN
+#if MODE == STANDARD && IDMAX > IDLEN90MIN
     /* UCN16, UCN32, MBCHAR are counted as one character for each.  */
-#if MODE == STANDARD
 #if OK_UCN
-    len -= (uc2 * 5) - (uc4 * 9);
+    if (mode == STD)
+        len -= (uc2 * 5) - (uc4 * 9);
 #endif
 #if OK_MBIDENT
-    len -= mb;
+    if (mode == STD)
+        len -= mb;
 #endif
-#endif  /* MODE == STANDARD */
     if (infile->fp && len > id_len_min && (warn_level & 4))
         cwarn( "Identifier longer than %.0s%ld characters \"%s\""   /* _W4_ */
                 , NULLST, (long) id_len_min, identifier);
-#endif  /* MODE >= STANDARD && IDMAX > IDLEN90MIN   */
+#endif  /* MODE == STANDARD && IDMAX > IDLEN90MIN   */
 
 #if DOLLAR_IN_NAME
     if (diagnosed == FALSE && (warn_level & 2)
@@ -585,22 +584,18 @@ scan_quote( delim, out, out_end, diag)
  */
 {
     const char * const      skip_line = ", skipped the line";   /* _E_  */
-#if MODE >= STANDARD || ! OK_UNTERM_STRING
     const char * const      unterm_string
                         = "Unterminated string literal%s";
     const char * const      unterm_char
                         = "Unterminated character constant %s%.0ld%s";
-#endif 
     const char *    skip;
     size_t      len;
     register int    c;
     char *      out_p = out;
 
     *out_p++ = delim;
-#if 1 || MODE != POST_STANDARD      /* In POST_STANDARD mode,       */
     if (delim == '<')               /*   header-name by <, > is an  */
         delim = '>';                /*     obsolescent feature.     */
-#endif
 
 scan:
     while ((c = get()) != EOS) {
@@ -614,13 +609,14 @@ scan:
                 if (infile->fp != NULL && compiling && diag) {
                     if (warn_level & 1) {
                         char *  buf;
-                        size_t  len;
-                        buf = xmalloc( len = infile->bptr - bptr + 2);
-                        memcpy( buf, bptr, len - 1);
-                        buf[ len - 1] = EOS;
+                        size_t  chlen;
+                        buf = xmalloc( chlen = infile->bptr - bptr + 2);
+                        memcpy( buf, bptr, chlen - 1);
+                        buf[ chlen - 1] = EOS;
                         cwarn(
     "Illegal multi-byte character sequence \"%s\" in quotation",    /* _W1_ */
                         buf, 0L, NULLST);
+                        free( buf);
                     }
                 }
                 continue;
@@ -632,12 +628,10 @@ scan:
         if (c == delim) {
             break;
         } else if (c == '\\'
-#if 1 || MODE != POST_STANDARD
                 && delim != '>'             /* In string literal    */
-#endif
             ) {
 #if MODE == STANDARD && OK_UCN
-            if (stdc2) {
+            if (mode == STD && stdc2) {
                 int         cnt;
                 char *      tp;
 
@@ -673,7 +667,7 @@ escape:
                 c = get();
             }
 #endif
-#if (1 || MODE != POST_STANDARD) && MODE >= STANDARD
+#if MODE == STANDARD
         } else if (c == ' ' && delim == '>' && infile->fp == NULL) {
             continue;   /* Skip space possibly inserted by macro expansion  */
 #endif
@@ -700,14 +694,18 @@ chk_limit:
     if (diag) {                         /* At translation phase 3   */
         skip = (infile->fp == NULL) ? NULLST : skip_line;
         if (c != delim) {
-#if MODE == PRE_STANDARD && OK_UNTERM_STRING
-            if (delim == '"' || delim == '\'')  /* Implicit closing of quote*/
+#if MODE == PRE_STANDARD
+            if (mode == OLD_PREP        /* Implicit closing of quote*/
+                    && (delim == '"' || delim == '\''))
                 return  out_p;
-#else   /* MODE >= STANDARD || ! OK_UNTERM_STRING   */
+            if (delim == '"') {                     /* mode == KR   */
+                if (lang_asm)
+#else   /* MODE == STANDARD */
             if (delim == '"') {
-#if TOP_SPACE && MODE != POST_STANDARD && ! OK_UNTERM_STRING
-                if (lang_asm) {
+                if (mode == STD && lang_asm)
+#endif
                 /* Concatenate the unterminated string to the next line */
+                {
                     if (warn_level & 1)
                         cwarn( unterm_string
                                 , ", catenated to the next line"    /* _W1_ */
@@ -718,41 +716,33 @@ chk_limit:
                 } else {
                     cerror( unterm_string, skip, 0L, NULLST);       /* _E_  */
                 }
-#else   /* ! TOP_SPACE || MODE == POST_STANDARD || OK_UNTERM_STRING)        */
-                cerror( unterm_string, skip, 0L, NULLST);   /* _E_  */
-#endif  /* ! TOP_SPACE || MODE == POST_STANDARD || OK_UNTERM_STRING)        */
             } else if (delim == '\'') {
                 cerror( unterm_char, out, 0L, skip);        /* _E_  */
             }
-#if 1 || MODE != POST_STANDARD
             else
                 cerror( "Unterminated header name %s%.0ld%s"        /* _E_  */
                         , out, 0L, skip);
-#endif  /* 1 || MODE != POST_STANDARD   */
             out_p = NULL;
-#endif  /* MODE >= STANDARD || ! OK_UNTERM_STRING   */
         } else if (delim == '\'' && out_p - out <= 2) {
             cerror( "Empty character constant %s%.0ld%s"    /* _E_  */
                     , out, 0L, skip);
             out_p = NULL;
         }
-#if MODE == POST_STANDARD
-        else if (delim == '>' && (warn_level & 2))
+#if MODE == STANDARD
+        else if (mode == POST_STD && delim == '>' && (warn_level & 2))
             cwarn(
         "Header-name enclosed by <, > is an obsolescent feature %s" /* _W2_ */
                     , out, 0L, skip);
 #endif
-#if MODE >= STANDARD && NWORK-2 > SLEN90MIN
+#if MODE == STANDARD && NWORK-2 > SLEN90MIN
         if (out_p - out > str_len_min && (warn_level & 4))
             cwarn( "Quotation longer than %.0s%ld bytes"    /* _W4_ */
-                    , NULLST, (long) str_len_min, NULLST);
+                    , NULLST, str_len_min, NULLST);
 #endif
     }
 
     return  out_p;
 }
-
-#if MODE == PRE_STANDARD || TOP_SPACE
 
 static char *
 #if PROTO
@@ -766,6 +756,7 @@ cat_line( del_bsl)
  *     Delete <backslash><newline> sequence in string literal.
  * FALSE: Overwrite the <newline> with <backslash>'n'.
  * Return NULL on end of file.  Called only from scan_quote().
+ * This routine is never called in POST_STD mode.
  */
 {
     size_t  len;
@@ -795,9 +786,7 @@ cat_line( del_bsl)
     return  infile->bptr;
 }
 
-#endif  /* MODE == PRE_STANDARD || TOP_SPACE    */
-
-#if MODE >= STANDARD                /* Standard conforming version  */
+#if MODE == STANDARD                /* Standard conforming version  */
 
 static char *
 #if PROTO
@@ -829,9 +818,8 @@ scan_number(c, out, out_end)
                 *out_p++ = c;
                 c = get();
             }
-#if MODE == STANDARD
 #if OK_UCN
-        } else if (c == '\\' && stdc3) {
+        } else if (mode == STD && c == '\\' && stdc3) {
             int     cnt;
             char *  tp;
 
@@ -852,7 +840,7 @@ scan_number(c, out, out_end)
             c = get();
 #endif  /* OK_UCN   */
 #if OK_MBIDENT
-        } else if ((type[ c] & mbstart) && stdc3) {
+        } else if (mode == STD && (type[ c] & mbstart) && stdc3) {
             len = mb_read( c, &infile->bptr, &out_p);
             if (len & MB_ERROR) {
                 if (infile->fp)
@@ -861,17 +849,16 @@ scan_number(c, out, out_end)
                             , NULLST, 0L, NULLST);
             }
 #endif  /* OK_MBIDENT   */
-#endif  /* MODE == STANDARD */
         } else {
             c = get();
         }
     } while ((type[ c] & (DIG | DOT | LET)) /* Digit, dot or letter */
 #if MODE == STANDARD
 #if OK_UCN
-            || (c == '\\' && stdc3)
+            || (mode == STD && c == '\\' && stdc3)
 #endif
 #if OK_MBIDENT
-            || ((type[ c] & mbstart) && stdc3)
+            || (mode == STD && (type[ c] & mbstart) && stdc3)
 #endif
 #endif  /* MODE == STANDARD */
         );
@@ -885,7 +872,7 @@ scan_number(c, out, out_end)
 }
 
 #else   /* MODE == PRE_STANDARD */
-/* Original version, too exact for STANDARD preprocessing.          */
+/* Original version of DECUS CPP, too exact for STANDARD preprocessing.     */
 
 static char *
 #if PROTO
@@ -972,17 +959,16 @@ scan_number(c, out, out_end)
     /*
      * When we break out of the scan loop, c contains the first
      * character (maybe) not in the number.  If the number is an
-     * integer, allow a trailing 'L' for long and/or a trailing 'U'
-     * for unsigned.  If not those, push the trailing character back
-     * on the input stream.  Floating point numbers accept a trailing
-     * 'L' for "long double" or a trailing 'F' for explicit float.
+     * integer, allow a trailing 'L' for long.  for unsigned.  If not
+     * those, push the trailing character back on the input stream.
+     * Floating point numbers accept a trailing 'L' for "long double"
+     * or a trailing 'F' for explicit float.
      */
 done:
     if (! (dotflag || expseen)) {           /* Not floating point   */
         /*
          * We know that dotflag and expseen are both zero, now:
-         *   dotflag signals "saw 'L'", and
-         *   expseen signals "saw 'U'".
+         *   dotflag signals "saw 'L'".
          * We assume that 12F is not a floating constant.
          */
         for (;;) {
@@ -996,7 +982,7 @@ done:
             default:
                 goto nomore;
             }
-            *out++ = c;                     /* Got 'L' or 'U'.      */
+            *out++ = c;                     /* Got 'L' .            */
             c = get();                      /* Look at next, too.   */
         }
     }
@@ -1028,6 +1014,7 @@ scan_ucn( cnt, out)
 /*
  * Scan an UCN sequence and put the sequence to 'out'.
  * Return the advanced pointer or NULL on failure.
+ * This routine is never called in POST_STD mode.
  */
 {
     uexpr_t value;                              /* Value of UCN     */
@@ -1140,13 +1127,13 @@ scan_op( c, out)
         case '=':   openum = OP_LE;         break;      /* <=       */
 #if MODE == STANDARD && OK_DIGRAPHS
         case ':':                                   /* <: i.e. [    */
-            if (digraphs)
+            if (mode == STD && digraphs)
                 openum = OP_LBRCK_D;
             else
                 openum = OP_LT;
             break;
         case '%':                                   /* <% i.e. {    */
-            if (digraphs)
+            if (mode == STD && digraphs)
                 openum = OP_LBRACE_D;
             else
                 openum = OP_LT;
@@ -1171,14 +1158,12 @@ scan_op( c, out)
         }
         break;
     case '#':
-        if (in_directive || macro_line) {   /* in directive or macro*/
-#if MODE >= STANDARD
-            if (in_define || macro_line)    /* in #define or macro  */
-                openum = ((c2 == '#') ? OP_CAT : OP_STR);   /* ##, #*/
-            else
+#if MODE == STANDARD
+        if (in_define || macro_line)        /* in #define or macro  */
+            openum = ((c2 == '#') ? OP_CAT : OP_STR);   /* ##, #    */
+        else
 #endif
-                openum = OP_1;                          /* #        */
-        }
+            openum = OP_1;                              /* #        */
         break;
     case '+':
         switch (c2) {
@@ -1194,7 +1179,7 @@ scan_op( c, out)
             /* openum = OP_2;   */
             break;
         case '>':
-#if MODE >= STANDARD
+#if MODE == STANDARD
             if (cplus) {
                 if ((c3 = get()) == '*') {              /* ->*      */
                     openum = OP_3;
@@ -1206,7 +1191,7 @@ scan_op( c, out)
             }   /* else openum = OP_2;  */              /* ->       */
 #else   /* MODE == PRE_STANDARD */
             /* openum = OP_2;   */
-#endif  /* MODE == PRE_STANDARD */
+#endif
             break;
         default :   openum = OP_SUB;        break;      /* -        */
         }
@@ -1216,13 +1201,13 @@ scan_op( c, out)
         case '=':                           break;      /* %=       */
 #if MODE == STANDARD && OK_DIGRAPHS
         case '>':                                   /* %> i.e. }    */
-            if (digraphs)
+            if (mode == STD && digraphs)
                 openum = OP_RBRACE_D;
             else
                 openum = OP_MOD;
             break;
         case ':':
-            if (digraphs) {
+            if (mode == STD && digraphs) {
                 if ((c3 = get()) == '%') {
                     if ((c4 = get()) == ':') {      /* %:%: i.e. ## */
                         openum = OP_DSHARP_D;
@@ -1267,7 +1252,7 @@ scan_op( c, out)
         /* else openum = OP_2;  */                      /* ^=       */
         break;
     case '.':
-#if MODE >= STANDARD
+#if MODE == STANDARD
         if (c2 == '.') {
             c3 = get();
             if (c3 == '.') {
@@ -1285,21 +1270,21 @@ scan_op( c, out)
             openum = OP_1;
 #else   /* MODE == PRE_STANDARD */
         openum = OP_1;
-#endif  /* MODE == PRE_STANDARD */
+#endif
         break;
     case ':':
-#if MODE >= STANDARD
+#if MODE == STANDARD
         if (cplus && c2 == ':')                         /* ::       */
             /* openum = OP_2    */  ;
 #if OK_DIGRAPHS
-        else if (c2 == '>' && digraphs)             /* :> i.e. ]    */
-            openum = OP_RBRCK_D;
+        else if (mode == STD && c2 == '>' && digraphs)
+            openum = OP_RBRCK_D;                    /* :> i.e. ]    */
 #endif
         else                                            /* :        */
             openum = OP_COL;
 #else   /* MODE == PRE_STANDARD */
         openum = OP_COL;
-#endif  /* MODE == PRE_STANDARD */
+#endif
         break;
     default:                                        /* Who knows ?  */
 #if DEBUG
@@ -1311,10 +1296,10 @@ scan_op( c, out)
     }
 
     switch (openum) {
-#if MODE >= STANDARD
+#if MODE == STANDARD
     case OP_STR:
 #if MODE == STANDARD && OK_DIGRAPHS
-        if (c == '%')   break;      /* %:   */
+        if (mode == STD && c == '%')    break;              /* %:   */
 #endif
 #endif
     case OP_1:
@@ -1346,11 +1331,12 @@ id_operator( name)
  * Check whether the name is identifier-like operator in C++.
  * Return the operator number if matched, return 0 if not matched.
  * Note: these identifiers are defined as macros in <iso646.h> in C95.
+ * This routine is never called in POST_STD mode.
  */
 {
     typedef struct  id_op {
-    const char *    name;
-    int             op_num;
+        const char *    name;
+        int             op_num;
     } ID_OP;
 
     ID_OP   id_ops[] = {
@@ -1379,7 +1365,7 @@ id_operator( name)
 }
 #endif  /* MODE == STANDARD */
 
-#if MODE >= STANDARD
+#if MODE == STANDARD
 #undef  get
 #undef  unget
 #endif
@@ -1409,8 +1395,8 @@ get()
     if ((file = infile) == NULL)
         return  CHAR_EOF;                   /* End of all input     */
 
-#if MODE == POST_STANDARD
-    if (file->fp) {                         /* In a source file     */
+#if MODE == STANDARD
+    if (mode == POST_STD && file->fp) {     /* In a source file     */
         switch (insert_sep) {
         case NO_SEP:
             break;
@@ -1445,12 +1431,12 @@ get()
      * Read a character from the current input logical line or macro.
      * At EOS, either finish the current macro (freeing temporary storage)
      * or get another logical line by parse_line().
-     * At EOF, exit the current file (#include) or, at EOF from the cpp input
+     * At EOF, exit the current file (#include) or, at EOF from the MCPP input
      * file, return CHAR_EOF to finish processing.
      * The character is converted to int with no sign-extension.
      */
     if ((c = (*file->bptr++ & UCHARMAX)) != EOS) {
-#if MODE >= STANDARD
+#if MODE == STANDARD
         return  c;                          /* Just a character     */
 #else   /* MODE == PRE_STANDARD */
         if (! in_string && c == '\\' && *file->bptr == '\n'
@@ -1500,7 +1486,7 @@ get()
         line = infile->line;                /* Reset line number    */
         inc_dirp = infile->dirp;            /* Includer's directory */
         include_nest--;
-        wrong_line = TRUE;                  /* Need a #line now     */
+        sharp();                            /* Need a #line now     */
     }
     free( file);                            /* Free file space      */
     return  get();                          /* Get from the parent  */
@@ -1553,25 +1539,20 @@ parse_line()
                     free( temp);            /* End of file with un- */
                     return  NULL;           /*   terminated comment */
                 }
-#if ! TOP_SPACE
-#if COMMENT_INVISIBLE
-                if (temp < tp && (*(tp - 1) != ' ' && *(tp - 1) != COM_SEP))
+#if MODE == STANDARD
+                if (mode == POST_STD && (temp < tp && *(tp - 1) != ' '))
+                    *tp++ = ' ';            /* Skip line top spaces */
+                else if (mode == STD && (temp == tp || *(tp - 1) != ' '))
+                    *tp++ = ' ';            /* Squeeze white spaces */
+#else
+                if (mode == OLD_PREP && (temp == tp
+                        || (*(tp - 1) != ' ' && *(tp - 1) != COM_SEP)))
                     *tp++ = COM_SEP;        /* Convert to magic character   */
-#else   /* ! COMMENT_INVISIBLE  */
-                if (temp < tp && *(tp - 1) != ' ')  /* Skip line top spaces */
-                    *tp++ = ' ';
+                else if (mode == KR && (temp == tp || *(tp - 1) != ' '))
+                    *tp++ = ' ';            /* Squeeze white spaces */
 #endif
-#else   /* TOP_SPACE    */
-#if COMMENT_INVISIBLE
-                if (temp == tp || (*(tp - 1) != ' ' && *(tp - 1) != COM_SEP))
-                    *tp++ = COM_SEP;        /* Convert to magic character   */
-#else   /* ! COMMENT_INVISIBLE  */
-                if (temp == tp || *(tp - 1) != ' ') /* Squeeze white spaces */
-                    *tp++ = ' ';
-#endif
-#endif  /* TOP_SPACE    */
                 break;
-#if MODE >= STANDARD
+#if MODE == STANDARD
             case '/':
                 /* Comment when C++ or __STDC_VERSION__ >= 199901L      */
                 /* Need not to convert to a space because '\n' follows  */
@@ -1604,24 +1585,22 @@ parse_line()
                     , NULLST, (long) c, NULLST);
         case '\t':                          /* Horizontal space     */
         case ' ':
-#if ! TOP_SPACE
-            if (temp < tp && *(tp - 1) != ' ')      /* Skip line top spaces */
+#if MODE == STANDARD
+            if (mode == POST_STD && temp < tp && *(tp - 1) != ' ')
+                *tp++ = ' ';                /* Skip line top spaces */
+            else if (mode == STD && (temp == tp || *(tp - 1) != ' '))
                 *tp++ = ' ';                /* Squeeze white spaces */
-#else   /* TOP_SPACE    */
-#if COMMENT_INVISIBLE
-            if (temp < tp && *(tp - 1) == COM_SEP)
+#else
+            if (mode == OLD_PREP && temp < tp && *(tp - 1) == COM_SEP)
                 *(tp - 1) = ' ';    /* Squeeze COM_SEP with spaces  */
-            else
-#endif
-        /* ! COMMENT_INVISIBLE  */
-            if (temp == tp || *(tp - 1) != ' ')
+            else if (temp == tp || *(tp - 1) != ' ')
                 *tp++ = ' ';                /* Squeeze white spaces */
-#endif  /* TOP_SPACE    */
+#endif
             break;
         case '"':                           /* String literal       */
         case '\'':                          /* Character constant   */
             infile->bptr = sp;
-#if MODE >= STANDARD
+#if MODE == STANDARD
             tp = scan_quote( c, tp, limit, TRUE);
 #else
             in_string = TRUE;       /* Enable line splicing by scan_quote() */
@@ -1652,7 +1631,7 @@ parse_line()
         }
     }
 
-#if MODE >= STANDARD
+#if MODE == STANDARD
 end_line:
 #endif
     if (temp < tp && *(tp - 1) == ' ')
@@ -1662,22 +1641,14 @@ end_line:
     infile->bptr = strcpy( infile->buffer, temp);   /* Write back to buffer */
     free( temp);
     if (macro_line != 0 && macro_line != MACRO_ERROR) { /* Expanding macro  */
-#if TOP_SPACE
         temp = infile->buffer;
         if (*temp == ' ')
             temp++;
         if (*temp == '#'
 #if MODE == STANDARD
-                || (*temp == '%' && *(temp + 1) == ':')
+                    || (*temp == '%' && *(temp + 1) == ':')
 #endif
         )
-#else   /* ! TOP_SPACE  */
-        if (*(infile->buffer) == '#'
-#if MODE == STANDARD
-                || (*(infile->buffer) == '%' && *(infile->buffer + 1) == ':')
-#endif
-        )
-#endif  /* ! TOP_SPACE  */
             if (warn_level & 1)
                 cwarn(
     "Macro started at line %.0s%ld swallowed directive-like line"   /* _W1_ */
@@ -1752,10 +1723,10 @@ get_line( in_comment)
  * Get the next logical line from source file.
  */
 {
-#if MODE >= STANDARD && (OK_TRIGRAPHS || OK_DIGRAPHS)
+#if MODE == STANDARD && (OK_TRIGRAPHS || OK_DIGRAPHS)
     int     converted = FALSE;
 #endif
-#if MODE >= STANDARD
+#if MODE == STANDARD
     int     esc;                            /* Line ends with \     */
 #endif
     int     len;                            /* Line length - alpha  */
@@ -1769,7 +1740,7 @@ get_line( in_comment)
             != NULL) {
         /* Translation phase 1  */
         line++;                     /* Gotten next physical line    */
-#if MODE >= STANDARD
+#if MODE == STANDARD
         if (line == line_limit + 1 && (warn_level & 1))
             cwarn( "Line number %.0s\"%ld\" got beyond range"       /* _W1_ */
                     , NULLST, line, NULLST);
@@ -1796,15 +1767,15 @@ get_line( in_comment)
         if (tflag)
             converted = cnv_trigraph( ptr);
 #endif
-#if MODE == POST_STANDARD && OK_DIGRAPHS
-        if (digraphs)
+#if MODE == STANDARD && OK_DIGRAPHS
+        if (mode == POST_STD && digraphs)
             converted += cnv_digraph( ptr);
 #endif
-#if MODE >= STANDARD && (OK_TRIGRAPHS || OK_DIGRAPHS)
+#if MODE == STANDARD && (OK_TRIGRAPHS || OK_DIGRAPHS)
         if (converted)
             len = strlen( ptr);
 #endif
-#if MODE >= STANDARD
+#if MODE == STANDARD
         /* Translation phase 2  */
         len -= 2;
         if (len >= 0) {
@@ -1818,12 +1789,12 @@ get_line( in_comment)
                 continue;
             }
         }
-#endif  /* MODE >= STANDARD */
-#if MODE >= STANDARD && NBUFF-2 > SLEN90MIN
+#endif  /* MODE == STANDARD */
+#if MODE == STANDARD && NBUFF-2 > SLEN90MIN
         if (ptr - infile->buffer + len + 2 > str_len_min + 1
                 && (warn_level & 4))        /* +1 for '\n'          */
             cwarn( "Logical source line longer than %.0s%ld bytes"  /* _W4_ */
-                    , NULLST, (long) str_len_min, NULLST);
+                    , NULLST, str_len_min, NULLST);
 #endif
         return  infile->bptr = infile->buffer;      /* Logical line */
     }
@@ -1885,7 +1856,7 @@ cnv_trigraph( in)
 
 #endif  /* MODE == STANDARD && OK_TRIGRAPHS */
 
-#if MODE == POST_STANDARD && OK_DIGRAPHS
+#if MODE == STANDARD && OK_DIGRAPHS
 
 int
 #if PROTO
@@ -1896,6 +1867,7 @@ cnv_digraph( in)
 #endif
 /*
  * Perform in-place digraph replacement on a physical line.
+ * Called only in POST_STD mode.
  */
 {
     int     count = 0;
@@ -1937,7 +1909,7 @@ cnv_digraph( in)
     return  count;
 }
 
-#endif  /* MODE == POST_STANDARD && OK_DIGRAPHS */
+#endif  /* MODE == STANDARD && OK_DIGRAPHS */
 
 #if BSL_IN_MBCHAR
 static int
@@ -1990,13 +1962,12 @@ at_eof( in_comment)
     const char * const  input
             = infile->parent ? "file" : "input";        /* _E_ _W1_ */
     const char * const  no_newline
-            = "no newline, skipped the line";           /* _E_      */
+            = "no newline, skipped the line";           /* _E_ _W1_ */
     const char * const  unterm_com
-            = "unterminated comment, skipped the line";         /* _E_      */
-#if MODE >= STANDARD
-    const char * const  backsl = "\\, skipped the line";        /* _E_      */
-#endif
-#if MODE < STANDARD
+            = "unterminated comment, skipped the line";         /* _E_ _W1_ */
+#if MODE == STANDARD
+    const char * const  backsl = "\\, skipped the line";        /* _E_ _W1_ */
+#else
     const char * const  unterm_asm_format
 = "End of %s with unterminated #asm block started at line %ld"; /* _E_ _W1_ */
 #endif
@@ -2009,70 +1980,59 @@ at_eof( in_comment)
         line++;
         *++cp = '\n';                   /* For diagnostic message   */
         *++cp = EOS;
+#if MODE == STANDARD
         cerror( format, input, 0L, no_newline);
+#else
+        if (mode != OLD_PREP && (warn_level & 1))
+            cwarn( format, input, 0L, no_newline);
+#endif
     }
 
-#if MODE >= STANDARD
+#if MODE == STANDARD
     if (infile->buffer < infile->bptr)
         cerror( format, input, 0L, backsl);
 #endif
 
     if (in_comment)
+#if MODE == STANDARD
         cerror( format, input, 0L, unterm_com);
+#else
+        if (mode != OLD_PREP && (warn_level & 1))
+            cwarn( format, input, 0L, no_newline);
+#endif
 
     if (infile->initif < ifptr) {
         ifp = infile->initif + 1;
-#if MODE >= STANDARD
+#if MODE == STANDARD
         cerror( unterm_if_format, input, ifp->ifline, NULLST);
         ifptr = infile->initif;             /* Clear information of */
         compiling = ifptr->stat;            /*   erroneous grouping */
 #else   /* MODE == PRE_STANDARD */
-#if OLD_PREPROCESSOR
-        if (warn_level & 1)
-            cwarn( unterm_if_format, input, ifp->ifline, NULLST);
-#else
-        if (infile->parent == NULL)
-            cerror( unterm_if_format, input, ifp->ifline, NULLST);
-        else if (warn_level & 1)
+        if (mode != OLD_PREP && (warn_level & 1))
             cwarn( unterm_if_format, input, ifp->ifline, NULLST);
 #endif
-#endif  /* MODE == PRE_STANDARD */
     }
 
     if (macro_line != 0 && macro_line != MACRO_ERROR
 #if MODE == STANDARD
-                && in_getarg
+                && mode == STD && in_getarg
 #endif
             ) {
-#if MODE >= STANDARD
+#if MODE == STANDARD
         cerror( unterm_macro_format, input, macro_line, NULLST);
         macro_line = MACRO_ERROR;
-#else   /* MODE == PRE_STANDARD */
-#if OLD_PREPROCESSOR
+#else
         if (warn_level & 1)
             cwarn( unterm_macro_format, input, macro_line, NULLST);
-#else
-        if (infile->parent == NULL)
-            cerror( unterm_macro_format, input, macro_line, NULLST);
-        else if (warn_level & 1)
-            cwarn( unterm_macro_format, input, macro_line, NULLST);
 #endif
-#endif  /* MODE == PRE_STANDARD */
     }
 
 #if MODE == PRE_STANDARD
     if (in_asm) {
-#if OLD_PREPROCESSOR
-        if (warn_level & 1)
+        if (mode != OLD_PREP && (warn_level & 1))
             cwarn( unterm_asm_format, input, in_asm, NULLST);
-#else
-        if (infile->parent == NULL)
-            cerror( unterm_asm_format, input, in_asm, NULLST);
-        else if (warn_level & 1)
-            cwarn( unterm_asm_format, input, in_asm, NULLST);
-#endif
     }
-#endif  /* MODE == PRE_STANDARD */
+#endif
 }
 
 void
@@ -2089,8 +2049,8 @@ unget()
  */
 {
     if (infile != NULL) {
-#if MODE == POST_STANDARD
-        if (infile->fp) {
+#if MODE == STANDARD
+        if (mode == POST_STD && infile->fp) {
             switch (insert_sep) {
             case INSERTED_SEP:  /* Have just read an inserted separator */
                 insert_sep = INSERT_SEP;
@@ -2105,7 +2065,7 @@ unget()
                 break;
             }
         }
-#endif  /* MODE == POST_STANDARD    */
+#endif  /* MODE == STANDARD */
         --infile->bptr;
 #if DEBUG
         if (infile->bptr < infile->buffer)      /* Shouldn't happen */
@@ -2216,7 +2176,7 @@ char *
     char *      result;
 
     if ((result = (char *) malloc( size)) == NULL) {
- #if DEBUG
+#if DEBUG
         if (debug & MEMORY)
             print_heap();
 #endif
@@ -2239,7 +2199,9 @@ char *
 {
     char *      result;
 
-    if ((result = (char *) realloc( ptr, size)) == NULL) {
+    if ((result = (char *) realloc( ptr, size)) == NULL && size != 0) {
+        /* 'size != 0' is necessary to cope with some               */
+        /*   implementation of realloc( ptr, 0) which returns NULL. */
 #if DEBUG
         if (debug & MEMORY)
             print_heap();
@@ -2249,7 +2211,7 @@ char *
     return  result;
 }
 
-#if COMMENT_INVISIBLE
+#if MODE == PRE_STANDARD
 
 static void
 #if PROTO
@@ -2261,6 +2223,7 @@ put_line( out, fp)
 #endif
 /*
  * Put out a logical source line.
+ * This routine is called only in OLD_PREP mode.
  */
 {
     register int    c;
@@ -2271,7 +2234,7 @@ put_line( out, fp)
     }
 }
 
-#endif  /* COMMENT_INVISIBLE    */
+#endif  /* MODE == PRE_STANDARD */
 
 static void
 #if PROTO
@@ -2316,21 +2279,24 @@ do_msg( severity, format, arg1, arg2, arg3)
 
         while ((c = *sp++) != EOS) {
             switch (c) {
-#if MODE >= STANDARD || COMMENT_INVISIBLE
 #if MODE == STANDARD
             case RT_END:
             case TOK_SEP:
-#endif
-#if COMMENT_INVISIBLE
-            case COM_SEP:
-#endif
-#if MODE >= STANDARD
+            case IN_SRC:
+                if (mode == POST_STD) {
+                    *tp++ = c;
+                    break;
+                }                       /* Else fall through        */
             case CAT:
             case ST_QUOTE:
             case DEF_MAGIC:
+                break;
+#else
+            case COM_SEP:
+                if (mode == OLD_PREP)
+                    break;              /* Skip magic characters    */
+                /* Else illegal control character, convert to a space       */
 #endif
-                break;                  /* Skip magic characters    */
-#endif  /* MODE >= STANDARD || COMMENT_INVISIBLE   */
             case '\n':
                 *tp++ = ' ';            /* Convert '\n' to a space  */
                 break;
@@ -2359,11 +2325,15 @@ do_msg( severity, format, arg1, arg2, arg3)
 
     file = infile;
     if (file != NULL && file->fp != NULL) {
-#if ! COMMENT_INVISIBLE
+#if MODE == STANDARD
         fprintf( fp_err, "    %s", file->buffer);   /* Current source line  */
 #else
-        fputs( "    ", fp_err);
-        put_line( file->buffer, fp_err);
+        if (mode == OLD_PREP) {
+            fputs( "    ", fp_err);
+            put_line( file->buffer, fp_err);
+        } else {
+            fprintf( fp_err, "    %s", file->buffer);
+        }
 #endif
         file = file->parent;
     }
@@ -2373,21 +2343,26 @@ do_msg( severity, format, arg1, arg2, arg3)
             if (file->filename) {
                 DEFBUF *    defp;
                 defp = look_id( file->filename);
-                dump_a_def( "    in macro", defp, FALSE, FALSE, fp_err);
+                dump_a_def( "    in macro", defp, FALSE, FALSE, TRUE, fp_err);
             }
         } else {                            /* Source file          */
             if (file->buffer[ 0] == '\0')
                 strcpy( file->buffer, "\n");
-#if ! COMMENT_INVISIBLE
+#if MODE == STANDARD
             fprintf( fp_err, "    from %s%s: %ld:    %s",
                 *(file->dirp),              /* Include directory    */
                 file->filename,             /* Current file name    */
                 file->line,                 /* Current line number  */
                 file->buffer);              /* The source line      */
 #else
-            fprintf( fp_err, "    from %s%s: %ld:    ",
-                *(file->dirp), file->filename, file->line);
-            put_line( file->buffer, fp_err);
+            if (mode == OLD_PREP) {
+                fprintf( fp_err, "    from %s%s: %ld:    ",
+                    *(file->dirp), file->filename, file->line);
+                put_line( file->buffer, fp_err);
+            } else {
+                fprintf( fp_err, "    from %s%s: %ld:    %s",
+                    *(file->dirp), file->filename, file->line, file->buffer);
+            }
 #endif
         }
         file = file->parent;
@@ -2488,17 +2463,6 @@ dump_string( why, text)
             fprintf( fp_debug, "<%d>", c);
             break;
 #if MODE == STANDARD
-        case TOK_SEP:
-            chr = "<TSEP>";
-            break;
-#else   /* MODE != STANDARD */
-#if COMMENT_INVISIBLE
-        case COM_SEP:
-            chr = "<CSEP>";
-            break;
-#endif
-#endif  /* MODE != STANDARD */
-#if MODE >= STANDARD
         case DEF_MAGIC:
             chr = "<MAGIC>";
             break;
@@ -2508,12 +2472,37 @@ dump_string( why, text)
         case ST_QUOTE:
             chr = "#";
             break;
-#endif
-#if MODE == STANDARD
-        case RT_END:
-            chr = "<RT_END>";
+        default:
+            if (mode == STD) {
+                switch( c) {
+                case TOK_SEP:
+                    chr = "<TSEP>";
+                    break;
+                case RT_END:
+                    chr = "<RT_END>";
+                    break;
+                case IN_SRC:
+                    chr = "<SRC>";
+                    break;
+                }
+            }
+            if (chr)
+                break;
+            if (c < ' ')
+                fprintf( fp_debug, "<^%c>", c + '@');
+            else
+                fputc( c, fp_debug);
             break;
-#endif
+        }
+
+        if (chr)
+            fputs( chr, fp_debug);
+#else
+        case COM_SEP:
+            if (mode == OLD_PREP) {
+                chr = "<CSEP>";
+                break;
+            }       /* Else fall through    */
         default:
             if (c < ' ')
                 fprintf( fp_debug, "<^%c>", c + '@');
@@ -2524,6 +2513,7 @@ dump_string( why, text)
 
         if (chr)
             fputs( chr, fp_debug);
+#endif
     }
 
     fputc( '\n', fp_debug);

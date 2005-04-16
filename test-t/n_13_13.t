@@ -3,10 +3,12 @@
 #define ZERO_TOKEN
 #define MACRO_0         0
 #define MACRO_1         1
+#if ! __cplusplus
 #define and             &&
 #define or              ||
 #define not_eq          !=
 #define bitor           |
+#endif
 
 /* 13.13:   With macros expanding to operators. */
 /*  Valid block */

@@ -38,30 +38,27 @@ POST_UNINSTALL = :
 host_triplet = @host@
 @MAINTAINER_MODE_TRUE@am__append_1 = mcpp_prestd mcpp_old mcpp_poststd
 ACLOCAL = @ACLOCAL@
-AMDEP_FALSE = @AMDEP_FALSE@
-AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
-CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
-DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+GNUC_FALSE = @GNUC_FALSE@
+GNUC_TRUE = @GNUC_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -90,13 +87,7 @@ VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_STRIP = @ac_ct_STRIP@
-am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
-am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
-am__include = @am__include@
 am__leading_dot = @am__leading_dot@
-am__quote = @am__quote@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -107,6 +98,7 @@ cpp_call = @cpp_call@
 datadir = @datadir@
 exec_prefix = @exec_prefix@
 gcc_maj_ver = @gcc_maj_ver@
+gcc_min_ver = @gcc_min_ver@
 gcc_path = @gcc_path@
 gcc_testsuite_dir = @gcc_testsuite_dir@
 host = @host@
@@ -114,6 +106,7 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+inc_dir = @inc_dir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -134,16 +127,14 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 
 bin_PROGRAMS = mcpp $(am__append_1)
-mcpp_SOURCES = system.H configed.H internal.H \
-	main.c control.c eval.c expand.c support.c system.c mbchar.c lib.c
-
+mcpp_SOURCES = system.H configed.H internal.H main.c control.c eval.c expand.c support.c system.c mbchar.c lib.c
 man_MANS = mcpp.1
 EXTRA_DIST = $(man_MANS)
 @MAINTAINER_MODE_TRUE@mcpp_poststd_SOURCES = $(mcpp_SOURCES)
 @MAINTAINER_MODE_TRUE@mcpp_poststd_CPPFLAGS = -DMODE=POST_STANDARD
-@MAINTAINER_MODE_TRUE@mcpp_prestd_SOURCES = $(mcpp_SOURCES)
-@MAINTAINER_MODE_TRUE@mcpp_old_SOURCES = $(mcpp_SOURCES)
+@MAINTAINER_MODE_TRUE@mcpp_prestd_SOURCES = $(mcpp_std_SOURCES)
 @MAINTAINER_MODE_TRUE@mcpp_prestd_CPPFLAGS = -DMODE=PRE_STANDARD
+@MAINTAINER_MODE_TRUE@mcpp_old_SOURCES = $(mcpp_SOURCES)
 @MAINTAINER_MODE_TRUE@mcpp_old_CPPFLAGS = -DMODE=PRE_STANDARD -DOLD_PREPROCESSOR
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -185,12 +176,7 @@ mcpp_poststd_OBJECTS = $(am_mcpp_poststd_OBJECTS)
 mcpp_poststd_LDADD = $(LDADD)
 mcpp_poststd_DEPENDENCIES =
 mcpp_poststd_LDFLAGS =
-am__mcpp_prestd_SOURCES_DIST = system.H configed.H internal.H main.c \
-	control.c eval.c expand.c support.c system.c mbchar.c lib.c
-am__objects_3 = mcpp_prestd-main.$(OBJEXT) mcpp_prestd-control.$(OBJEXT) \
-	mcpp_prestd-eval.$(OBJEXT) mcpp_prestd-expand.$(OBJEXT) \
-	mcpp_prestd-support.$(OBJEXT) mcpp_prestd-system.$(OBJEXT) \
-	mcpp_prestd-mbchar.$(OBJEXT) mcpp_prestd-lib.$(OBJEXT)
+am__mcpp_prestd_SOURCES_DIST =
 @MAINTAINER_MODE_TRUE@am_mcpp_prestd_OBJECTS = $(am__objects_3)
 mcpp_prestd_OBJECTS = $(am_mcpp_prestd_OBJECTS)
 mcpp_prestd_LDADD = $(LDADD)
@@ -198,36 +184,8 @@ mcpp_prestd_DEPENDENCIES =
 mcpp_prestd_LDFLAGS =
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I.
-depcomp = $(SHELL) $(top_srcdir)/config/depcomp
-am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/control.Po ./$(DEPDIR)/eval.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/expand.Po ./$(DEPDIR)/lib.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/main.Po ./$(DEPDIR)/mbchar.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_old-control.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_old-eval.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_old-expand.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_old-lib.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_old-main.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_old-mbchar.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_old-support.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_old-system.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_poststd-control.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_poststd-eval.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_poststd-expand.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_poststd-lib.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_poststd-main.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_poststd-mbchar.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_poststd-support.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_poststd-system.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_prestd-control.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_prestd-eval.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_prestd-expand.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_prestd-lib.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_prestd-main.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_prestd-mbchar.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_prestd-support.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/mcpp_prestd-system.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/support.Po ./$(DEPDIR)/system.Po
+depcomp =
+am__depfiles_maybe =
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -248,7 +206,7 @@ all: config.h
 .SUFFIXES: .c .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  src/Makefile
+	  $(AUTOMAKE) --gnu  src/Makefile
 Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
 
@@ -311,588 +269,107 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/control.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/eval.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/expand.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lib.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mbchar.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_old-control.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_old-eval.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_old-expand.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_old-lib.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_old-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_old-mbchar.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_old-support.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_old-system.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_poststd-control.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_poststd-eval.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_poststd-expand.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_poststd-lib.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_poststd-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_poststd-mbchar.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_poststd-support.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_poststd-system.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_prestd-control.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_prestd-eval.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_prestd-expand.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_prestd-lib.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_prestd-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_prestd-mbchar.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_prestd-support.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mcpp_prestd-system.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/support.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/system.Po@am__quote@
-
 .c.o:
-@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `test -f '$<' || echo '$(srcdir)/'`$<
+	$(COMPILE) -c `test -f '$<' || echo '$(srcdir)/'`$<
 
 .c.obj:
-@am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o $@ `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
+	$(COMPILE) -c `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
 
 mcpp_old-main.o: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-main.o -MD -MP -MF "$(DEPDIR)/mcpp_old-main.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-main.Tpo" "$(DEPDIR)/mcpp_old-main.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-main.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='mcpp_old-main.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-main.Po' tmpdepfile='$(DEPDIR)/mcpp_old-main.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
 
 mcpp_old-main.obj: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-main.obj -MD -MP -MF "$(DEPDIR)/mcpp_old-main.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-main.Tpo" "$(DEPDIR)/mcpp_old-main.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-main.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='mcpp_old-main.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-main.Po' tmpdepfile='$(DEPDIR)/mcpp_old-main.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
 
 mcpp_old-control.o: control.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-control.o -MD -MP -MF "$(DEPDIR)/mcpp_old-control.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-control.o `test -f 'control.c' || echo '$(srcdir)/'`control.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-control.Tpo" "$(DEPDIR)/mcpp_old-control.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-control.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='control.c' object='mcpp_old-control.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-control.Po' tmpdepfile='$(DEPDIR)/mcpp_old-control.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-control.o `test -f 'control.c' || echo '$(srcdir)/'`control.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-control.o `test -f 'control.c' || echo '$(srcdir)/'`control.c
 
 mcpp_old-control.obj: control.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-control.obj -MD -MP -MF "$(DEPDIR)/mcpp_old-control.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-control.obj `if test -f 'control.c'; then $(CYGPATH_W) 'control.c'; else $(CYGPATH_W) '$(srcdir)/control.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-control.Tpo" "$(DEPDIR)/mcpp_old-control.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-control.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='control.c' object='mcpp_old-control.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-control.Po' tmpdepfile='$(DEPDIR)/mcpp_old-control.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-control.obj `if test -f 'control.c'; then $(CYGPATH_W) 'control.c'; else $(CYGPATH_W) '$(srcdir)/control.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-control.obj `if test -f 'control.c'; then $(CYGPATH_W) 'control.c'; else $(CYGPATH_W) '$(srcdir)/control.c'; fi`
 
 mcpp_old-eval.o: eval.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-eval.o -MD -MP -MF "$(DEPDIR)/mcpp_old-eval.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-eval.o `test -f 'eval.c' || echo '$(srcdir)/'`eval.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-eval.Tpo" "$(DEPDIR)/mcpp_old-eval.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-eval.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='eval.c' object='mcpp_old-eval.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-eval.Po' tmpdepfile='$(DEPDIR)/mcpp_old-eval.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-eval.o `test -f 'eval.c' || echo '$(srcdir)/'`eval.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-eval.o `test -f 'eval.c' || echo '$(srcdir)/'`eval.c
 
 mcpp_old-eval.obj: eval.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-eval.obj -MD -MP -MF "$(DEPDIR)/mcpp_old-eval.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-eval.obj `if test -f 'eval.c'; then $(CYGPATH_W) 'eval.c'; else $(CYGPATH_W) '$(srcdir)/eval.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-eval.Tpo" "$(DEPDIR)/mcpp_old-eval.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-eval.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='eval.c' object='mcpp_old-eval.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-eval.Po' tmpdepfile='$(DEPDIR)/mcpp_old-eval.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-eval.obj `if test -f 'eval.c'; then $(CYGPATH_W) 'eval.c'; else $(CYGPATH_W) '$(srcdir)/eval.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-eval.obj `if test -f 'eval.c'; then $(CYGPATH_W) 'eval.c'; else $(CYGPATH_W) '$(srcdir)/eval.c'; fi`
 
 mcpp_old-expand.o: expand.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-expand.o -MD -MP -MF "$(DEPDIR)/mcpp_old-expand.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-expand.o `test -f 'expand.c' || echo '$(srcdir)/'`expand.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-expand.Tpo" "$(DEPDIR)/mcpp_old-expand.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-expand.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='expand.c' object='mcpp_old-expand.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-expand.Po' tmpdepfile='$(DEPDIR)/mcpp_old-expand.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-expand.o `test -f 'expand.c' || echo '$(srcdir)/'`expand.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-expand.o `test -f 'expand.c' || echo '$(srcdir)/'`expand.c
 
 mcpp_old-expand.obj: expand.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-expand.obj -MD -MP -MF "$(DEPDIR)/mcpp_old-expand.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-expand.obj `if test -f 'expand.c'; then $(CYGPATH_W) 'expand.c'; else $(CYGPATH_W) '$(srcdir)/expand.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-expand.Tpo" "$(DEPDIR)/mcpp_old-expand.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-expand.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='expand.c' object='mcpp_old-expand.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-expand.Po' tmpdepfile='$(DEPDIR)/mcpp_old-expand.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-expand.obj `if test -f 'expand.c'; then $(CYGPATH_W) 'expand.c'; else $(CYGPATH_W) '$(srcdir)/expand.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-expand.obj `if test -f 'expand.c'; then $(CYGPATH_W) 'expand.c'; else $(CYGPATH_W) '$(srcdir)/expand.c'; fi`
 
 mcpp_old-support.o: support.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-support.o -MD -MP -MF "$(DEPDIR)/mcpp_old-support.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-support.o `test -f 'support.c' || echo '$(srcdir)/'`support.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-support.Tpo" "$(DEPDIR)/mcpp_old-support.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-support.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='support.c' object='mcpp_old-support.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-support.Po' tmpdepfile='$(DEPDIR)/mcpp_old-support.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-support.o `test -f 'support.c' || echo '$(srcdir)/'`support.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-support.o `test -f 'support.c' || echo '$(srcdir)/'`support.c
 
 mcpp_old-support.obj: support.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-support.obj -MD -MP -MF "$(DEPDIR)/mcpp_old-support.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-support.obj `if test -f 'support.c'; then $(CYGPATH_W) 'support.c'; else $(CYGPATH_W) '$(srcdir)/support.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-support.Tpo" "$(DEPDIR)/mcpp_old-support.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-support.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='support.c' object='mcpp_old-support.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-support.Po' tmpdepfile='$(DEPDIR)/mcpp_old-support.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-support.obj `if test -f 'support.c'; then $(CYGPATH_W) 'support.c'; else $(CYGPATH_W) '$(srcdir)/support.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-support.obj `if test -f 'support.c'; then $(CYGPATH_W) 'support.c'; else $(CYGPATH_W) '$(srcdir)/support.c'; fi`
 
 mcpp_old-system.o: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-system.o -MD -MP -MF "$(DEPDIR)/mcpp_old-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-system.Tpo" "$(DEPDIR)/mcpp_old-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='mcpp_old-system.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-system.Po' tmpdepfile='$(DEPDIR)/mcpp_old-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c
 
 mcpp_old-system.obj: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-system.obj -MD -MP -MF "$(DEPDIR)/mcpp_old-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-system.Tpo" "$(DEPDIR)/mcpp_old-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='mcpp_old-system.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-system.Po' tmpdepfile='$(DEPDIR)/mcpp_old-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
 
 mcpp_old-mbchar.o: mbchar.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-mbchar.o -MD -MP -MF "$(DEPDIR)/mcpp_old-mbchar.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-mbchar.o `test -f 'mbchar.c' || echo '$(srcdir)/'`mbchar.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-mbchar.Tpo" "$(DEPDIR)/mcpp_old-mbchar.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-mbchar.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mbchar.c' object='mcpp_old-mbchar.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-mbchar.Po' tmpdepfile='$(DEPDIR)/mcpp_old-mbchar.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-mbchar.o `test -f 'mbchar.c' || echo '$(srcdir)/'`mbchar.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-mbchar.o `test -f 'mbchar.c' || echo '$(srcdir)/'`mbchar.c
 
 mcpp_old-mbchar.obj: mbchar.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-mbchar.obj -MD -MP -MF "$(DEPDIR)/mcpp_old-mbchar.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-mbchar.obj `if test -f 'mbchar.c'; then $(CYGPATH_W) 'mbchar.c'; else $(CYGPATH_W) '$(srcdir)/mbchar.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-mbchar.Tpo" "$(DEPDIR)/mcpp_old-mbchar.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-mbchar.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mbchar.c' object='mcpp_old-mbchar.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-mbchar.Po' tmpdepfile='$(DEPDIR)/mcpp_old-mbchar.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-mbchar.obj `if test -f 'mbchar.c'; then $(CYGPATH_W) 'mbchar.c'; else $(CYGPATH_W) '$(srcdir)/mbchar.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-mbchar.obj `if test -f 'mbchar.c'; then $(CYGPATH_W) 'mbchar.c'; else $(CYGPATH_W) '$(srcdir)/mbchar.c'; fi`
 
 mcpp_old-lib.o: lib.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-lib.o -MD -MP -MF "$(DEPDIR)/mcpp_old-lib.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-lib.o `test -f 'lib.c' || echo '$(srcdir)/'`lib.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-lib.Tpo" "$(DEPDIR)/mcpp_old-lib.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-lib.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lib.c' object='mcpp_old-lib.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-lib.Po' tmpdepfile='$(DEPDIR)/mcpp_old-lib.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-lib.o `test -f 'lib.c' || echo '$(srcdir)/'`lib.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-lib.o `test -f 'lib.c' || echo '$(srcdir)/'`lib.c
 
 mcpp_old-lib.obj: lib.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_old-lib.obj -MD -MP -MF "$(DEPDIR)/mcpp_old-lib.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_old-lib.obj `if test -f 'lib.c'; then $(CYGPATH_W) 'lib.c'; else $(CYGPATH_W) '$(srcdir)/lib.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_old-lib.Tpo" "$(DEPDIR)/mcpp_old-lib.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_old-lib.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lib.c' object='mcpp_old-lib.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_old-lib.Po' tmpdepfile='$(DEPDIR)/mcpp_old-lib.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-lib.obj `if test -f 'lib.c'; then $(CYGPATH_W) 'lib.c'; else $(CYGPATH_W) '$(srcdir)/lib.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_old_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_old-lib.obj `if test -f 'lib.c'; then $(CYGPATH_W) 'lib.c'; else $(CYGPATH_W) '$(srcdir)/lib.c'; fi`
 
 mcpp_poststd-main.o: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-main.o -MD -MP -MF "$(DEPDIR)/mcpp_poststd-main.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-main.Tpo" "$(DEPDIR)/mcpp_poststd-main.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-main.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='mcpp_poststd-main.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-main.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-main.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
 
 mcpp_poststd-main.obj: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-main.obj -MD -MP -MF "$(DEPDIR)/mcpp_poststd-main.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-main.Tpo" "$(DEPDIR)/mcpp_poststd-main.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-main.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='mcpp_poststd-main.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-main.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-main.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
 
 mcpp_poststd-control.o: control.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-control.o -MD -MP -MF "$(DEPDIR)/mcpp_poststd-control.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-control.o `test -f 'control.c' || echo '$(srcdir)/'`control.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-control.Tpo" "$(DEPDIR)/mcpp_poststd-control.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-control.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='control.c' object='mcpp_poststd-control.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-control.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-control.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-control.o `test -f 'control.c' || echo '$(srcdir)/'`control.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-control.o `test -f 'control.c' || echo '$(srcdir)/'`control.c
 
 mcpp_poststd-control.obj: control.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-control.obj -MD -MP -MF "$(DEPDIR)/mcpp_poststd-control.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-control.obj `if test -f 'control.c'; then $(CYGPATH_W) 'control.c'; else $(CYGPATH_W) '$(srcdir)/control.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-control.Tpo" "$(DEPDIR)/mcpp_poststd-control.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-control.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='control.c' object='mcpp_poststd-control.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-control.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-control.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-control.obj `if test -f 'control.c'; then $(CYGPATH_W) 'control.c'; else $(CYGPATH_W) '$(srcdir)/control.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-control.obj `if test -f 'control.c'; then $(CYGPATH_W) 'control.c'; else $(CYGPATH_W) '$(srcdir)/control.c'; fi`
 
 mcpp_poststd-eval.o: eval.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-eval.o -MD -MP -MF "$(DEPDIR)/mcpp_poststd-eval.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-eval.o `test -f 'eval.c' || echo '$(srcdir)/'`eval.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-eval.Tpo" "$(DEPDIR)/mcpp_poststd-eval.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-eval.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='eval.c' object='mcpp_poststd-eval.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-eval.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-eval.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-eval.o `test -f 'eval.c' || echo '$(srcdir)/'`eval.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-eval.o `test -f 'eval.c' || echo '$(srcdir)/'`eval.c
 
 mcpp_poststd-eval.obj: eval.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-eval.obj -MD -MP -MF "$(DEPDIR)/mcpp_poststd-eval.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-eval.obj `if test -f 'eval.c'; then $(CYGPATH_W) 'eval.c'; else $(CYGPATH_W) '$(srcdir)/eval.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-eval.Tpo" "$(DEPDIR)/mcpp_poststd-eval.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-eval.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='eval.c' object='mcpp_poststd-eval.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-eval.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-eval.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-eval.obj `if test -f 'eval.c'; then $(CYGPATH_W) 'eval.c'; else $(CYGPATH_W) '$(srcdir)/eval.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-eval.obj `if test -f 'eval.c'; then $(CYGPATH_W) 'eval.c'; else $(CYGPATH_W) '$(srcdir)/eval.c'; fi`
 
 mcpp_poststd-expand.o: expand.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-expand.o -MD -MP -MF "$(DEPDIR)/mcpp_poststd-expand.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-expand.o `test -f 'expand.c' || echo '$(srcdir)/'`expand.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-expand.Tpo" "$(DEPDIR)/mcpp_poststd-expand.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-expand.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='expand.c' object='mcpp_poststd-expand.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-expand.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-expand.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-expand.o `test -f 'expand.c' || echo '$(srcdir)/'`expand.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-expand.o `test -f 'expand.c' || echo '$(srcdir)/'`expand.c
 
 mcpp_poststd-expand.obj: expand.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-expand.obj -MD -MP -MF "$(DEPDIR)/mcpp_poststd-expand.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-expand.obj `if test -f 'expand.c'; then $(CYGPATH_W) 'expand.c'; else $(CYGPATH_W) '$(srcdir)/expand.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-expand.Tpo" "$(DEPDIR)/mcpp_poststd-expand.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-expand.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='expand.c' object='mcpp_poststd-expand.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-expand.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-expand.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-expand.obj `if test -f 'expand.c'; then $(CYGPATH_W) 'expand.c'; else $(CYGPATH_W) '$(srcdir)/expand.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-expand.obj `if test -f 'expand.c'; then $(CYGPATH_W) 'expand.c'; else $(CYGPATH_W) '$(srcdir)/expand.c'; fi`
 
 mcpp_poststd-support.o: support.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-support.o -MD -MP -MF "$(DEPDIR)/mcpp_poststd-support.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-support.o `test -f 'support.c' || echo '$(srcdir)/'`support.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-support.Tpo" "$(DEPDIR)/mcpp_poststd-support.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-support.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='support.c' object='mcpp_poststd-support.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-support.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-support.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-support.o `test -f 'support.c' || echo '$(srcdir)/'`support.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-support.o `test -f 'support.c' || echo '$(srcdir)/'`support.c
 
 mcpp_poststd-support.obj: support.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-support.obj -MD -MP -MF "$(DEPDIR)/mcpp_poststd-support.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-support.obj `if test -f 'support.c'; then $(CYGPATH_W) 'support.c'; else $(CYGPATH_W) '$(srcdir)/support.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-support.Tpo" "$(DEPDIR)/mcpp_poststd-support.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-support.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='support.c' object='mcpp_poststd-support.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-support.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-support.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-support.obj `if test -f 'support.c'; then $(CYGPATH_W) 'support.c'; else $(CYGPATH_W) '$(srcdir)/support.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-support.obj `if test -f 'support.c'; then $(CYGPATH_W) 'support.c'; else $(CYGPATH_W) '$(srcdir)/support.c'; fi`
 
 mcpp_poststd-system.o: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-system.o -MD -MP -MF "$(DEPDIR)/mcpp_poststd-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-system.Tpo" "$(DEPDIR)/mcpp_poststd-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='mcpp_poststd-system.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-system.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c
 
 mcpp_poststd-system.obj: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-system.obj -MD -MP -MF "$(DEPDIR)/mcpp_poststd-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-system.Tpo" "$(DEPDIR)/mcpp_poststd-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='mcpp_poststd-system.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-system.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
 
 mcpp_poststd-mbchar.o: mbchar.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-mbchar.o -MD -MP -MF "$(DEPDIR)/mcpp_poststd-mbchar.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-mbchar.o `test -f 'mbchar.c' || echo '$(srcdir)/'`mbchar.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-mbchar.Tpo" "$(DEPDIR)/mcpp_poststd-mbchar.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-mbchar.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mbchar.c' object='mcpp_poststd-mbchar.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-mbchar.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-mbchar.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-mbchar.o `test -f 'mbchar.c' || echo '$(srcdir)/'`mbchar.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-mbchar.o `test -f 'mbchar.c' || echo '$(srcdir)/'`mbchar.c
 
 mcpp_poststd-mbchar.obj: mbchar.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-mbchar.obj -MD -MP -MF "$(DEPDIR)/mcpp_poststd-mbchar.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-mbchar.obj `if test -f 'mbchar.c'; then $(CYGPATH_W) 'mbchar.c'; else $(CYGPATH_W) '$(srcdir)/mbchar.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-mbchar.Tpo" "$(DEPDIR)/mcpp_poststd-mbchar.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-mbchar.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mbchar.c' object='mcpp_poststd-mbchar.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-mbchar.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-mbchar.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-mbchar.obj `if test -f 'mbchar.c'; then $(CYGPATH_W) 'mbchar.c'; else $(CYGPATH_W) '$(srcdir)/mbchar.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-mbchar.obj `if test -f 'mbchar.c'; then $(CYGPATH_W) 'mbchar.c'; else $(CYGPATH_W) '$(srcdir)/mbchar.c'; fi`
 
 mcpp_poststd-lib.o: lib.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-lib.o -MD -MP -MF "$(DEPDIR)/mcpp_poststd-lib.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-lib.o `test -f 'lib.c' || echo '$(srcdir)/'`lib.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-lib.Tpo" "$(DEPDIR)/mcpp_poststd-lib.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-lib.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lib.c' object='mcpp_poststd-lib.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-lib.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-lib.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-lib.o `test -f 'lib.c' || echo '$(srcdir)/'`lib.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-lib.o `test -f 'lib.c' || echo '$(srcdir)/'`lib.c
 
 mcpp_poststd-lib.obj: lib.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_poststd-lib.obj -MD -MP -MF "$(DEPDIR)/mcpp_poststd-lib.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_poststd-lib.obj `if test -f 'lib.c'; then $(CYGPATH_W) 'lib.c'; else $(CYGPATH_W) '$(srcdir)/lib.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_poststd-lib.Tpo" "$(DEPDIR)/mcpp_poststd-lib.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_poststd-lib.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lib.c' object='mcpp_poststd-lib.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_poststd-lib.Po' tmpdepfile='$(DEPDIR)/mcpp_poststd-lib.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-lib.obj `if test -f 'lib.c'; then $(CYGPATH_W) 'lib.c'; else $(CYGPATH_W) '$(srcdir)/lib.c'; fi`
-
-mcpp_prestd-main.o: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-main.o -MD -MP -MF "$(DEPDIR)/mcpp_prestd-main.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-main.Tpo" "$(DEPDIR)/mcpp_prestd-main.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-main.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='mcpp_prestd-main.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-main.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-main.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
-
-mcpp_prestd-main.obj: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-main.obj -MD -MP -MF "$(DEPDIR)/mcpp_prestd-main.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-main.Tpo" "$(DEPDIR)/mcpp_prestd-main.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-main.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='mcpp_prestd-main.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-main.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-main.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
-
-mcpp_prestd-control.o: control.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-control.o -MD -MP -MF "$(DEPDIR)/mcpp_prestd-control.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-control.o `test -f 'control.c' || echo '$(srcdir)/'`control.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-control.Tpo" "$(DEPDIR)/mcpp_prestd-control.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-control.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='control.c' object='mcpp_prestd-control.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-control.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-control.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-control.o `test -f 'control.c' || echo '$(srcdir)/'`control.c
-
-mcpp_prestd-control.obj: control.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-control.obj -MD -MP -MF "$(DEPDIR)/mcpp_prestd-control.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-control.obj `if test -f 'control.c'; then $(CYGPATH_W) 'control.c'; else $(CYGPATH_W) '$(srcdir)/control.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-control.Tpo" "$(DEPDIR)/mcpp_prestd-control.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-control.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='control.c' object='mcpp_prestd-control.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-control.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-control.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-control.obj `if test -f 'control.c'; then $(CYGPATH_W) 'control.c'; else $(CYGPATH_W) '$(srcdir)/control.c'; fi`
-
-mcpp_prestd-eval.o: eval.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-eval.o -MD -MP -MF "$(DEPDIR)/mcpp_prestd-eval.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-eval.o `test -f 'eval.c' || echo '$(srcdir)/'`eval.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-eval.Tpo" "$(DEPDIR)/mcpp_prestd-eval.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-eval.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='eval.c' object='mcpp_prestd-eval.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-eval.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-eval.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-eval.o `test -f 'eval.c' || echo '$(srcdir)/'`eval.c
-
-mcpp_prestd-eval.obj: eval.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-eval.obj -MD -MP -MF "$(DEPDIR)/mcpp_prestd-eval.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-eval.obj `if test -f 'eval.c'; then $(CYGPATH_W) 'eval.c'; else $(CYGPATH_W) '$(srcdir)/eval.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-eval.Tpo" "$(DEPDIR)/mcpp_prestd-eval.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-eval.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='eval.c' object='mcpp_prestd-eval.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-eval.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-eval.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-eval.obj `if test -f 'eval.c'; then $(CYGPATH_W) 'eval.c'; else $(CYGPATH_W) '$(srcdir)/eval.c'; fi`
-
-mcpp_prestd-expand.o: expand.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-expand.o -MD -MP -MF "$(DEPDIR)/mcpp_prestd-expand.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-expand.o `test -f 'expand.c' || echo '$(srcdir)/'`expand.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-expand.Tpo" "$(DEPDIR)/mcpp_prestd-expand.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-expand.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='expand.c' object='mcpp_prestd-expand.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-expand.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-expand.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-expand.o `test -f 'expand.c' || echo '$(srcdir)/'`expand.c
-
-mcpp_prestd-expand.obj: expand.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-expand.obj -MD -MP -MF "$(DEPDIR)/mcpp_prestd-expand.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-expand.obj `if test -f 'expand.c'; then $(CYGPATH_W) 'expand.c'; else $(CYGPATH_W) '$(srcdir)/expand.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-expand.Tpo" "$(DEPDIR)/mcpp_prestd-expand.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-expand.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='expand.c' object='mcpp_prestd-expand.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-expand.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-expand.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-expand.obj `if test -f 'expand.c'; then $(CYGPATH_W) 'expand.c'; else $(CYGPATH_W) '$(srcdir)/expand.c'; fi`
-
-mcpp_prestd-support.o: support.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-support.o -MD -MP -MF "$(DEPDIR)/mcpp_prestd-support.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-support.o `test -f 'support.c' || echo '$(srcdir)/'`support.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-support.Tpo" "$(DEPDIR)/mcpp_prestd-support.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-support.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='support.c' object='mcpp_prestd-support.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-support.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-support.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-support.o `test -f 'support.c' || echo '$(srcdir)/'`support.c
-
-mcpp_prestd-support.obj: support.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-support.obj -MD -MP -MF "$(DEPDIR)/mcpp_prestd-support.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-support.obj `if test -f 'support.c'; then $(CYGPATH_W) 'support.c'; else $(CYGPATH_W) '$(srcdir)/support.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-support.Tpo" "$(DEPDIR)/mcpp_prestd-support.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-support.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='support.c' object='mcpp_prestd-support.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-support.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-support.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-support.obj `if test -f 'support.c'; then $(CYGPATH_W) 'support.c'; else $(CYGPATH_W) '$(srcdir)/support.c'; fi`
-
-mcpp_prestd-system.o: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-system.o -MD -MP -MF "$(DEPDIR)/mcpp_prestd-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-system.Tpo" "$(DEPDIR)/mcpp_prestd-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='mcpp_prestd-system.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-system.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-system.o `test -f 'system.c' || echo '$(srcdir)/'`system.c
-
-mcpp_prestd-system.obj: system.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-system.obj -MD -MP -MF "$(DEPDIR)/mcpp_prestd-system.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-system.Tpo" "$(DEPDIR)/mcpp_prestd-system.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-system.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='system.c' object='mcpp_prestd-system.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-system.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-system.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
-
-mcpp_prestd-mbchar.o: mbchar.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-mbchar.o -MD -MP -MF "$(DEPDIR)/mcpp_prestd-mbchar.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-mbchar.o `test -f 'mbchar.c' || echo '$(srcdir)/'`mbchar.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-mbchar.Tpo" "$(DEPDIR)/mcpp_prestd-mbchar.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-mbchar.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mbchar.c' object='mcpp_prestd-mbchar.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-mbchar.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-mbchar.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-mbchar.o `test -f 'mbchar.c' || echo '$(srcdir)/'`mbchar.c
-
-mcpp_prestd-mbchar.obj: mbchar.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-mbchar.obj -MD -MP -MF "$(DEPDIR)/mcpp_prestd-mbchar.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-mbchar.obj `if test -f 'mbchar.c'; then $(CYGPATH_W) 'mbchar.c'; else $(CYGPATH_W) '$(srcdir)/mbchar.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-mbchar.Tpo" "$(DEPDIR)/mcpp_prestd-mbchar.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-mbchar.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mbchar.c' object='mcpp_prestd-mbchar.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-mbchar.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-mbchar.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-mbchar.obj `if test -f 'mbchar.c'; then $(CYGPATH_W) 'mbchar.c'; else $(CYGPATH_W) '$(srcdir)/mbchar.c'; fi`
-
-mcpp_prestd-lib.o: lib.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-lib.o -MD -MP -MF "$(DEPDIR)/mcpp_prestd-lib.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-lib.o `test -f 'lib.c' || echo '$(srcdir)/'`lib.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-lib.Tpo" "$(DEPDIR)/mcpp_prestd-lib.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-lib.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lib.c' object='mcpp_prestd-lib.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-lib.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-lib.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-lib.o `test -f 'lib.c' || echo '$(srcdir)/'`lib.c
-
-mcpp_prestd-lib.obj: lib.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT mcpp_prestd-lib.obj -MD -MP -MF "$(DEPDIR)/mcpp_prestd-lib.Tpo" \
-@am__fastdepCC_TRUE@	  -c -o mcpp_prestd-lib.obj `if test -f 'lib.c'; then $(CYGPATH_W) 'lib.c'; else $(CYGPATH_W) '$(srcdir)/lib.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/mcpp_prestd-lib.Tpo" "$(DEPDIR)/mcpp_prestd-lib.Po"; \
-@am__fastdepCC_TRUE@	else rm -f "$(DEPDIR)/mcpp_prestd-lib.Tpo"; exit 1; \
-@am__fastdepCC_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lib.c' object='mcpp_prestd-lib.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/mcpp_prestd-lib.Po' tmpdepfile='$(DEPDIR)/mcpp_prestd-lib.TPo' @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_prestd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_prestd-lib.obj `if test -f 'lib.c'; then $(CYGPATH_W) 'lib.c'; else $(CYGPATH_W) '$(srcdir)/lib.c'; fi`
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(mcpp_poststd_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o mcpp_poststd-lib.obj `if test -f 'lib.c'; then $(CYGPATH_W) 'lib.c'; else $(CYGPATH_W) '$(srcdir)/lib.c'; fi`
 uninstall-info-am:
 
 man1dir = $(mandir)/man1
@@ -1062,7 +539,6 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic distclean-hdr \
 	distclean-tags
@@ -1088,7 +564,6 @@ install-man: install-man1
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1122,17 +597,22 @@ uninstall-man: uninstall-man1
 	tags uninstall uninstall-am uninstall-binPROGRAMS \
 	uninstall-info-am uninstall-man uninstall-man1
 
-@MAINTAINER_MODE_TRUE@install-exec-hook:
-@MAINTAINER_MODE_TRUE@	@if test x"$(CC)" = x"gcc"; then \
-@MAINTAINER_MODE_TRUE@        ./set_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) '$(cpp_call)' '$(CXX)' 'x$(EXEEXT)' '$(LN_S)'; \
-@MAINTAINER_MODE_TRUE@    fi
-@MAINTAINER_MODE_TRUE@uninstall-hook:
-@MAINTAINER_MODE_TRUE@	@if test x"$(CC)" = x"gcc"; then \
-@MAINTAINER_MODE_TRUE@        ./unset_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) '$(cpp_call)' '$(CXX)' 'x$(EXEEXT)'; \
-@MAINTAINER_MODE_TRUE@    fi
+
+@GNUC_TRUE@@MAINTAINER_MODE_TRUE@install-exec-hook:
+@GNUC_TRUE@@MAINTAINER_MODE_TRUE@	@if test x"$(gcc_path)" = x""; then	exit 1; fi
+@GNUC_TRUE@@MAINTAINER_MODE_TRUE@	@./set_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) $(gcc_min_ver) '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(EXEEXT)' '$(LN_S)' '$(inc_dir)'
+@GNUC_TRUE@@MAINTAINER_MODE_TRUE@uninstall-hook:
+@GNUC_TRUE@@MAINTAINER_MODE_TRUE@	@./unset_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) $(gcc_min_ver) '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(EXEEXT)' '$(inc_dir)'
 
 @MAINTAINER_MODE_FALSE@install-exec-hook:
 @MAINTAINER_MODE_FALSE@uninstall-hook:
+
+# if  GNUC
+# install-exec-hook:
+# 	cp -f mcpp_g*$(gcc_maj_ver)$(gcc_min_ver)_predef_*.h $(inc_dir)
+# uninstall-hook:
+# 	rm -f $(inc_dir)/mcpp_g*$(gcc_maj_ver)$(gcc_min_ver)_predef_*.h
+# endif
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

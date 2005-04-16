@@ -16,13 +16,13 @@
 #if     1
 #else
 #endif
-#else   /* { dg-error "#else after #else\n\[\^ \]* the conditional began here| `#else' after `#else'\n (matches line 14)| Already seen #else at line 15" } */
+#else   /* { dg-error "#else after #else\n\[\^ \]*( error:|) the conditional began here| `#else' after `#else'\n (matches line 14)| Already seen #else at line 15" } */
 #endif
 
 /* 17.4:    Error of #elif after #else. */
 #if     MACRO_1 == 1
 #else                   /* line 24  */
-#elif   MACRO_1 == 0    /* { dg-error "#elif after #else\n\[\^ \]* the conditional began here| `#elif' after `#else'\n (matches line 23)| Already seen #else at line 24" } */
+#elif   MACRO_1 == 0    /* { dg-error "#elif after #else\n\[\^ \]*( error:|) the conditional began here| `#elif' after `#else'\n (matches line 23)| Already seen #else at line 24" } */
 #endif
 
 /* 17.7:    Error of unterminated #if section.  */

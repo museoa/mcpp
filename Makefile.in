@@ -38,30 +38,27 @@ POST_UNINSTALL = :
 host_triplet = @host@
 @MAINTAINER_MODE_TRUE@am__append_1 = tests .
 ACLOCAL = @ACLOCAL@
-AMDEP_FALSE = @AMDEP_FALSE@
-AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
-CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
-DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+GNUC_FALSE = @GNUC_FALSE@
+GNUC_TRUE = @GNUC_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -90,13 +87,7 @@ VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_STRIP = @ac_ct_STRIP@
-am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
-am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
-am__include = @am__include@
 am__leading_dot = @am__leading_dot@
-am__quote = @am__quote@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -107,6 +98,7 @@ cpp_call = @cpp_call@
 datadir = @datadir@
 exec_prefix = @exec_prefix@
 gcc_maj_ver = @gcc_maj_ver@
+gcc_min_ver = @gcc_min_ver@
 gcc_path = @gcc_path@
 gcc_testsuite_dir = @gcc_testsuite_dir@
 host = @host@
@@ -114,6 +106,7 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+inc_dir = @inc_dir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -133,11 +126,12 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 
-AUTOMAKE_OPTIONS = no-dependencies
+AUTOMAKE_OPTIONS = foreign
+
 SUBDIRS = src $(am__append_1)
 
-EXTRA_DIST = README.eng README.jpeuc config/mb_* \
-    src/preproc.c src/noconfig.H src/*set_mcpp.sh tests/set_test.sh \
+EXTRA_DIST = LICENSE INSTALL_* mcpp.1 config/mb_* \
+    src/preproc.c src/noconfig.H src/*set_mcpp.sh tests/*_test.sh \
     noconfig cpp-test test-t test-c test-l tool doc doc.eng
 
 subdir = .
@@ -154,10 +148,11 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	all-recursive install-data-recursive install-exec-recursive \
 	installdirs-recursive install-recursive uninstall-recursive \
 	check-recursive installcheck-recursive
-DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/configure ChangeLog \
-	Makefile.am aclocal.m4 config/compile config/config.guess \
-	config/config.sub config/depcomp config/install-sh \
-	config/missing config/mkinstalldirs configure configure.ac
+DIST_COMMON = README $(srcdir)/Makefile.in $(srcdir)/configure \
+	ChangeLog Makefile.am aclocal.m4 config/compile \
+	config/config.guess config/config.sub config/depcomp \
+	config/install-sh config/missing config/mkinstalldirs configure \
+	configure.ac
 DIST_SUBDIRS = src tests .
 all: all-recursive
 
@@ -526,12 +521,13 @@ uninstall-info: uninstall-info-recursive
 
 
 install-data:
-	@if test -d "$(prefix)/doc"; then :; else mkdir $(prefix)/doc; fi
-	@if test -d "$(prefix)/doc/mcpp"; then :; else mkdir $(prefix)/doc/mcpp; fi
-	cp -Rpf cpp-test test-t test-c test-l tool doc doc.eng $(prefix)/doc/mcpp
+	@if test -d "$(prefix)/share/doc"; then :; else mkdir $(prefix)/share/doc; fi
+	@if test -d "$(prefix)/share/doc/mcpp"; then :; else mkdir $(prefix)/share/doc/mcpp; fi
+	cp -Rpf LICENSE cpp-test test-t test-c test-l tool doc doc.eng $(prefix)/share/doc/mcpp
+	gzip -c mcpp.1 > $(prefix)/man/man1/mcpp.1.gz
 
 uninstall-data:
-	rm -r -f $(prefix)/doc/mcpp
+	rm -r -f $(prefix)/share/doc/mcpp $(prefix)/man/man1/mcpp.1.gz
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

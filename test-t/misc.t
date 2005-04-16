@@ -1,7 +1,10 @@
 /*
  *          M I S C . T
- *  1998/08     made public                                     kmatsui
- *  2003/11     slightly revised                                kmatsui
+ *  1998/08     Made public.                                    kmatsui
+ *  2003/11     Slightly revised.                               kmatsui
+ *  2004/11     Split samples for "Reiser cpp" as "trad.t".
+ *              Removed duplicate samples with other testcases.
+ *                                                              kmatsui
  *
  *  Miscellaneous texts for test of preprocessor.
  *
@@ -199,54 +202,17 @@ concat()
 
 /*
  *  PART 5
- *  Tests of tokenization of preprocessing number
- */
-
-number()
-{
-#define NUM( dig, exp)      dig ## exp
-#define NUMX( dig, exp)     NUM( dig, exp)
-#define DIG                 12E+
-#define EXP                 34
-#define ARG( arg)           arg
-
-/*  12E+EXP     : single pp-token, "EXP" is not expanded    */
-    12E+EXP;
-/*  12E+34      : single pp-token   */
-    NUM( 12E+, 34);
-/*  DIGEXP  */
-    NUM( DIG, EXP);
-/*  12E+34      : single pp-token   */
-    NUMX( DIG, EXP);
-/*  3E+xy       : single pp-token   */
-    NUM( 3E+, xy);
-/*  "3E+xy" */
-    xstr( NUM( 3E+, xy));
-/*  12E+ 34     : two pp-tokens (illegal C token sequence)  */
-    ARG( DIG)34;
-/*  12E+ 34     : two pp-tokens (illegal C token sequence)
-   '+34' is decomposed to '+ 34', then '12E' and '+' are concatenated   */
-    NUM( 12E, +34);
-/*  12E + 34    : three pp-tokens (illegal C token sequence)
-   'E+EXP' is decomposed to 'E + EXP', then '12' and 'E' are concatenated   */
-    NUMX( 12, E+EXP);
-/* undefined: '12+' is not a valid pp-token */
-    NUM( 12, +34);
-}
-
-/*
- *  PART 6
  *  Test of stringization.
  */
 
 line()
 {
-/*  245; "245"; "__LINE__"; */
+/*  211; "211"; "__LINE__"; */
     __LINE__;  xstr( __LINE__);  str( __LINE__);
 }
 
 /*
- *  PART 7
+ *  PART 6
  *  Tests of handling escape sequences.
  *  Tests of concatenation of string literals.
  */
@@ -280,7 +246,7 @@ escape()
 }
 
 /*
- *  PART 8
+ *  PART 7
  *  Tests of evaluating constant expression in long, unsigned long.
  *  Tests of <limits.h>, <assert.h>.
  */
@@ -347,7 +313,7 @@ internal()
 }
 
 /*
- *  PART 9
+ *  PART 8
  *  Extended or obsolete facilities.
  */
 
@@ -369,8 +335,8 @@ non_standard()
 #if     __MCPP > 1
 /* Trace the process of macro expansion */
 #ifdef  __STDC__
-#pragma __debug_cpp __memory    /* list heap memory */
-#pragma __debug_cpp __token     /* trace token  */
+#pragma MCPP debug memory       /* list heap memory */
+#pragma MCPP debug token        /* trace token  */
 #else
 #debug  memory
 #debug  token
@@ -378,7 +344,7 @@ non_standard()
 /*  glue ( a, b)c;  */
     glue( glue( a, b), c);
 #ifdef  __STDC__
-#pragma __end_debug_cpp __token /* no debug     */
+#pragma MCPP end_debug token    /* no debug     */
 #else
 #end_debug token
 #endif
@@ -413,67 +379,9 @@ put_long()
 }
 
 /*
- *  PART 10
- *  Samples for a very old "Reiser" model preprocessor.
+ *  PART 9
+ *  Ambiguous macros and others.
  */
-
-#undef  glue
-#undef  debug
-
-#define glue(a, b)  a/**/b
-#define ctrl( c)    'c' & 0x1f
-
-#define debug(n1,n2)    printf("xn1= %d, xn2= %s", x/**/n1, x/**/n2)
-
-very_old()
-{
-/* ISO C preprocessor expands to    :a b c;
- * very old preprocessor does to    :abc;
- */
-    glue( glue( a, b), c);
-
-/* ISO C        :a b c;
- * very old     :abc;
- */
-    xglue( xglue( a, b), c);
-
-/* ISO C        :'c' & 0x1f;
- * very old     :'A' & 0x1f;
- */
-    ctrl( A);
-
-/* ISO C        :printf("xn1= %d, xn2= %s", x 1, x 2);
- * very old     :printf("x1= %d, x2= %s", x1, x2);
- */
-    debug(1, 2);
-}
-
-/* ISO C        :text other than comment after #else, #endif line is error
- * very old     :the text is skipped quietly
- */
-#if     OLD_PREPROCESSOR
-#else   OLD_PREPROCESSOR
-#endif  OLD_PREPROCESSOR
-
-/* ISO C     :Token error
- * very old  :Implicit closing quote at end of line
- */
-asm("
-    .text
-_probeintr:
-    ss
-    incl    _npx_intrs_while_probing
-    pushl   %eax
-    movb    $0x20,%al
-#ifdef PC98
-    outb    %al,$0x08
-    outb    %al,$0x0
-#else
-    outb    %al,$0xa0
-    outb    %al,$0x20
-#endif
-");
-
 wide_and_nonwide()
 {
 /* Wide-character string literal following string literal and vice versa.   */
@@ -481,10 +389,6 @@ wide_and_nonwide()
     L"´Á»ú" "string";
 }
 
-/*
- *  PART 11
- *  Ambiguous macros.
- */
 ambiguous()
 {
 /* Result of "f(2)(9)" is left intentionally ambiguous by Standard (ANSI C

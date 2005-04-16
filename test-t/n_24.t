@@ -2,7 +2,7 @@
 
 #define str( a)     # a
 
-/* 24.1:    */
+/* 24.1:    White spaces should not be inserted (silly specification).  */
 /*  "a+b";  */
     str( a+b);
 
@@ -22,4 +22,11 @@
 /*  "\"abc\"";  */
     str( "ab\
 c");
+
+/* 24.5:    Token separator inserted by macro expansion should be removed.
+        (Meanwhile, tokens should not be merged.  See 21.2.)    */
+#define xstr( a)    str( a)
+#define f(a)        a
+/*  "x-y";  */
+    xstr( x-f(y));
 

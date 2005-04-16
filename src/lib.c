@@ -18,7 +18,7 @@
 
 #if 1
 #if PREPROCESSED
-#include    "cpp.H"
+#include    "mcpp.H"
 #else
 #include    "system.H"  /* For PROTO, UCHARMAX and function declarations    */
 #endif

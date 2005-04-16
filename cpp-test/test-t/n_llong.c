@@ -1,12 +1,12 @@
 /* n_llong.c:   long long in #if expression */
 
-#if 12345678901234567890 < 13345678901234567890
+#if 12345678901234567890U < 13345678901234567890U
     "long long #if expression is implemented."
 #else
     "long long #if expression is not implemented."
 #endif
 
-#if 12345678901234567890LL < 13345678901234567890LL
+#if 12345678901234567890ULL < 13345678901234567890ULL
     Valid block
 #else
     Block to be skipped

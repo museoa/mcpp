@@ -42,6 +42,13 @@
 /*  (a - b);    */
     head a,b );
 
+/* 27.6:    Recursive macro (the 2nd 'm' is expanded to 'n' since it is in
+        source file).   */
+/*  n;  */
+#define m       n
+#define n( a)   a 
+    m( m);
+
 /* { dg-do preprocess }
    { dg-options "-ansi -w" }
    { dg-final { if ![file exist n_27.i] { return }                      } }
@@ -50,7 +57,8 @@
    { dg-final { if \{ [grep n_27.i "^ *1 *;"] != ""         \} \{   } }
    { dg-final { if \{ [grep n_27.i "\\( *\\( *a *\\) *- *\\( *b *\\) *\\)"] != ""   \} \{   } }
    { dg-final { if \{ [grep n_27.i "\\( *a *- *b *\\)"] != ""   \} \{   } }
-   { dg-final { return \} \} \} \} \}                                   } }
+   { dg-final { if \{ [grep n_27.i " *n *;"] != ""              \} \{   } }
+   { dg-final { return \} \} \} \} \} \}                                } }
    { dg-final { fail "n_27.c: macro rescanning"                         } }
  */
 

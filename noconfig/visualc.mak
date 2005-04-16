@@ -1,28 +1,28 @@
 # makefile to compile MCPP version 2.* for Visual C / nmake
-#		2003/11, 2004/02 	kmatsui
+#		2003/11, 2004/02, 2005/03 	kmatsui
 # To compile MCPP using resident cpp do
 #		nmake
 # To re-compile MCPP using compiled MCPP do
 #		nmake PREPROCESSED=1
 # To specify the preprocessor to compile MCPP
-#		nmake CPP=cpp32_std
-# To generate MCPP of modes other than STANDARD mode do as
-#		nmake MODE=POST_STANDARD NAME=cpp32_poststd
+#		nmake CPP=mcpp32_std
+# To generate MCPP of PRE_STANDARD mode do as
+#		nmake MODE=PRE_STANDARD NAME=mcpp32_prestd
 # To link kmmalloc V.2.5 (malloc() package of kmatsui) or later do
 #		nmake [PREPROCESSED=1] KMMALLOC=1
 # To compile MCPP with C++, rename *.c other than lib.c to *.cpp and do
 #		nmake CPLUS=1
 # $(NAME), $(CPP) can be specified by command-line as
-#		nmake NAME=cpp32_prestd
+#		nmake NAME=mcpp32_prestd CPP=mcpp32_std
 # WARNING: If you build by "makefile project" on Visual C IDE, you must
-#       specify CPP=cpp* option, otherwise IDE will define CPP as 'cl'.
+#       specify CPP=mcpp* option, otherwise IDE will define CPP as 'cl'.
 
 !ifndef NAME
-NAME = cpp32_std
+NAME = mcpp32_std
 !endif
 
 !ifndef CPP
-CPP = cpp32_std
+CPP = mcpp32_std
 !endif
 
 CFLAGS = $(CFLAGS) -Za -c	# -Zi # for debugging on Visual C / IDE
@@ -43,7 +43,7 @@ CPPFLAGS = $(CPPFLAGS) -DPREPROCESSED=$(PREPROCESSED)
 # BINDIR : Adjust to your system.
 #	for Visual C++ .net 2003
 BINDIR = "$(MSVCDIR)"\bin
-#	to make cpp for LSI C-86 V.3.3		# Don't use -DPREPROCESSED
+#	to make MCPP for LSI C-86 V.3.3		# Don't use -DPREPROCESSED
 # BINDIR = \LSIC86\BIN
 
 !ifdef CPLUS
@@ -75,9 +75,9 @@ $(NAME).exe : $(OBJS)
 !if $(PREPROCESSED)
 CMACRO =
 # make a "pre-preprocessed" header file to recompile MCPP with MCPP.
-cpp.H	: system.H internal.H
-	$(CPP) $(CPPFLAGS) $(LANG) $(MEM_MACRO) preproc.c cpp.H
-$(OBJS) : cpp.H
+mcpp.H	: system.H internal.H
+	$(CPP) $(CPPFLAGS) $(LANG) $(MEM_MACRO) preproc.c mcpp.H
+$(OBJS) : mcpp.H
 system.H	: noconfig.H
 !else
 CMACRO = $(MEM_MACRO)
@@ -115,5 +115,5 @@ system.H	: noconfig.H
 clean	:
 	-del *.obj
 	-del *.i
-	-del cpp.H
+	-del mcpp.H
 

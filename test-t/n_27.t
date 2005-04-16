@@ -42,3 +42,10 @@
 /*  (a - b);    */
     head a,b );
 
+/* 27.6:    Recursive macro (the 2nd 'm' is expanded to 'n' since it is in
+        source file).   */
+/*  n;  */
+#define m       n
+#define n( a)   a 
+    m( m);
+

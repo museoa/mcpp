@@ -6,7 +6,7 @@
         constant, header-name or comment).  */
 #if     1 ||2
 /*     0x1e ^ ^ 0x1f    */
-/* { dg-error "invalid character| Invalid token| Illegal control character 0x1e, \[a-z \]*\n\[\^ \]* error: Illegal" "" { target *-*-* } 7 } */
+/* { dg-error "invalid character| Invalid token| is not valid | Illegal control character 0x1e, \[a-z \]*\n\[\^ \]* error: Illegal" "" { target *-*-* } 7 } */
 #endif  /* Maybe the second error.  */
 
 /* u.1.6:   [VT], [FF] in directive line.   */

@@ -3,6 +3,7 @@
  *
  * 1998/08      made public                                     kmatsui
  * 2002/08      revised not to conflict with C99 Standard       kmatsui
+ * 2004/10      added a few testcases for macro expansion       kmatsui
  *
  *   Samples to test Standard C preprocessing.
  *   This is a strictly-comforming program.
@@ -243,7 +244,7 @@ void    n_7( void)
 }
 
 /* Restore to correct line number and filename. */
-#line   246 "n_std.c"
+#line   248 "n_std.c"
 
 void    n_9( void)
 /*      #pragma directive.  */
@@ -560,11 +561,18 @@ void    n_20( void)
 void    n_21( void)
 /*      Tokenization (No preprocessing tokens are merged implicitly).   */
 {
-    int     a = 1;
+    int     a = 1, x = 2, y = -3;
 
 /* 21.1:    */
 #define MINUS   -
     assert( -MINUS-a == -1);
+
+/* 21.2:    */
+#undef  sub
+#define sub( a, b)  a-b     /* '(a)-(b)' is better  */
+#define Y   -y              /* '(-y)' is better     */
+/*  x- -y   */
+    assert( sub( x, Y) == -1);
 }
 
 void    n_22( void)
@@ -616,6 +624,11 @@ void    n_24( void)
         parsing.   */
     assert( strcmp( str( "ab\
 c"), "\"abc\"") == 0);
+
+/* 24.5:    Token separator inserted by macro expansion should be removed.
+        (Meanwhile, tokens should not be merged.  See 21.2.)    */
+#define f(a)        a
+    assert( strcmp( xstr( x-f(y)), "x-y") == 0);
 }
 
 void    n_25( void)
@@ -624,6 +637,9 @@ void    n_25( void)
         completely prior to rescanning. */
 {
     int     a = 1, b = 2, abc = 3, MACRO_0MACRO_1 = 2;
+
+#undef sub
+#define sub( x, y)      (x - y)
 
 /* 25.1:    "TWO_ARGS" is read as one argument to "sub", then expanded to
         "a,b", then "x" is substituted by "a,b".    */
@@ -641,6 +657,8 @@ void    n_25( void)
 /* 25.5:    Operand of # operator is not pre-expanded.  */
     assert( strcmp( str( ZERO_TOKEN), "ZERO_TOKEN") == 0);
 }
+
+#undef  f
 
 #ifdef  void
 int     f( a)
@@ -707,7 +725,7 @@ void    n_27( void)
         re-examination may involve the succeding sequences from the source
         file (what a queer thing!). */
 {
-    int     a = 1, b = 2, c;
+    int     a = 1, b = 2, c, m = 1, n = 2;
 
 /* 27.1:    Cascaded use of object-like macros. */
 #define NEST8   NEST7 + 8
@@ -740,6 +758,12 @@ void    n_27( void)
 /* 27.5:    Queer thing.    */
     c = head a,b );
     assert( c == -1);
+
+/* 27.6:    Recursive macro (the 2nd 'm' is expanded to 'n' since it is in
+        source file).   */
+#define m       n
+#define n( a)   a 
+    assert( m( m) == 2);
 }
 
 void    n_28( void)
@@ -752,7 +776,7 @@ void    n_28( void)
     assert( strcmp( __FILE__, "n_std.c") == 0);
 
 /* 28.2:    */
-    assert( __LINE__ == 754);
+    assert( __LINE__ == 779);
 
 /* 28.3:    */
     assert( strlen( __DATE__) == 11);

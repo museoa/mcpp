@@ -1,7 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-AUTOMAKE_OPTIONS = dejagnu no-dependencies
-srcdir = $(gcc_testsuite_dir)
+AUTOMAKE_OPTIONS = dejagnu foreign
 
 if MAINTAINER_MODE
 
@@ -9,11 +8,7 @@ Makefile:
 
 check-DEJAGNU:
 	EXPECT=$(EXPECT); export EXPECT
-	
-	@if test x"$(CC)" != x"gcc"; then \
-        echo "ERROR: $(CC) is not gcc"; \
-        exit 1; \
-    fi
+
 	@if test x"$(gcc_testsuite_dir)" = x""; then \
         echo "ERROR: testsuite directory is not specified.  Do './configure --with-gcc-testsuite-dir=directory' prior to 'make check'"; \
         exit 1; \
@@ -26,12 +21,12 @@ check-DEJAGNU:
 	@if test -f "$(gcc_testsuite_dir)/gcc.dg/cpp-test/test-t/cpp-test.exp"; \
             then :; \
     else \
-        echo '  cp -Rp ../cpp-test "$(gcc_testsuite_dir)"/gcc.dg'; \
+        echo '  cp -Rp ../cpp-test $(gcc_testsuite_dir)/gcc.dg'; \
         cp -Rp ../cpp-test "$(gcc_testsuite_dir)/gcc.dg"; \
     fi
-	@./set_test.sh '$(gcc_testsuite_dir)' $(gcc_maj_ver) '$(LN_S)'
-	
-	$(RUNTEST) --tool gcc --srcdir "$(gcc_testsuite_dir)" cpp-test.exp
+	@./set_test.sh '$(CC)' '$(gcc_path)' '$(gcc_testsuite_dir)' $(gcc_maj_ver) '$(LN_S)'
+	-$(RUNTEST) --tool gcc --srcdir $(gcc_testsuite_dir) cpp-test.exp
+	@./after_test.sh '$(CC)' '$(gcc_path)'
 
 uninstall:
 	@if test x"$(gcc_testsuite_dir)" != x""; then \

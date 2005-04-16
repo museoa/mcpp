@@ -5,3 +5,9 @@
 #define MINUS   -
     -MINUS-a;
 
+/* 21.2:    */
+#define sub( a, b)  a-b     /* '(a)-(b)' is better  */
+#define Y   -y              /* '(-y)' is better     */
+/*  x- -y;  */
+    sub( x, Y);
+

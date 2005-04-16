@@ -7,7 +7,7 @@
 
 main( void)
 {
-    int     a = 1, b = 2, c;
+    int     a = 1, b = 2, c, m = 1, n = 2;
 
     fputs( "started\n", stderr);
 
@@ -47,6 +47,12 @@ main( void)
 /* 27.5:    Queer thing.    */
     c = head a,b );
     assert( c == -1);
+
+/* 27.6:    Recursive macro (the 2nd 'm' is expanded to 'n' since it is in
+        source file).   */
+#define m       n
+#define n( a)   a 
+    assert( m( m) == 2);
 
     fputs( "success\n", stderr);
     return  0;

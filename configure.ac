@@ -1,15 +1,15 @@
-dnl configure.ac for MCPP   2003/11, 2004/02, 2004/03 kmatsui
+dnl configure.ac for MCPP   2003/11, 2004/02, 2004/03, 2005/02 kmatsui
 dnl Process this file with autoconf to produce a configure script.
 
 dnl WARNING: This script does not assume cross-compiling.
 dnl To cross-compile you must edit here and there of this file.
 
-AC_INIT( mcpp, 2.4.1, kmatsui@t3.rim.or.jp)
+AC_INIT( mcpp, 2.5, kmatsui@t3.rim.or.jp)
 AC_CONFIG_SRCDIR( src/main.c)
 AM_CONFIG_HEADER( src/config.h)
 AC_CONFIG_AUX_DIR( config)
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE( mcpp, 2.4.1)
+AM_INIT_AUTOMAKE( no-dependencies)
 AM_MAINTAINER_MODE
 
 dnl Checks for programs.
@@ -120,63 +120,6 @@ if test x${ac_cv_c_digraph} = xyes; then
         [Define if digraphs are available.])
 fi
 
-AC_DEFUN( [AC_CHECK_MBCHAR_IS_ESCAPE_FREE], [
-    AC_CACHE_CHECK( if '0x5c' in $1 multi-byte character is handled differently from backslash,
-        ac_cv_c_$2_escape_free,
-        AC_RUN_IFELSE( [[
-#include    <assert.h>
-    int     strcmp();
-    void    exit();
-#define str( a)     # a
-int main( void)
-{
-    assert( strcmp( str( "$3"), "\"$3\"") == 0);    /* Multi-byte chars */
-    exit (0);
-} ]],
-            [ac_cv_c_$2_escape_free=yes],
-            [ac_cv_c_$2_escape_free=no],
-            AC_MSG_WARN( cannot run on cross-compiling so assumes that '0x5c' in multi-byte character is not rightly handled.)
-            [ac_cv_c_$2_escape_free=no]
-        )
-    )
-])
-
-## The following 3 mb_* files are separated from this file, since
-## the editors do not allow multiple encodings of multi-byte characters.
-
-if test x${ac_cv_c_compiler_gnu} = xyes; then
-    lang_save=${LANG}
-fi
-
-## Set the environment variable, though this is not fully enabled in GNU C.
-if test x${ac_cv_c_compiler_gnu} = xyes; then
-    export LANG=C-SJIS
-fi
-m4_include( ./config/mb_sjis)
-if test x${ac_cv_c_sjis_escape_free} = xyes; then
-    AC_DEFINE_UNQUOTED( [SJIS_IS_ESCAPE_FREE], 1,
-        [Define if '0x5c' in SJIS multi-byte character is safe.])
-fi
-
-if test x${ac_cv_c_compiler_gnu} = xyes; then
-    export LANG=C-JIS
-fi
-m4_include( ./config/mb_jis)
-if test x${ac_cv_c_iso2022_jp_escape_free} = xyes; then
-    AC_DEFINE_UNQUOTED( [ISO2022_JP_IS_ESCAPE_FREE], 1,
-        [Define if '0x5c' in ISO2022_JP multi-byte character is safe.])
-fi
-
-if test x${ac_cv_c_compiler_gnu} = xyes; then
-    export LANG=${lang_save}
-fi
-
-m4_include( ./config/mb_big5)
-if test x${ac_cv_c_bigfive_escape_free} = xyes; then
-    AC_DEFINE_UNQUOTED( [BIGFIVE_IS_ESCAPE_FREE], 1,
-        [Define if '0x5c' in BIGFIVE multi-byte character is safe.])
-fi
-
 AC_CACHE_CHECK( preprocessor output format of line directive,
     ac_cv_c_line_format,
     [ac_cv_c_line_format=\"`echo '#line 4321' | ${CPP} - | grep 432 | sed 's/432.*$//'`\"]
@@ -192,9 +135,11 @@ fi
 AC_DEFINE_UNQUOTED( [STD_LINE_PREFIX], ${ac_cv_c_std_line_prefix},
     [Define whether output format of line directive is C source style.])
 
+AC_PROG_EGREP
+
 AC_CACHE_CHECK( default value of __STDC__,
     ac_cv_c_stdc,
-    [stdc=`echo '__STDC__' | ${CPP} - | sed '$p; 1,$d' | sed 's/^ *//; s/ *$//'`]
+    [stdc=`echo '__STDC__' | ${CPP} - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ .*//'`]
     if test x"${stdc}" = x"__STDC__"; then
         [ac_cv_c_stdc=0]
     else
@@ -206,7 +151,7 @@ AC_DEFINE_UNQUOTED( [STDC], ${ac_cv_c_stdc},
 
 AC_CACHE_CHECK( default value of __STDC_VERSION__,
     ac_cv_c_stdc_ver,
-    [stdc_ver=`echo '__STDC_VERSION__' | ${CPP} - | sed '$p; 1,$d' | sed 's/^ *//; s/ *$//'`]
+    [stdc_ver=`echo '__STDC_VERSION__' | ${CPP} - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ .*//'`]
     if test x"${stdc_ver}" = x"__STDC_VERSION__"; then
         [ac_cv_c_stdc_ver=0]
     else
@@ -274,8 +219,8 @@ dnl Check printf length modifier of the longest integer.
 # AC_CHECK_MOD_LL( modifier, additional include header)
 # Try the printf length modifier for the longest integer.
 AC_DEFUN( [AC_CHECK_MOD_LL], [
-    AC_CACHE_CHECK( printf length modifier for the longest integer,
-        ac_cv_c_printf_modifier,
+    AC_CACHE_CHECK( [printf length modifier for the longest integer],
+        [ac_cv_c_printf_modifier],
         AC_RUN_IFELSE( [[
 #include    <stdio.h>
 #include    <assert.h>
@@ -496,9 +441,10 @@ if test x$mcpp_ac_c_define_CPU_OLD != x${Target_Cpu}; then
         [Define the cpu-specific-predefined-macro.])
 fi
 
-if test x$target_os = xfreebsd* &&  \
+fbsd=`expr ${target_os} : '\(freebsd\)'`
+if test x${fbsd} = xfreebsd &&  \
         test x$mcpp_ac_c_define_SYSTEM_SP_STD != x__FreeBSD__; then
-    fbsd_ver=`echo '__FreeBSD__' | ${CPP} - | sed '$p; 1,$d' | sed 's/^ *//; s/ *$//'`
+    fbsd_ver=`echo '__FreeBSD__' | ${CPP} - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ .*//'`
     AC_DEFINE_UNQUOTED( [SYSTEM_EXT_VAL], "${fbsd_ver}",
         [Define the version of FreeBSD.])
 fi
@@ -512,61 +458,126 @@ if test x${ac_cv_c_compiler_gnu} = xyes; then
 
     AC_DEFINE( [COMPILER], [GNUC], [Define the compiler.])
 
-    cpp_call=`echo '' | ${CPP} -v - 2>&1 | grep '/cpp' | sed 's/^ *//; s/ .*//'` 
+    cpp_call=`echo '' | ${CPP} -v - 2>&1 | $EGREP '/cpp|/cc1' | sed 's/^ *//; s/ .*//'` 
     AC_MSG_CHECKING( for the directory to install mcpp)
-    libexecdir=`echo ${cpp_call} | sed 's,/cpp.*,,'`
+    cpp_name=`expr ${cpp_call} : '.*/\(.*\)'`
+    libexecdir=`expr ${cpp_call} : "\(.*\)/${cpp_name}"`
     AC_MSG_RESULT( ${libexecdir})
 
-    if test -e ${libexecdir}/include; then
-        AC_DEFINE_UNQUOTED( [C_INCLUDE_DIR1], "${libexecdir}/include",
-            [Define compiler-specific include directory 1.])
+    lang_save=${LANG}
+    export LANG=C
+
+    AC_MSG_CHECKING( for the compiler-specific C include directory)
+    c_include_dirs=`echo '' | ${CPP} -xc -v - 2>&1 | sed '1,/> search starts here/d' | sed '/End of search list/q' | sed 's/^ *//' | $EGREP -v '^/usr(/local|)/include$|End of search list'`
+    n=1
+    for dir in ${c_include_dirs}
+    do
+        case $n in
+        1)  c_include_dir1=${dir};;
+        2)  c_include_dir2=${dir};;
+        esac
+        let n=n+1
+    done
+    if test x${c_include_dir1+set} = xset; then
+        AC_DEFINE_UNQUOTED( [C_INCLUDE_DIR1], "${c_include_dir1}",
+            [Define compiler-specific C include directory 1.])
+        AC_MSG_RESULT( ${c_include_dir1})
+    fi
+    if test x${c_include_dir2+set} = xset; then
+        AC_DEFINE_UNQUOTED( [C_INCLUDE_DIR2], "${c_include_dir2}",
+            [Define compiler-specific C include directory 2.])
+        AC_MSG_RESULT( ${c_include_dir2})
     fi
 
-    AC_MSG_CHECKING( for version of GNU C)
-    version=`${CC} --version | sed '1q' | sed 's/^[[^0-9]]*//'`
-    AC_MSG_RESULT( ${version})
-    gcc_maj_ver=`echo ${version} | sed 's/\..*//'`
+    AC_PROG_CXX
+    AC_PROG_CXXCPP
+    AC_LANG_PUSH( C++)
+    AC_MSG_CHECKING( for the compiler-specific C++ include directory)
+    cxx_include_dirs=`echo '' | ${CXXCPP} -xc++ -v - 2>&1 | sed '1,/> search starts here/d' | sed '/End of search list/q' | sed '/End of search list/d' | sed 's/^ *//' | $EGREP -v "^/usr(/local|)/include\$|^${c_include_dir1}\$|^${c_include_dir2}\$"`
+    n=1
+    for dir in ${cxx_include_dirs}
+    do
+        case $n in
+        1)  cxx_include_dir1=${dir};;
+        2)  cxx_include_dir2=${dir};;
+        3)  cxx_include_dir3=${dir};;
+        4)  cxx_include_dir4=${dir};;
+        esac
+        let n=n+1
+    done
+    if test x${cxx_include_dir1+set} = xset; then
+        AC_DEFINE_UNQUOTED( [CPLUS_INCLUDE_DIR1], "${cxx_include_dir1}",
+            [Define compiler-specific C include directory 1.])
+        AC_MSG_RESULT( ${cxx_include_dir1})
+    fi
+    if test x${cxx_include_dir2+set} = xset; then
+        AC_DEFINE_UNQUOTED( [CPLUS_INCLUDE_DIR2], "${cxx_include_dir2}",
+            [Define compiler-specific C include directory 2.])
+        AC_MSG_RESULT( ${cxx_include_dir2})
+    fi
+    if test x${cxx_include_dir3+set} = xset; then
+        AC_DEFINE_UNQUOTED( [CPLUS_INCLUDE_DIR3], "${cxx_include_dir3}",
+            [Define compiler-specific C include directory 3.])
+        AC_MSG_RESULT( ${cxx_include_dir3})
+    fi
+    if test x${cxx_include_dir4+set} = xset; then
+        AC_DEFINE_UNQUOTED( [CPLUS_INCLUDE_DIR4], "${cxx_include_dir4}",
+            [Define compiler-specific C include directory 4.])
+        AC_MSG_RESULT( ${cxx_include_dir4})
+    fi
+    AC_LANG_POP( C++)
+
+    export LANG=${lang_save}
+
+    AC_MSG_CHECKING( for value of __GNUC__)
+    gcc_maj_ver=`echo '__GNUC__' | ${CPP} - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *//'`
+    AC_MSG_RESULT( ${gcc_maj_ver})
     AC_DEFINE_UNQUOTED( [GCC_MAJOR_VERSION], "${gcc_maj_ver}",
         [Define gcc major version.])
-    gcc_min_ver=`echo ${version} | sed 's/^[[0-9]]*\.//; s/[[^0-9]].*//'`
+    AC_MSG_CHECKING( for value of __GNUC_MINOR__)
+    gcc_min_ver=`echo __GNUC_MINOR__ | ${CPP} - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *//'`
+    AC_MSG_RESULT( ${gcc_min_ver})
     AC_DEFINE_UNQUOTED( [GCC_MINOR_VERSION], "${gcc_min_ver}",
         [Define gcc minor version.])
 
-    AC_SUBST( [gcc_maj_ver])
-    AC_SUBST( [cpp_call])
-    AC_PATH_PROG( [gcc_path], [${CC}], , [${PATH}])
-
-    gcc_dir=`echo ${gcc_path} | sed 's,/bin/gcc$,,'`
-    if test x"${gcc_dir}" != x"/usr" &&     \
-            test -d "${gcc_dir}/include/c++/${gcc_maj_ver}.${gcc_min_ver}";
-            then
-        AC_DEFINE_UNQUOTED( [CPLUS_INCLUDE_DIR2],
-            "${gcc_dir}/include/c++/${gcc_maj_ver}.${gcc_min_ver}",
-            [Define compiler-specific C++ include directory 2.])
+    if test x${c_include_dir1+set} = xset; then
+        inc_dir=${c_include_dir1}
+    else
+        inc_dir=/usr/local/include
     fi
+
+    AC_SUBST( [inc_dir])
+    AC_SUBST( [cpp_call])
+    AC_SUBST( [gcc_maj_ver])
+    AC_SUBST( [gcc_min_ver])
+    AC_PATH_PROG( [gcc_path], [${CC}], , [${PATH}])
 
     AC_PROG_LN_S
 
-    AC_CACHE_CHECK( for value of predefined macro '__SIZE_TYPE__',
-        size_type,
-        [size_type=`echo '__SIZE_TYPE__' | ${CPP} - | sed '$p; 1,$d' | sed 's/^ *//; s/ *$//'`]
-    )
-    AC_DEFINE_UNQUOTED( [COMPILER_SP1_VAL], "${size_type}",
-        [Define the type of size_t.])
+    if test x${gcc_maj_ver} = x2; then
 
-    AC_CACHE_CHECK( for value of predefined macro '__PTRDIFF_TYPE__',
-        ptrdiff_type,
-        [ptrdiff_type=`echo '__PTRDIFF_TYPE__' | ${CPP} - | sed '$p; 1,$d' | sed 's/^ *//; s/ *$//'`]
-    )
-    AC_DEFINE_UNQUOTED( [COMPILER_SP2_VAL], "${ptrdiff_type}",
-        [Define the type of ptrdiff_t.])
+        AC_CACHE_CHECK( for value of predefined macro '__SIZE_TYPE__',
+            size_type,
+            [size_type=`echo '__SIZE_TYPE__' | ${CPP} - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *//'`]
+        )
+        AC_DEFINE_UNQUOTED( [COMPILER_SP1_VAL], "${size_type}",
+            [Define the type of size_t.])
 
-    AC_CACHE_CHECK( for value of predefined macro '__WCHAR_TYPE__',
-        wchar_type,
-        [wchar_type=`echo '__WCHAR_TYPE__' | ${CPP} - | sed '$p; 1,$d' | sed 's/^ *//; s/ *$//'`]
-    )
-    AC_DEFINE_UNQUOTED( [COMPILER_SP3_VAL], "${wchar_type}",
+        AC_CACHE_CHECK( for value of predefined macro '__PTRDIFF_TYPE__',
+            ptrdiff_type,
+            [ptrdiff_type=`echo '__PTRDIFF_TYPE__' | ${CPP} - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *$//'`]
+        )
+        AC_DEFINE_UNQUOTED( [COMPILER_SP2_VAL], "${ptrdiff_type}",
+            [Define the type of ptrdiff_t.])
+
+        AC_CACHE_CHECK( for value of predefined macro '__WCHAR_TYPE__',
+            wchar_type,
+            [wchar_type=`echo '__WCHAR_TYPE__' | ${CPP} - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *$//'`]
+        )
+        AC_DEFINE_UNQUOTED( [COMPILER_SP3_VAL], "${wchar_type}",
         [Define the type of wchar_t.])
+
+    fi
 
     AC_CACHE_CHECK( if the library is glibc,
         gcc_cv_glibc,
@@ -584,43 +595,86 @@ if test x${ac_cv_c_compiler_gnu} = xyes; then
             [Define if the library is glibc.])
     fi
 
-    dnl find the C++ include directory
+    AC_MSG_CHECKING( for predefined macros of GNU C)
+    echo '' | ${CPP} -xc -dM - | sort | grep ' *#define *_' > src/mcpp_gcc${gcc_maj_ver}${gcc_min_ver}_predef_std.h
+    echo '' | ${CPP} -xc -dM - | sort | ${EGREP} ' *#define *[A-Za-z]+' > src/mcpp_gcc${gcc_maj_ver}${gcc_min_ver}_predef_old.h
+    echo '' | ${CXXCPP} -xc++ -dM - | sort | grep ' *#define *_' > src/mcpp_gxx${gcc_maj_ver}${gcc_min_ver}_predef_std.h
+    echo '' | ${CXXCPP} -xc++ -dM - | sort | ${EGREP} ' *#define *[A-Za-z]+' > src/mcpp_gxx${gcc_maj_ver}${gcc_min_ver}_predef_old.h
+    AC_MSG_RESULT(
+        output to "src/mcpp_g*${gcc_maj_ver}${gcc_min_ver}_predef_*.h")
 
-    if test x"${target}" = x"${build}" && test x"${target}" = x"${host}"; then
-        AC_PROG_CXX
-        AC_PROG_CXXCPP
-        AC_LANG_PUSH( C++)
-        AC_CACHE_CHECK( for the C++ default include directory,
-            gcc_cv_cxx_include_dir,
-            for cxx_dir in  \
-                "/usr/include/g++-3" "/usr/include/g++-2" "/usr/include/g++"
-            do
-                if test -f ${cxx_dir}/iostream.h; then
-                    [gcc_cv_cxx_include_dir=${cxx_dir}]
-                    break
-                fi
-            done,
-            AC_MSG_WARN( cannnot find the directory)
-        )
-        AC_LANG_POP( C++)
-    else
-        AC_ARG_WITH( [gcc-cxx-include-dir],
-            AC_HELP_STRING( [--with-gcc-cxx-include-dir=directory],
-                [specify the gcc C++ default include directory by absolute path.
-                e.g. /usr/include/g++-3 or /usr/include/g++, etc.]),
-            if test x"${withval+set}" = x"set"; then
-                [gcc_cv_cxx_include_dir=`echo ${withval} | sed 's,/$,,'`]
-            else
-                AC_MSG_ERROR( [--with-gcc-cxx-include-dir option requires an argument])
-            fi
-        )
-    fi
-    if test x"${gcc_cv_cxx_include_dir+set}" = x"set"; then
-        AC_DEFINE_UNQUOTED( [CPLUS_INCLUDE_DIR1], "${gcc_cv_cxx_include_dir}",
-            [Define the C++ include directory.])
-    fi
 fi
 
+if test x${ac_cv_c_compiler_gnu} = xyes     \
+    && (test x${gcc_maj_ver} = x4           \
+    || (test x${gcc_maj_ver} = x3 && test x${gcc_min_ver} = x4)); then
+    ## for GNU C V.3.4 and 4.x.  Skip these tests, since GCC 3.4 is buggy on
+    ## multibyte character processing.
+
+    AC_DEFINE_UNQUOTED( [SJIS_IS_ESCAPE_FREE], 1)
+    AC_DEFINE_UNQUOTED( [ISO2022_JP_IS_ESCAPE_FREE], 1)
+    AC_DEFINE_UNQUOTED( [BIGFIVE_IS_ESCAPE_FREE], 1)
+
+else    ## for the compilers except GNU C V.3.4 or 4.x
+
+    AC_DEFUN( [AC_CHECK_MBCHAR_IS_ESCAPE_FREE], [
+        AC_CACHE_CHECK( [if '0x5c' in $1 multi-byte character is handled differently from backslash],
+            [ac_cv_c_$2_escape_free],
+            AC_RUN_IFELSE( [[
+    #include    <assert.h>
+        int     strcmp();
+        void    exit();
+    #define str( a)     # a
+    int main( void)
+    {
+        assert( strcmp( str( "$3"), "\"$3\"") == 0);    /* Multi-byte chars */
+        exit (0);
+    }]],
+                [ac_cv_c_$2_escape_free=yes],
+                [ac_cv_c_$2_escape_free=no],
+                AC_MSG_WARN( [cannot run on cross-compiling so assumes that '0x5c' in multi-byte character is not rightly handled.])
+                [ac_cv_c_$2_escape_free=no]
+            )
+        )
+    ])
+    
+    ## The following 3 mb_* files are separated from this file, since
+    ## the editors do not allow multiple encodings of multi-byte characters.
+    
+    if test x${ac_cv_c_compiler_gnu} = xyes; then
+        lang_save=${LANG}
+    fi
+    
+    ## Set the environment variable, though this is not fully enabled in GNU C.
+    if test x${ac_cv_c_compiler_gnu} = xyes; then
+        export LANG=C-SJIS
+    fi
+    m4_include(./config/mb_sjis)
+    if test x${ac_cv_c_sjis_escape_free} = xyes; then
+        AC_DEFINE_UNQUOTED( [SJIS_IS_ESCAPE_FREE], 1,
+            [Define if '0x5c' in SJIS multi-byte character is safe.])
+    fi
+    
+    if test x${ac_cv_c_compiler_gnu} = xyes; then
+        export LANG=C-JIS
+    fi
+    m4_include(./config/mb_jis)
+    if test x${ac_cv_c_iso2022_jp_escape_free} = xyes; then
+        AC_DEFINE_UNQUOTED( [ISO2022_JP_IS_ESCAPE_FREE], 1,
+            [Define if '0x5c' in ISO2022-JP multi-byte character is safe.])
+    fi
+    
+    if test x${ac_cv_c_compiler_gnu} = xyes; then
+        export LANG=${lang_save}
+    fi
+    
+    m4_include(./config/mb_big5)
+    if test x${ac_cv_c_bigfive_escape_free} = xyes; then
+        AC_DEFINE_UNQUOTED( [BIGFIVE_IS_ESCAPE_FREE], 1,
+            [Define if '0x5c' in BIG5 multi-byte character is safe.])
+    fi
+    
+fi
 
 AC_ARG_WITH( [gcc-testsuite-dir],
     AC_HELP_STRING( [--with-gcc-testsuite-dir=directory],
@@ -641,6 +695,7 @@ AC_ARG_WITH( [gcc-testsuite-dir],
     fi
 )
 AC_SUBST( [gcc_testsuite_dir])
+AM_CONDITIONAL( [GNUC], test x${ac_cv_c_compiler_gnu} = xyes)
 
 dnl Final output.
 
