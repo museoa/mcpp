@@ -42,7 +42,8 @@ install: build
 	dh_installdirs
 
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/mcpp
-
+	install -d $(CURDIR)/debian/mcpp/usr/share/man/man1
+	install mcpp.1 $(CURDIR)/debian/mcpp/usr/share/man/man1/mcpp.1
 
 # Build architecture-independent files here.
 binary-indep: build install

@@ -1,3 +1,13 @@
+mcpp (2.6.1-1) unstable; urgency=low
+
+  * configure.ac: Fix for automake 1.9.
+  * debian/rules: Install the manual.
+  * debian/control (Standards-Version): Follows new standard 3.7.2.2.
+  * debian/watch: The upstram has been moved.
+  * New upstream release
+
+ -- NIIBE Yutaka <gniibe@fsij.org>  Sat, 14 Oct 2006 15:25:32 +0900
+
 mcpp (2.5-1) unstable; urgency=low
 
   * New upstream release
