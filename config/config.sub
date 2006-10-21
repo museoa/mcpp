@@ -367,9 +367,6 @@ case $basic_machine in
     	abacus)
 		basic_machine=abacus-unknown
 		;;
-    	abacus)
-		basic_machine=abacus-unknown
-		;;
 	adobe68k)
 		basic_machine=m68010-adobe
 		os=-scout
@@ -383,12 +380,6 @@ case $basic_machine in
 	am29k)
 		basic_machine=a29k-none
 		os=-bsd
-		;;
-	amd64)
-		basic_machine=x86_64-pc
-		;;
-	amd64-*)
-		basic_machine=x86_64-`echo $basic_machine | sed 's/^[^-]*-//'`
 		;;
 	amd64)
 		basic_machine=x86_64-pc
@@ -426,10 +417,6 @@ case $basic_machine in
 	balance)
 		basic_machine=ns32k-sequent
 		os=-dynix
-		;;
-	c90)
-		basic_machine=c90-cray
-		os=-unicos
 		;;
 	c90)
 		basic_machine=c90-cray
@@ -692,10 +679,6 @@ case $basic_machine in
 		basic_machine=powerpc-unknown
 		os=-morphos
 		;;
-	morphos)
-		basic_machine=powerpc-unknown
-		os=-morphos
-		;;
 	msdos)
 		basic_machine=i386-pc
 		os=-msdos
@@ -768,24 +751,12 @@ case $basic_machine in
 	np1)
 		basic_machine=np1-gould
 		;;
-	nv1)
-		basic_machine=nv1-cray
-		os=-unicosmp
-		;;
 	nsr-tandem)
 		basic_machine=nsr-tandem
 		;;
 	op50n-* | op60c-*)
 		basic_machine=hppa1.1-oki
 		os=-proelf
-		;;
-	or32 | or32-*)
-		basic_machine=or32-unknown
-		os=-coff
-		;;
-	os400)
-		basic_machine=powerpc-ibm
-		os=-os400
 		;;
 	or32 | or32-*)
 		basic_machine=or32-unknown
@@ -1234,9 +1205,6 @@ case $os in
 	-linux-dietlibc)
 		os=-linux-dietlibc
 		;;
-	-linux-dietlibc)
-		os=-linux-dietlibc
-		;;
 	-linux*)
 		os=`echo $os | sed -e 's|linux|linux-gnu|'`
 		;;
@@ -1248,9 +1216,6 @@ case $os in
 		;;
 	-opened*)
 		os=-openedition
-		;;
-        -os400*)
-		os=-os400
 		;;
         -os400*)
 		os=-os400
@@ -1300,9 +1265,6 @@ case $os in
 		;;
 	-sinix*)
 		os=-sysv4
-		;;
-        -tpf*)
-		os=-tpf
 		;;
         -tpf*)
 		os=-tpf
@@ -1410,9 +1372,6 @@ case $basic_machine in
 		;;
 	mips*-*)
 		os=-elf
-		;;
-	or32-*)
-		os=-coff
 		;;
 	or32-*)
 		os=-coff
@@ -1587,9 +1546,6 @@ case $basic_machine in
 				;;
 			-*mint | -mint[0-9]* | -*MiNT | -MiNT[0-9]*)
 				vendor=atari
-				;;
-			-vos*)
-				vendor=stratus
 				;;
 			-vos*)
 				vendor=stratus

@@ -1,3 +1,11 @@
+mcpp (2.6.1-2) unstable; urgency=low
+
+  * configure.ac: Revert the change for automake 1.9 to minimize diff.
+  (The fix has been reported to upstream and it will be included in
+  forthcoming next release.)
+
+ -- NIIBE Yutaka <gniibe@fsij.org>  Sat, 21 Oct 2006 14:38:24 +0900
+
 mcpp (2.6.1-1) unstable; urgency=low
 
   * configure.ac: Fix for automake 1.9.

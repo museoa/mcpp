@@ -120,7 +120,7 @@ dnl Check printf length modifier of the longest integer.
 
 # AC_CHECK_MOD_LL( modifier, additional include header)
 # Try the printf length modifier for the longest integer.
-AC_DEFUN([AC_CHECK_MOD_LL], [
+AC_DEFUN( [AC_CHECK_MOD_LL], [
     AC_CACHE_CHECK( [printf length modifier for the longest integer],
         [ac_cv_c_printf_modifier],
         AC_RUN_IFELSE( [[
@@ -283,7 +283,7 @@ else    # not gcc
 
 # mcpp_AC_C_DEFINE( SYSTEM | CPU | COMPILER, STD | OLD, ${enableval})
 # Specify the target-specific predefined macro.
-AC_DEFUN([mcpp_AC_C_DEFINE], [
+AC_DEFUN( [mcpp_AC_C_DEFINE], [
     name=`echo $3 | sed 's/=.*//'`
     mcpp_macro=$1_SP_$2
     stripped_mcpp_macro=`echo $mcpp_macro | sed 's/STD//'`
@@ -310,7 +310,7 @@ AC_DEFUN([mcpp_AC_C_DEFINE], [
 
 # mcpp_AC_C_PREDEF( SYSTEM | CPU | COMPILER, STD | OLD, additional description)
 # Specify the target-specific predefined macro via mcpp_AC_C_DEFINE.
-AC_DEFUN([mcpp_AC_C_PREDEF], [
+AC_DEFUN( [mcpp_AC_C_PREDEF], [
     AC_ARG_ENABLE( $1-$2-macro,
         AC_HELP_STRING( --enable-$1-$2-macro=name@<:@=replace@:>@,
             [specify the $1-specific $2-style predefined macro.  $3]),
@@ -360,7 +360,7 @@ dnl relative to CURRENT or SOURCE directory.
 
 # AC_C_INCLUDE_PREF( CURRENT | SOURCE | NEXT)
 # Check the include preference ('NEXT' means CURRENT & SOURCE)
-AC_DEFUN([AC_C_INCLUDE_PREF], [
+AC_DEFUN( [AC_C_INCLUDE_PREF], [
     AC_EGREP_CPP( $1, [
 #include "../next/header.h"
 ],
@@ -620,7 +620,7 @@ fi
 
 if test x${ac_cv_c_compiler_gnu} = xyes; then
 
-    AC_DEFUN([AC_CHECK_MBCHAR_IS_ESCAPE_FREE], [
+    AC_DEFUN( [AC_CHECK_MBCHAR_IS_ESCAPE_FREE], [
         AC_CACHE_CHECK(
             [if '0x5c' in $1 multi-byte character is handled differently from backslash],
             [ac_cv_c_$2_escape_free],
