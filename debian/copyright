@@ -2,13 +2,15 @@ This package was debianized by NIIBE Yutaka <gniibe@fsij.org> on
 Mon, 22 Mar 2004 16:28:08 +0900.
 
 It was downloaded from ftp://ftp.m17n.org/pub/ftp/mcpp/
+	Then, the project moved to: http://mcpp.sf.net/
 
 Upstream Author: Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
 
 Copyright:
+(Taken from mcpp-2.6.2/LICENSE)
 
 /*-
- * Copyright (c) 1998, 2002-2004 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2006 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * This software including the files in this directory is provided under

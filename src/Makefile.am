@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 
 bin_PROGRAMS = mcpp
-mcpp_SOURCES = system.H configed.H internal.H main.c control.c eval.c expand.c mbchar.c support.c system.c lib.c
+mcpp_SOURCES = system.H configed.H internal.H main.c directive.c eval.c expand.c mbchar.c support.c system.c lib.c
 
-main.o control.o eval.o expand.o mbohar.o support.o system.o    : system.H internal.H
+main.o directive.o eval.o expand.o mbohar.o support.o system.o    : system.H internal.H
 lib.o       :   configed.H
 system.H    :   configed.H
 
@@ -19,7 +19,23 @@ endif
 install-exec-hook:
 	@if test x"$(gcc_path)" = x""; then	exit 1; fi
 	@$(srcdir)/set_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) $(gcc_min_ver) '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(EXEEXT)' '$(LN_S)' '$(inc_dir)'
+	$(top_srcdir)/config/install-sh -d "$(DESTDIR)$(prefix)/share/doc/mcpp"
+	cp -pf $(top_srcdir)/LICENSE $(top_srcdir)/README	\
+            $(DESTDIR)$(prefix)/share/doc/mcpp
 uninstall-hook:
 	@$(srcdir)/unset_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) $(gcc_min_ver) '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(EXEEXT)' '$(LN_S)' '$(inc_dir)'
+	rm -f $(DESTDIR)$(prefix)/share/doc/mcpp/LICENSE
+	rm -f $(DESTDIR)$(prefix)/share/doc/mcpp/README
 endif
+
+else
+
+install-exec-hook:
+	$(top_srcdir)/config/install-sh -d "$(DESTDIR)$(prefix)/share/doc/mcpp"
+	cp -pf $(top_srcdir)/LICENSE $(top_srcdir)/README	\
+            $(DESTDIR)$(prefix)/share/doc/mcpp
+uninstall-hook:
+	rm -f $(DESTDIR)$(prefix)/share/doc/mcpp/LICENSE
+	rm -f $(DESTDIR)$(prefix)/share/doc/mcpp/README
+
 endif
