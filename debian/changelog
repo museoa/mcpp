@@ -1,6 +1,18 @@
+mcpp (2.6.4-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Kiyoshi Matsui <kmatsui@t3.rim.or.jp>  Sun, 20 May 2007 22:55:19 +0900
+
+mcpp (2.6.3-1) unstable; urgency=low
+
+  * Initial Release by the author of mcpp.
+
+ -- Kiyoshi Matsui <kmatsui@t3.rim.or.jp>  Sat, 07 Apr 2007 14:27:29 +0900
+
 mcpp (2.6.2-1) unstable; urgency=low
 
-  * New upstream release
+  * New upstream release.
 
  -- NIIBE Yutaka <gniibe@fsij.org>  Mon, 13 Nov 2006 16:31:58 +0900
 

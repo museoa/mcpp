@@ -1,2 +1,2 @@
-version=2
-http://jaist.dl.sourceforge.net/sourceforge/mcpp/mcpp-(.*)\.tar\.gz	debian	uupdate
+version=3
+http://sf.net/mcpp/mcpp-(.*)\.tar\.gz

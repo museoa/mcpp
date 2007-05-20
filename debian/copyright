@@ -1,16 +1,14 @@
-This package was debianized by NIIBE Yutaka <gniibe@fsij.org> on
-Mon, 22 Mar 2004 16:28:08 +0900.
+This package was debianized by Kiyoshi Matsui <kmatsui@t3.rim.or.jp> on
+Sun, 20 May 2007 22:55:19 +0900
 
-It was downloaded from ftp://ftp.m17n.org/pub/ftp/mcpp/
-	Then, the project moved to: http://mcpp.sf.net/
+It was downloaded from <http://mcpp.sourceforge.net/>
 
-Upstream Author: Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+Copyright Holder: Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
 
-Copyright:
-(Taken from mcpp-2.6.2/LICENSE)
-
+License:
+(Taken from mcpp-2.6.4/LICENSE)
 /*-
- * Copyright (c) 1998, 2002-2006 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2007 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * This software including the files in this directory is provided under

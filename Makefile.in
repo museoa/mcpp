@@ -36,11 +36,12 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@REPLACE_CPP_TRUE@am__append_1 = tests .
+@MCPP_LIB_FALSE@@REPLACE_CPP_TRUE@am__append_1 = tests .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure ChangeLog \
-	INSTALL NEWS config/config.guess config/config.sub \
-	config/install-sh config/missing
+	INSTALL NEWS config/compile config/config.guess \
+	config/config.sub config/depcomp config/install-sh \
+	config/ltmain.sh config/missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/./config/mb_sjis \
@@ -83,6 +84,8 @@ distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
+AR = @AR@
+AS = @AS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -96,14 +99,17 @@ CXXCPP = @CXXCPP@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
+DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+F77 = @F77@
+FFLAGS = @FFLAGS@
 GNUC_FALSE = @GNUC_FALSE@
 GNUC_TRUE = @GNUC_TRUE@
-GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -111,11 +117,15 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
+MCPP_LIB_FALSE = @MCPP_LIB_FALSE@
+MCPP_LIB_TRUE = @MCPP_LIB_TRUE@
 MINGW_FALSE = @MINGW_FALSE@
 MINGW_TRUE = @MINGW_TRUE@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -124,14 +134,22 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+RANLIB = @RANLIB@
 REPLACE_CPP_FALSE = @REPLACE_CPP_FALSE@
 REPLACE_CPP_TRUE = @REPLACE_CPP_TRUE@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+ac_ct_AR = @ac_ct_AR@
+ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
+ac_ct_F77 = @ac_ct_F77@
+ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
+ac_ct_RANLIB = @ac_ct_RANLIB@
+ac_ct_STRIP = @ac_ct_STRIP@
 am__leading_dot = @am__leading_dot@
 am__tar = @am__tar@
 am__untar = @am__untar@
@@ -143,9 +161,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 cpp_call = @cpp_call@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 gcc_maj_ver = @gcc_maj_ver@
 gcc_min_ver = @gcc_min_ver@
@@ -156,22 +171,18 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-htmldir = @htmldir@
 inc_dir = @inc_dir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -182,15 +193,15 @@ target_os = @target_os@
 target_vendor = @target_vendor@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src $(am__append_1)
-@REPLACE_CPP_FALSE@man_page = mcpp
-@REPLACE_CPP_TRUE@man_page = mcpp-gcc
-man1_MANS = $(man_page).1
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@man_page = mcpp
+@MCPP_LIB_FALSE@@REPLACE_CPP_TRUE@man_page = mcpp-gcc
+@MCPP_LIB_FALSE@man1_MANS = $(man_page).1
 EXTRA_DIST = $(top_srcdir)/LICENSE $(top_srcdir)/INSTALL*   \
   $(top_srcdir)/ChangeLog.old $(top_srcdir)/NEWS    \
   $(top_srcdir)/mcpp.1 $(top_srcdir)/mcpp-gcc.1 $(top_srcdir)/config/mb_*   \
   $(top_srcdir)/src/preproc.c $(top_srcdir)/src/noconfig.H  \
   $(top_srcdir)/src/cc1.c $(top_srcdir)/src/*set_mcpp.sh 	\
-  $(top_srcdir)/src/testmain.c	\
+  $(top_srcdir)/src/testmain.c $(top_srcdir)/src/mcpp_lib.def	\
   $(top_srcdir)/tests/*_test.sh $(top_srcdir)/noconfig  \
   $(top_srcdir)/cpp-test $(top_srcdir)/test-t    \
   $(top_srcdir)/test-c $(top_srcdir)/test-l $(top_srcdir)/tool  \
@@ -232,6 +243,15 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(srcdir) && $(AUTOCONF)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+	-rm -f libtool
 uninstall-info-am:
 install-man1: $(man1_MANS) $(man_MANS)
 	@$(NORMAL_INSTALL)
@@ -563,6 +583,7 @@ installdirs-am:
 	done
 install: install-recursive
 install-exec: install-exec-recursive
+install-data: install-data-recursive
 uninstall: uninstall-recursive
 
 install-am: all-am
@@ -584,14 +605,19 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@MCPP_LIB_TRUE@install-exec-hook:
+@REPLACE_CPP_TRUE@install-exec-hook:
+@MCPP_LIB_TRUE@uninstall-hook:
+@REPLACE_CPP_TRUE@uninstall-hook:
 clean: clean-recursive
 
-clean-am: clean-generic mostlyclean-am
+clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-tags
+distclean-am: clean-am distclean-generic distclean-libtool \
+	distclean-tags
 
 dvi: dvi-recursive
 
@@ -606,6 +632,8 @@ info-am:
 install-data-am: install-man
 
 install-exec-am:
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 
 install-info: install-info-recursive
 
@@ -621,7 +649,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-generic
+mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
 pdf: pdf-recursive
 
@@ -632,42 +660,41 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-man
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 
 uninstall-info: uninstall-info-recursive
 
 uninstall-man: uninstall-man1
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am am--refresh check \
-	check-am clean clean-generic clean-recursive ctags \
-	ctags-recursive dist dist-all dist-bzip2 dist-gzip dist-shar \
-	dist-tarZ dist-zip distcheck distclean distclean-generic \
-	distclean-recursive distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
+	check-am clean clean-generic clean-libtool clean-recursive \
+	ctags ctags-recursive dist dist-all dist-bzip2 dist-gzip \
+	dist-shar dist-tarZ dist-zip distcheck distclean \
+	distclean-generic distclean-libtool distclean-recursive \
+	distclean-tags distcleancheck distdir distuninstallcheck dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-exec install-exec-am \
+	install-exec-hook install-info install-info-am install-man \
 	install-man1 install-strip installcheck installcheck-am \
 	installdirs installdirs-am maintainer-clean \
 	maintainer-clean-generic maintainer-clean-recursive \
-	mostlyclean mostlyclean-generic mostlyclean-recursive pdf \
-	pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-info-am uninstall-man uninstall-man1
+	mostlyclean mostlyclean-generic mostlyclean-libtool \
+	mostlyclean-recursive pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am uninstall-hook uninstall-info-am \
+	uninstall-man uninstall-man1
 
 
-install-data:
-	$(top_srcdir)/config/install-sh -d "$(DESTDIR)$(prefix)/share/doc/mcpp"
-	cp -Rpf $(top_srcdir)/cpp-test \
-            $(top_srcdir)/test-t $(top_srcdir)/test-c $(top_srcdir)/test-l  \
-            $(top_srcdir)/tool $(top_srcdir)/doc $(top_srcdir)/doc-jp   \
-            $(DESTDIR)$(prefix)/share/doc/mcpp
-
-uninstall-data:
-	rm -r -f $(DESTDIR)$(prefix)/share/doc/mcpp/cpp-test
-	rm -r -f $(DESTDIR)$(prefix)/share/doc/mcpp/test-t
-	rm -r -f $(DESTDIR)$(prefix)/share/doc/mcpp/test-c
-	rm -r -f $(DESTDIR)$(prefix)/share/doc/mcpp/test-l
-	rm -r -f $(DESTDIR)$(prefix)/share/doc/mcpp/tool
-	rm -r -f $(DESTDIR)$(prefix)/share/doc/mcpp/doc
-	rm -r -f $(DESTDIR)$(prefix)/share/doc/mcpp/doc-jp
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@install-exec-hook:
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@	$(top_srcdir)/config/install-sh -d "$(DESTDIR)$(prefix)/share/doc/mcpp"
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@	cp -pf $(top_srcdir)/LICENSE $(top_srcdir)/README $(top_srcdir)/NEWS \
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@            $(DESTDIR)$(prefix)/share/doc/mcpp
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@	cp -pf $(top_srcdir)/doc/mcpp-manual.html   \
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@            $(DESTDIR)$(prefix)/share/doc/mcpp
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@	cp -pf $(top_srcdir)/doc-jp/mcpp-manual.html   \
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@            $(DESTDIR)$(prefix)/share/doc/mcpp/mcpp-manual-jp.html
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@uninstall-hook:
+@MCPP_LIB_FALSE@@REPLACE_CPP_FALSE@	rm -rf $(DESTDIR)$(prefix)/share/doc/mcpp
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
