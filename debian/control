@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
 Uploaders: NIIBE Yutaka <gniibe@fsij.org>
 Build-Depends: debhelper (>= 4.0.0)
-Standards-Version: 3.7.2.2
+Standards-Version: 3.7.3
 
 Package: mcpp
 Architecture: any

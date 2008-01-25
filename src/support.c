@@ -1678,9 +1678,8 @@ not_comment:
                     , NULL, (long) c, NULL);
         case '\t':                          /* Horizontal space     */
         case ' ':
-            if (mcpp_mode == OLD_PREP) {
-                if ((*(tp - 1) != ' ' && *(tp - 1) != COM_SEP))
-                    *(tp - 1) = ' ';        /* Squeeze COM_SEP with spaces  */
+            if (mcpp_mode == OLD_PREP && (*(tp - 1) == COM_SEP)) {
+                *(tp - 1) = ' ';            /* Squeeze COM_SEP with spaces  */
             } else {
                 if (*(tp - 1) != ' ')
                     *tp++ = ' ';            /* Squeeze white spaces */
