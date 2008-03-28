@@ -44,9 +44,7 @@ subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/./config/mb_sjis \
-	$(top_srcdir)/./config/mb_jis $(top_srcdir)/./config/mb_big5 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -64,10 +62,10 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libmcpp_la_LIBADD =
 am__libmcpp_la_SOURCES_DIST = system.H configed.H internal.H main.c \
-	directive.c eval.c expand.c mbchar.c support.c system.c lib.c \
+	directive.c eval.c expand.c mbchar.c support.c system.c \
 	mcpp_lib.h
 @MCPP_LIB_TRUE@am_libmcpp_la_OBJECTS = main.lo directive.lo eval.lo \
-@MCPP_LIB_TRUE@	expand.lo mbchar.lo support.lo system.lo lib.lo
+@MCPP_LIB_TRUE@	expand.lo mbchar.lo support.lo system.lo
 libmcpp_la_OBJECTS = $(am_libmcpp_la_OBJECTS)
 @MCPP_LIB_TRUE@am_libmcpp_la_rpath = -rpath $(libdir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
@@ -79,13 +77,12 @@ am__cc1_SOURCES_DIST = cc1.c
 cc1_OBJECTS = $(am_cc1_OBJECTS)
 cc1_LDADD = $(LDADD)
 am__mcpp_SOURCES_DIST = system.H configed.H internal.H main.c \
-	directive.c eval.c expand.c mbchar.c support.c system.c lib.c \
+	directive.c eval.c expand.c mbchar.c support.c system.c \
 	mcpp_lib.h
 @MCPP_LIB_FALSE@am_mcpp_OBJECTS = mcpp-main.$(OBJEXT) \
 @MCPP_LIB_FALSE@	mcpp-directive.$(OBJEXT) mcpp-eval.$(OBJEXT) \
 @MCPP_LIB_FALSE@	mcpp-expand.$(OBJEXT) mcpp-mbchar.$(OBJEXT) \
-@MCPP_LIB_FALSE@	mcpp-support.$(OBJEXT) mcpp-system.$(OBJEXT) \
-@MCPP_LIB_FALSE@	mcpp-lib.$(OBJEXT)
+@MCPP_LIB_FALSE@	mcpp-support.$(OBJEXT) mcpp-system.$(OBJEXT)
 mcpp_OBJECTS = $(am_mcpp_OBJECTS)
 mcpp_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -163,6 +160,7 @@ REPLACE_CPP_TRUE = @REPLACE_CPP_TRUE@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+Target_Cpu = @Target_Cpu@
 VERSION = @VERSION@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_AS = @ac_ct_AS@
@@ -193,6 +191,7 @@ host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
+host_system = @host_system@
 host_vendor = @host_vendor@
 inc_dir = @inc_dir@
 includedir = @includedir@
@@ -211,13 +210,18 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target = @target@
 target_alias = @target_alias@
+target_cc = @target_cc@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 @MCPP_LIB_TRUE@lib_LTLIBRARIES = libmcpp.la
-@MCPP_LIB_TRUE@libmcpp_la_SOURCES = system.H configed.H internal.H main.c directive.c eval.c expand.c mbchar.c support.c system.c lib.c mcpp_lib.h
-@MCPP_LIB_TRUE@libmcpp_la_LDFLAGS = -no-undefined -version-info 0:1:0
-@MCPP_LIB_FALSE@mcpp_SOURCES = system.H configed.H internal.H main.c directive.c eval.c expand.c mbchar.c support.c system.c lib.c mcpp_lib.h
+@MCPP_LIB_TRUE@libmcpp_la_SOURCES = system.H configed.H internal.H main.c directive.c  \
+@MCPP_LIB_TRUE@    eval.c expand.c mbchar.c support.c system.c mcpp_lib.h
+
+@MCPP_LIB_TRUE@libmcpp_la_LDFLAGS = -no-undefined -version-info 1:0:1
+@MCPP_LIB_FALSE@mcpp_SOURCES = system.H configed.H internal.H main.c directive.c eval.c \
+@MCPP_LIB_FALSE@    expand.c mbchar.c support.c system.c mcpp_lib.h
+
 @MCPP_LIB_FALSE@mcpp_CFLAGS = $(AM_CFLAGS)		## dummy to avoid conflict with MCPP_LIB
 @GNUC_TRUE@@MINGW_TRUE@@REPLACE_CPP_TRUE@cc1_SOURCES = cc1.c
 @GNUC_TRUE@@MINGW_TRUE@@REPLACE_CPP_TRUE@cc1dir = $(bindir)
@@ -421,12 +425,6 @@ mcpp-system.o: system.c
 mcpp-system.obj: system.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mcpp_CFLAGS) $(CFLAGS) -c -o mcpp-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
 
-mcpp-lib.o: lib.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mcpp_CFLAGS) $(CFLAGS) -c -o mcpp-lib.o `test -f 'lib.c' || echo '$(srcdir)/'`lib.c
-
-mcpp-lib.obj: lib.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mcpp_CFLAGS) $(CFLAGS) -c -o mcpp-lib.obj `if test -f 'lib.c'; then $(CYGPATH_W) 'lib.c'; else $(CYGPATH_W) '$(srcdir)/lib.c'; fi`
-
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -620,19 +618,23 @@ uninstall-am: uninstall-binPROGRAMS uninstall-cc1PROGRAMS \
 	uninstall-libLTLIBRARIES
 
 
-@MCPP_LIB_TRUE@main.lo directive.lo eval.lo expand.lo mbohar.lo support.lo system.lo	: system.H internal.H mcpp_lib.h
-@MCPP_LIB_TRUE@lib.lo      :   configed.H
+@MCPP_LIB_TRUE@main.lo directive.lo eval.lo expand.lo mbohar.lo support.lo system.lo	\
+@MCPP_LIB_TRUE@    : system.H internal.H mcpp_lib.h
 @MCPP_LIB_TRUE@system.H    :   configed.H
 
-@MCPP_LIB_FALSE@main.o directive.o eval.o expand.o mbohar.o support.o system.o    : system.H internal.H mcpp_lib.h
-@MCPP_LIB_FALSE@lib.o       :   configed.H
+@MCPP_LIB_FALSE@main.o directive.o eval.o expand.o mbohar.o support.o system.o    :     \
+@MCPP_LIB_FALSE@    system.H internal.H mcpp_lib.h
 @MCPP_LIB_FALSE@system.H    :   configed.H
 
 @GNUC_TRUE@@REPLACE_CPP_TRUE@install-exec-hook:
 @GNUC_TRUE@@REPLACE_CPP_TRUE@	@if test x"$(gcc_path)" = x""; then	exit 1; fi
-@GNUC_TRUE@@REPLACE_CPP_TRUE@	@$(srcdir)/set_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) $(gcc_min_ver) '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(EXEEXT)' '$(LN_S)' '$(inc_dir)'
+@GNUC_TRUE@@REPLACE_CPP_TRUE@	@$(srcdir)/set_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) $(gcc_min_ver)  \
+@GNUC_TRUE@@REPLACE_CPP_TRUE@            '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(CPPFLAGS)' 'x$(EXEEXT)'  \
+@GNUC_TRUE@@REPLACE_CPP_TRUE@			'$(LN_S)' '$(inc_dir)' $(host_system) $(Target_Cpu) $(target_cc)
 @GNUC_TRUE@@REPLACE_CPP_TRUE@uninstall-hook:
-@GNUC_TRUE@@REPLACE_CPP_TRUE@	@$(srcdir)/unset_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) $(gcc_min_ver) '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(EXEEXT)' '$(LN_S)' '$(inc_dir)'
+@GNUC_TRUE@@REPLACE_CPP_TRUE@	@$(srcdir)/unset_mcpp.sh '$(gcc_path)' $(gcc_maj_ver) $(gcc_min_ver)\
+@GNUC_TRUE@@REPLACE_CPP_TRUE@             '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(EXEEXT)' '$(LN_S)'      \
+@GNUC_TRUE@@REPLACE_CPP_TRUE@             '$(inc_dir)' $(host_system) $(target_cc)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

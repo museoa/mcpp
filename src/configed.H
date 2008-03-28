@@ -8,7 +8,7 @@
 
 #define     TRUE            1
 #define     FALSE           0
-#define     DATE            "2007/05"               /* Date of mcpp     */
+#define     DATE            "2008/03"               /* Date of mcpp     */
 
 /*
  *  'Target' means the O.S. and the compiler to which cpp is implemented.
@@ -38,7 +38,7 @@
 #define SYS_LINUX           0x1800  /* (SYS_LINUX & 0xF000) == SYS_UNIX     */
 #define SYS_FREEBSD         0x1A00  /* (SYS_FREEBSD & 0xF000) == SYS_UNIX   */
 #define SYS_CYGWIN          0x1C00  /* (SYS_CYGWIN & 0xF000) == SYS_UNIX    */
-#define SYS_MAC             0x6000
+#define SYS_MAC             0x1E00  /* (SYS_MAC & 0xF000) == SYS_UNIX       */
 #define SYS_WIN             0x7000
 #define SYS_WIN32           0x7400  /* (SYS_WIN32 & 0xF000) == SYS_WIN      */
 #define SYS_MINGW           0x7C00  /* (SYS_MINGW & 0xF000) == SYS_WIN      */
@@ -70,7 +70,7 @@
  * MBCHAR means the default encoding, and you can change the encoding by
  *      #pragma MCPP setlocale, -e <encoding> option or environment variable
  *      LC_ALL, LC_CTYPE, LANG.
- * MBCHAR == 0 means no multi-byte character encoding.
+ * MBCHAR == 0 means not to recognize any multi-byte character encoding.
  */
 
 /*
@@ -85,16 +85,16 @@
  * They should not be #defined to no token or to "".
  *
  * CPU_OLD, CPU_STD1, CPU_STD2, CPU_SP_OLD, CPU_SP_STD
- *      define the target cpu (by name)
+ *      define the target cpu (by name).
  * SYSTEM_OLD, SYSTEM_STD1, SYSTEM_STD2, SYSTEM_EXT, SYSTEM_EXT2
- *      define the target operating system (by name)
+ *      define the target operating system (by name).
  * SYSTEM_SP_OLD, SYSTEM_SP_STD     define the target-OS specific macro name
  * COMPILER_OLD, COMPILER_STD1, COMPILER_STD2, COMPILER_EXT, COMPILER_EXT2
  *          , COMPILER_SP_OLD, COMPILER_SP_STD
- *      define the target compiler (by name)
- * COMPILER_CPLUS        define the target C++ compiler
+ *      define the target compiler (by name).
+ * COMPILER_CPLUS        defines the target C++ compiler.
  * COMPILER_SP1, COMPILER_SP2, COMPILER_SP3
- *      define the compiler-specific macros
+ *      define the compiler-specific macros.
  *
  * <macro>_VAL      specify the value of the <macro>.
  *      If not specified, these values default to "1".
@@ -149,9 +149,28 @@
 #if     SYSTEM == SYS_FREEBSD
 #define SYSTEM_EXT          "__FreeBSD__"
 #endif
+
 #if     SYSTEM == SYS_LINUX
 #define SYSTEM_EXT          "__linux__"
 #endif
+
+#if     SYSTEM == SYS_MAC
+#define SYSTEM_EXT          "__APPLE__"
+#if     COMPILER == INDEPENDENT
+/* Apple-GCC changes CPU-specific macros by -arch option.  These    */
+/* should be defined at compile time rather than configuration time.*/
+#if     defined (__i386__)
+#define CPU_OLD             "i386"
+#define CPU_STD2            "__i386__"
+#elif   defined (__x86_64__)
+#define CPU_STD2            "__x86_64__"
+#elif   defined (__ppc__)
+#define CPU_STD2            "__ppc__"
+#elif   defined (__ppc64__)
+#define CPU_STD2            "__ppc64__"
+#endif
+#endif
+#endif  /* SYSTEM == SYS_MAC    */
 
 #if     SYSTEM == SYS_CYGWIN
 #define SYSTEM_EXT          "__CYGWIN__"
@@ -189,6 +208,7 @@
 /*
  * __SIZE_TYPE__, __PTRDIFF_TYPE__ and __WCHAR_TYPE__ are the predefines of
  * GCC and undocumented in GCC 2.
+ * On GCC V.3.*, V.4.*, these macros are known by mcpp_g*_predef_*.h files.
  */
 #if     __GNUC__ == 2
 #define COMPILER_SP1        "__SIZE_TYPE__"
@@ -283,7 +303,20 @@
  * ULONGMAX     should be defined to the ULONG_MAX in <limits.h>.
  */
 
+/* _POSIX_* only to get PATH_MAX    */
+#define _POSIX_             1
+#define _POSIX_SOURCE       1
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE     1
+#define _POSIX_C_SOURCE_defined     1
+#endif
 #include    "limits.h"
+#undef  _POSIX_
+#undef  _POSIX_SOURCE
+#ifdef  _POSIX_C_SOURCE_defined
+#undef  _POSIX_C_SOURCE
+#undef  _POSIX_C_SOURCE_defined
+#endif
 #define CHARBIT             CHAR_BIT
 #define UCHARMAX            UCHAR_MAX
 #define USHRTMAX            USHRT_MAX
@@ -305,8 +338,6 @@
  * SJIS literal.
  * BIGFIVE_IS_ESCAPE_FREE means similar case on BIGFIVE encoding.
  * ISO2022_JP_IS_ESCAPE_FREE means similar case on ISO2022_JP encoding.
- *
- * GCC can handle these encodings if it has been configured so.
  */
 #ifndef SJIS_IS_ESCAPE_FREE
 #define SJIS_IS_ESCAPE_FREE     FALSE   /* or TRUE following your compiler  */
@@ -326,8 +357,6 @@
  */
 
 #define HOST_HAVE_STPCPY        HAVE_STPCPY
-#define HOST_HAVE_GETOPT        HAVE_GETOPT
-#define HOST_LIB_IS_GLIBC       LIB_IS_GLIBC
 
 /*
  * Declaration of standard library functions and macros.
@@ -336,11 +365,11 @@
 /* stdin, stdout, stderr, FILE, NULL, fgets(), fputs() and other functions. */
 #include    "stdio.h"
 
-/* FILENAMEMAX should be defined to FILENAME_MAX of host system.    */
-#ifdef  FILENAME_MAX
-#define FILENAMEMAX     FILENAME_MAX
+/* PATHMAX is the maximum length of path-list on the host system.   */
+#ifdef  PATH_MAX
+#define PATHMAX     PATH_MAX        /* Posix macro  */
 #else
-#define FILENAMEMAX     BUFSIZ
+#define PATHMAX     FILENAME_MAX
 #endif
 
 /* islower(), isupper(), toupper(), isdigit(), isxdigit(), iscntrl()        */
@@ -353,15 +382,6 @@
 #include    "stdlib.h"
 #include    "time.h"
 #include    "setjmp.h"
-
-/* Functions other than standard.   */
-#if     ! HOST_HAVE_GETOPT || HOST_LIB_IS_GLIBC || HOST_SYSTEM == SYS_MINGW
-#define NEED_GETOPT     TRUE
-#else
-#define NEED_GETOPT     FALSE
-#endif
-
-extern char *   stpcpy( char * dest, const char * src);
 
 /* For debugging malloc systems by kmatsui  */
 #if     KMMALLOC && _MEM_DEBUG

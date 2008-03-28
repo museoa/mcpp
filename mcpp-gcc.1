@@ -1,4 +1,4 @@
-.TH MCPP "1" "May 2007" "alternative CPP" "Commands for GCC"
+.TH MCPP "1" "Mar 2008" "alternative CPP" "Commands for GCC"
 .SH NAME
 mcpp \- Matsui CPP, an alternative C preprocessor
 .SH SYNOPSIS
@@ -110,12 +110,18 @@ Expand recursive macro more than Standard.
 Enable trigraphs.
 .IP \fB-trigraphs
 Enable trigraphs.
+.IP \fB-K
+Embed macro annotations into comments.
 .PP
 Options available with -@std (default), -@kr or -@oldprep options:
 .IP \fB-lang-asm
 Same as -x assembler-with-cpp.
 .IP "\fB-x assembler-with-cpp"
 Process "assembler" source.
+.PP
+Option available on Mac OS X / Apple-GCC:
+.IP "\fB-arch <arch>"
+Change the target to <arch> (one of i386, x86_64, ppc and ppc64).
 .PP
 Option available on CygWIN:
 .IP \fB-mno-cygwin
@@ -132,7 +138,7 @@ Putout all the macro definitions currently valid.
 .IP "#pragma MCPP debug <args>"
 Start to putout debugging informations.
     <args> should be one or more of:
-    token expand path if expression memory getc
+    token expand macro_call path if expression memory getc
 .IP "#pragma MCPP end_debug <args>"
 Stop to putout debugging informations.
     <args> are the same with 'debug'.
@@ -146,7 +152,7 @@ Retrieve the macro definition from the stack.
 .IP "#pragma MCPP warning    any message"
 Putout warning "any message".
 .SH "VERSION"
-MCPP V.2.6.4 (2007/05) for GCC
+MCPP V.2.7 (2008/03) for GCC
 .SH "SEE ALSO"
 The full documentation for \fBmcpp\fR are maintained as html files.
 Please see mcpp-manual.html.

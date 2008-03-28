@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1998, 2002-2007 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2008 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * Some parts of this code are derived from the public domain software
@@ -49,7 +49,10 @@
 
 /* Some system has a wrong definition of UCHAR_MAX.  See cpp-test.html#5.1.3 */
 #if     UCHARMAX < -255
-#error  "The definition of UCHARMAX (possibly UCHAR_MAX too) is wrong.  Define it as signed int value as 255, not as unsigned value as 255U."
+/* The definition of UCHARMAX (possibly UCHAR_MAX too) is wrong.    */
+/* Define it as a signed int value, not as an unsigned value.       */
+#undef  UCHARMAX
+#define UCHARMAX    ((1 << CHAR_BIT) - 1)
 #endif
 
 /*
@@ -119,7 +122,7 @@
  *      2. A space is inserted as a token separator between any tokens in
  *          a source (except a macro name and the next '(' in macro
  *          definition): thus simplifying tokenization, test of macro
- *          redefinition and macro expansion especially "stringization".
+ *          redefinition and macro expansion, especially "stringization".
  *      3. Test of macro redefinition ignores difference of parameter names,
  *          test of which has little utility and not a little overhead.
  *      4. #if expression forbids character constants, which have little
@@ -156,7 +159,7 @@
  * The following specifications are available only in KR and OLD_PREP modes.
  *      #assert, #asm, #endasm, #put_defines, #debug and some other older
  *          directives,
- *      argument of #line directive other than dicimal-digits.
+ *      argument of #line directive other than decimal-digits.
  */
 
 /* The values of 'mcpp_mode'.   */
@@ -198,7 +201,7 @@ typedef intmax_t    expr_t;
 typedef uintmax_t   uexpr_t;
 #else
 #if     HAVE_LONG_LONG
-#if     HOST_COMPILER == MSC || HOST_COMPILER == BORLANDC
+#if     (HOST_COMPILER == MSC && _MSC_VER < 1500) || HOST_COMPILER == BORLANDC
 typedef __int64             expr_t;
 typedef unsigned __int64    uexpr_t;
 #else
@@ -224,20 +227,15 @@ typedef long            expr_t;
 #endif
 
 /*
- * DOLLAR_IN_NAME   Should be set TRUE if $ is a valid letter in identifiers
- *              or FALSE if $ is invalid.
- */
-#ifndef DOLLAR_IN_NAME
-#define DOLLAR_IN_NAME      FALSE
-#endif
-
-/*
  * Translation limits.
  * The following definitions are used to allocate memory for work buffers.
  *
  * NWORK        Output buffer size.  Set this size according to your compiler-
  *              proper.  Length of string literal should be less than NWORK
  *              - 1.
+ *              Nevertheless, when COMPILER == GNUC || COMPILER == MSC, mcpp
+ *              uses NMACWORK as output buffer size because GNUC and Visual C
+ *              can accept very long line.
  * NBUFF        Input buffer size after line concatenation by <backslash>
  *              <newline>.
  * NMACWORK     Internal work buffer size for macro definition and expansion.
@@ -246,8 +244,8 @@ typedef long            expr_t;
  *              NOTE: Must be NMACPARS <= UCHARMAX.
  * NEXP         The maximum nesting depth of #if expressions.
  * BLK_NEST     The number of nested #if's permitted.
- * NINCLUDE     The number of directories that may be specified on a per-
- *              system basis, or by the -I option.
+ * INCLUDE_NEST The maximum nesting depth of #include.  This is needed to
+ *              prevent infinite recursive inclusion.
  * RESCAN_LIMIT The maximum rescan times of macro expansion in STD or POST_STD
  *              modes.
  * PRESTD_RESCAN_LIMIT  The maximum rescan times of macro expansion in KR or
@@ -259,8 +257,9 @@ typedef long            expr_t;
  * SBSIZE defines the number of hash-table slots for the macro symbol table.
  * It must be a power of 2.
  *
- * MKDEP_MAX    The maximum number of filenames in a dependency line of
- *              output of -M* option.
+ * MKDEP_INIT   The initial maximum number of filenames in a dependency line
+ *              of output of -M* option.  The maximum number is dynamically
+ *              enlarged in execution.
  */
 
 #ifndef IDMAX
@@ -277,9 +276,6 @@ typedef long            expr_t;
 #endif
 #ifndef INCLUDE_NEST
 #define INCLUDE_NEST        0x100
-#endif
-#ifndef NINCLUDE
-#define NINCLUDE            0x80
 #endif
 #ifndef RESCAN_LIMIT
 #define RESCAN_LIMIT        0x40
@@ -299,8 +295,8 @@ typedef long            expr_t;
 #ifndef SBSIZE
 #define SBSIZE              0x400
 #endif
-#ifndef MKDEP_MAX
-#define MKDEP_MAX           0x100
+#ifndef MKDEP_INIT
+#define MKDEP_INIT          0x100
 #endif
 
 #if     UCHARMAX < NMACPARS
@@ -369,7 +365,6 @@ typedef long            expr_t;
 
 /*
  * STDC     This macro is used for the predefined __STDC__.
- *      (STDC >= 1) disables predefined macros not beginning with '_'.
  * STDC_VERSION     is used for the value of __STDC_VERSION__.
  * STDC_HOSTED      is used for the value of __STDC_HOSTED__.
  */

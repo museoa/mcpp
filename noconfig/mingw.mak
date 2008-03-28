@@ -1,5 +1,5 @@
-# makefile to compile MCPP version 2.6.3 and later for MinGW / GCC / GNU make
-#   2007/05   kmatsui
+# makefile to compile MCPP version 2.7 and later for MinGW / GCC / GNU make
+#   2008/03   kmatsui
 #
 # First, you must edit GCCDIR, BINDIR, INCDIR, gcc_maj_ver and gcc_min_ver.
 # To make compiler-independent-build of MCPP do:
@@ -32,7 +32,7 @@ NAME = mcpp
 # CC:   name of gcc executable
 #       e.g. gcc, mingw32-gcc
 CC = gcc
-GPP = g++
+CXX = g++
 CFLAGS = -c -O2 -Wall   #-v 
 CPPFLAGS =
 
@@ -41,30 +41,32 @@ LINKFLAGS = -o $(NAME)
 ifeq    ($(COMPILER), )
 # compiler-independent-build
 CPPOPTS =
-# BINDIR:   /usr/bin or /usr/local/bin
+# BINDIR:   directory to install mcpp: /usr/bin or /usr/local/bin
 BINDIR = /usr/local/bin
 # INCDIR:   empty
 INCDIR =
+
 else
 # compiler-specific-build:  Adjust for your system
 
 ifeq    ($(COMPILER), GNUC)
-CPPOPTS = -DCOMPILER=$(COMPILER)
-# BINDIR:   the directory where cc1 resides
-BINDIR = /mingw/libexec/gcc/mingw32/3.4.5
-# INCDIR:   version specific include directory
-INCDIR = /mingw/lib/gcc/mingw32/3.4.5/include
+# The directory where 'gcc' (cc) command is located
+GCCDIR = /mingw/bin
 # set GCC version
 gcc_maj_ver = 3
 gcc_min_ver = 4
+# INCDIR:   version specific include directory
+INCDIR = /mingw/lib/gcc/mingw32/3.4.5/include
+CPPOPTS = -DCOMPILER=$(COMPILER)
+
+# BINDIR:   the directory where cc1 resides
+BINDIR = /mingw/libexec/gcc/mingw32/3.4.5
 cpp_call = $(BINDIR)/cc1.exe
+target = mingw32
 endif
 endif
 
 LIBDIR = /usr/local/lib
-
-# The directory where 'gcc' (cc) command is located
-GCCDIR = /mingw/bin
 
 ifneq   ($(MALLOC), )
 ifeq    ($(MALLOC), KMMALLOC)
@@ -76,7 +78,7 @@ else
         MEM_MACRO =
 endif
 
-OBJS = main.o directive.o eval.o expand.o support.o system.o mbchar.o lib.o
+OBJS = main.o directive.o eval.o expand.o support.o system.o mbchar.o
 
 $(NAME): $(OBJS)
 	$(CC) $(OBJS) $(LINKFLAGS)
@@ -111,8 +113,9 @@ endif
 install :
 	install -s -b $(NAME).exe $(BINDIR)/$(NAME).exe
 ifeq    ($(COMPILER), GNUC)
-	./set_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)' \
-            '$(cpp_call)' '$(CC)' '$(GPP)' 'x.exe' 'ln -s' '$(INCDIR)'
+	@./set_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'    \
+            '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(CPPFLAGS)' 'x' 'ln -s'   \
+            '$(INCDIR)' SYS_MINGW
 endif
 
 clean	:
@@ -121,8 +124,8 @@ clean	:
 uninstall:
 	rm -f $(BINDIR)/$(NAME).exe
 ifeq    ($(COMPILER), GNUC)
-	./unset_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'   \
-            '$(cpp_call)' '$(CC)' '$(GPP)' 'x.exe' 'ln -s' '$(INCDIR)'
+	@./unset_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'   \
+            '$(cpp_call)' '$(CC)' '$(CXX)' 'x.exe' 'ln -s' '$(INCDIR)' SYS_MINGW
 endif
 
 ifeq    ($(COMPILER), )
@@ -137,13 +140,13 @@ mcpplib_a:  $(OBJS)
 
 # DLL
 DLL_VER = 0
-SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so lib.so
+SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so
 .SUFFIXES: .so
 .c.so   :
-	$(CC) $(CFLAGS) $(MEM_MACRO) -DDLL_EXPORT -c -o$*.so $*.c
+	$(CC) $(CFLAGS) $(MEM_MACRO) -DDLL_EXPORT -c -o $*.so $*.c
         # -fPIC is not necessary for MinGW
 mcpplib_dll: $(SOBJS)
-	$(CC) -shared $(SOBJS) -olibmcpp-$(DLL_VER).dll -Wl,--enable-auto-image-base,--out-implib,libmcpp.dll.a
+	$(CC) -shared $(SOBJS) -o libmcpp-$(DLL_VER).dll -Wl,--enable-auto-image-base,--out-implib,libmcpp.dll.a
 
 mcpplib_install:
 	cp libmcpp.a libmcpp.dll.a $(LIBDIR)
@@ -158,7 +161,7 @@ ifeq    ($(OUT2MEM), 1)
 # output to memory buffer
 CFLAGS += -DOUT2MEM
 endif
-LINKFLAGS = $(NAME).o -o$(NAME).exe
+LINKFLAGS = $(NAME).o -o $(NAME).exe
 ifeq    ($(DLL_IMPORT), 1)
 LINKFLAGS += $(LIBDIR)/libmcpp.dll.a
 CFLAGS += -DDLL_IMPORT
