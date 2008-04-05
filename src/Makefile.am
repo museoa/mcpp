@@ -2,10 +2,14 @@
 
 if MCPP_LIB
 
+bin_PROGRAMS = mcpp
+mcpp_SOURCES = main_libmcpp.c
+mcpp_LDADD = -lmcpp
 lib_LTLIBRARIES = libmcpp.la
 libmcpp_la_SOURCES = system.H configed.H internal.H main.c directive.c  \
-    eval.c expand.c mbchar.c support.c system.c mcpp_lib.h
+    eval.c expand.c mbchar.c support.c system.c
 libmcpp_la_LDFLAGS = -no-undefined -version-info 1:0:1
+include_HEADERS = mcpp_lib.h
 
 main.lo directive.lo eval.lo expand.lo mbohar.lo support.lo system.lo	\
     : system.H internal.H mcpp_lib.h

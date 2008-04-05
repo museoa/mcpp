@@ -1,3 +1,21 @@
+mcpp (2.7-2) unstable; urgency=low
+
+  * debian/control, debian/rules: Provide packages libmcpp0 and
+    libmcpp0-dev as well as mcpp (Closes: #474169).
+    Thanks to Francisco Moya.
+  * debian/copyright: Updated.
+
+  NIIBE Yutaka:
+  * src/Makefile.am: Build mcpp with libmcpp.
+  * src/main_libmcpp.c: New file.
+  * Makefile.am: Install mcpp.1 even if MCPP_LIB is defined.
+  * debian/libmcpp-dev.{dirs,install}, debian/libmcpp0.{dirs,install},
+    debian/mcpp.install: New files.
+  * debian/rules: Enable dh_install and dh_makeshlibs.
+    Supply ac_cv_func_stpcpy=no to configure option to avoid GCC bug.
+
+ -- Kiyoshi Matsui <kmatsui@t3.rim.or.jp>  Sat, 05 Apr 2008 23:21:59 +0900
+
 mcpp (2.7-1) unstable; urgency=low
 
   * New upstream release.

@@ -19,14 +19,14 @@ endif
 
 config.status: configure
 	dh_testdir
-	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
+	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info --enable-mcpplib CFLAGS="$(CFLAGS)" ac_cv_func_stpcpy=no LDFLAGS="-Wl,-z,defs"
 
 
 build: build-stamp
 build-stamp:  config.status
 	dh_testdir
 	$(MAKE)
-	touch build-stamp
+	touch $@
 
 clean:
 	dh_testdir
@@ -41,10 +41,9 @@ install: build
 	dh_clean -k 
 	dh_installdirs
 
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/mcpp
-	rmdir $(CURDIR)/debian/mcpp/usr/lib
+	$(MAKE) DESTDIR=$(CURDIR)/debian/tmp install 
 #	LICENSE is included in debian/copyright
-	rm -f $(CURDIR)/debian/mcpp/usr/share/doc/mcpp/LICENSE
+	rm -f $(CURDIR)/debian/tmp/usr/share/doc/mcpp/LICENSE
 
 
 # Build architecture-independent files here.
@@ -58,7 +57,7 @@ binary-arch: build install
 	dh_installchangelogs ChangeLog
 	dh_installdocs
 	dh_installexamples
-#	dh_install
+	dh_install
 #	dh_installmenu
 #	dh_installdebconf	
 #	dh_installlogrotate
@@ -75,7 +74,7 @@ binary-arch: build install
 	dh_fixperms
 #	dh_perl
 #	dh_python
-#	dh_makeshlibs
+	dh_makeshlibs
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol

@@ -1,14 +1,14 @@
 This package was debianized by Kiyoshi Matsui <kmatsui@t3.rim.or.jp> on
-Sun, 20 May 2007 22:55:19 +0900
+Mon, 24 Mar 2008 00:49:32 +0900
 
 It was downloaded from <http://mcpp.sourceforge.net/>
 
 Copyright Holder: Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
 
 License:
-(Taken from mcpp-2.6.4/LICENSE)
+(Taken from mcpp-2.7/LICENSE)
 /*-
- * Copyright (c) 1998, 2002-2007 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2008 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * This software including the files in this directory is provided under

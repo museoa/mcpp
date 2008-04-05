@@ -3,7 +3,7 @@ Section: devel
 Priority: optional
 Maintainer: Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
 Uploaders: NIIBE Yutaka <gniibe@fsij.org>
-Build-Depends: debhelper (>= 4.0.0)
+Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.3
 
 Package: mcpp
@@ -23,3 +23,36 @@ Description: Alternative C/C++ preprocessor
  proprocessor or as a subroutine called from some other main program,
  this package installs only a stand-alone program named 'mcpp' which
  behaves independent from GCC.
+
+Package: libmcpp0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Alternative C/C++ preprocessor (shared library)
+ C/C++ preprocessor expands macros and processes '#if', '#include' and
+ some other directives.
+ .
+ MCPP is an alternative C/C++ preprocessor with the highest
+ conformance, implementated by Kiyoshi Matsui.  MCPP is especially
+ useful for debugging the source program which use complicated macros
+ and also useful for checking portability of the source.  It supports
+ multiple standards: K&R, ISO C90, ISO C99, and ISO C++98.
+ .
+ This package installs the shared library version of MCPP.
+
+Package: libmcpp-dev
+Section: libdevel
+Architecture: any
+Depends: libmcpp0 (= ${binary:Version})
+Description: Alternative C/C++ preprocessor (development files)
+ C/C++ preprocessor expands macros and processes '#if', '#include' and
+ some other directives.
+ .
+ MCPP is an alternative C/C++ preprocessor with the highest
+ conformance, implementated by Kiyoshi Matsui.  MCPP is especially
+ useful for debugging the source program which use complicated macros
+ and also useful for checking portability of the source.  It supports
+ multiple standards: K&R, ISO C90, ISO C99, and ISO C++98.
+ .
+ This package installs the development files for the library version
+ of MCPP.

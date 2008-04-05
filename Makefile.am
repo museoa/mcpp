@@ -4,7 +4,6 @@ AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = src
 
-if ! MCPP_LIB
 if REPLACE_CPP
 SUBDIRS += tests .
 man_page = mcpp-gcc
@@ -12,7 +11,6 @@ else
 man_page = mcpp
 endif
 man1_MANS = $(man_page).1
-endif
 
 EXTRA_DIST = $(top_srcdir)/LICENSE $(top_srcdir)/INSTALL*   \
   $(top_srcdir)/ChangeLog.old $(top_srcdir)/NEWS    \

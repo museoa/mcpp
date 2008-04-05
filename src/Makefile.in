@@ -15,6 +15,7 @@
 @SET_MAKE@
 
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -39,10 +40,11 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 @MCPP_LIB_FALSE@bin_PROGRAMS = mcpp$(EXEEXT)
+@MCPP_LIB_TRUE@bin_PROGRAMS = mcpp$(EXEEXT)
 @GNUC_TRUE@@MINGW_TRUE@@REPLACE_CPP_TRUE@cc1_PROGRAMS = cc1$(EXEEXT)
 subdir = src
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in
+DIST_COMMON = $(am__include_HEADERS_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/config.h.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -57,13 +59,12 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
-	"$(DESTDIR)$(cc1dir)"
+	"$(DESTDIR)$(cc1dir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libmcpp_la_LIBADD =
 am__libmcpp_la_SOURCES_DIST = system.H configed.H internal.H main.c \
-	directive.c eval.c expand.c mbchar.c support.c system.c \
-	mcpp_lib.h
+	directive.c eval.c expand.c mbchar.c support.c system.c
 @MCPP_LIB_TRUE@am_libmcpp_la_OBJECTS = main.lo directive.lo eval.lo \
 @MCPP_LIB_TRUE@	expand.lo mbchar.lo support.lo system.lo
 libmcpp_la_OBJECTS = $(am_libmcpp_la_OBJECTS)
@@ -78,13 +79,14 @@ cc1_OBJECTS = $(am_cc1_OBJECTS)
 cc1_LDADD = $(LDADD)
 am__mcpp_SOURCES_DIST = system.H configed.H internal.H main.c \
 	directive.c eval.c expand.c mbchar.c support.c system.c \
-	mcpp_lib.h
+	mcpp_lib.h main_libmcpp.c
 @MCPP_LIB_FALSE@am_mcpp_OBJECTS = mcpp-main.$(OBJEXT) \
 @MCPP_LIB_FALSE@	mcpp-directive.$(OBJEXT) mcpp-eval.$(OBJEXT) \
 @MCPP_LIB_FALSE@	mcpp-expand.$(OBJEXT) mcpp-mbchar.$(OBJEXT) \
 @MCPP_LIB_FALSE@	mcpp-support.$(OBJEXT) mcpp-system.$(OBJEXT)
+@MCPP_LIB_TRUE@am_mcpp_OBJECTS = mcpp-main_libmcpp.$(OBJEXT)
 mcpp_OBJECTS = $(am_mcpp_OBJECTS)
-mcpp_LDADD = $(LDADD)
+mcpp_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
 depcomp =
 am__depfiles_maybe =
@@ -99,6 +101,9 @@ LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 SOURCES = $(libmcpp_la_SOURCES) $(cc1_SOURCES) $(mcpp_SOURCES)
 DIST_SOURCES = $(am__libmcpp_la_SOURCES_DIST) $(am__cc1_SOURCES_DIST) \
 	$(am__mcpp_SOURCES_DIST)
+am__include_HEADERS_DIST = mcpp_lib.h
+includeHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -130,6 +135,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 GNUC_FALSE = @GNUC_FALSE@
 GNUC_TRUE = @GNUC_TRUE@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -162,15 +168,9 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 Target_Cpu = @Target_Cpu@
 VERSION = @VERSION@
-ac_ct_AR = @ac_ct_AR@
-ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
 am__leading_dot = @am__leading_dot@
 am__tar = @am__tar@
 am__untar = @am__untar@
@@ -182,6 +182,9 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 cpp_call = @cpp_call@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 gcc_maj_ver = @gcc_maj_ver@
 gcc_min_ver = @gcc_min_ver@
@@ -193,18 +196,22 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_system = @host_system@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 inc_dir = @inc_dir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -214,14 +221,17 @@ target_cc = @target_cc@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
-@MCPP_LIB_TRUE@lib_LTLIBRARIES = libmcpp.la
-@MCPP_LIB_TRUE@libmcpp_la_SOURCES = system.H configed.H internal.H main.c directive.c  \
-@MCPP_LIB_TRUE@    eval.c expand.c mbchar.c support.c system.c mcpp_lib.h
-
-@MCPP_LIB_TRUE@libmcpp_la_LDFLAGS = -no-undefined -version-info 1:0:1
 @MCPP_LIB_FALSE@mcpp_SOURCES = system.H configed.H internal.H main.c directive.c eval.c \
 @MCPP_LIB_FALSE@    expand.c mbchar.c support.c system.c mcpp_lib.h
 
+@MCPP_LIB_TRUE@mcpp_SOURCES = main_libmcpp.c
+@MCPP_LIB_TRUE@mcpp_LDADD = -lmcpp
+@MCPP_LIB_TRUE@lib_LTLIBRARIES = libmcpp.la
+@MCPP_LIB_TRUE@libmcpp_la_SOURCES = system.H configed.H internal.H main.c directive.c  \
+@MCPP_LIB_TRUE@    eval.c expand.c mbchar.c support.c system.c
+
+@MCPP_LIB_TRUE@libmcpp_la_LDFLAGS = -no-undefined -version-info 1:0:1
+@MCPP_LIB_TRUE@include_HEADERS = mcpp_lib.h
 @MCPP_LIB_FALSE@mcpp_CFLAGS = $(AM_CFLAGS)		## dummy to avoid conflict with MCPP_LIB
 @GNUC_TRUE@@MINGW_TRUE@@REPLACE_CPP_TRUE@cc1_SOURCES = cc1.c
 @GNUC_TRUE@@MINGW_TRUE@@REPLACE_CPP_TRUE@cc1dir = $(bindir)
@@ -425,6 +435,12 @@ mcpp-system.o: system.c
 mcpp-system.obj: system.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mcpp_CFLAGS) $(CFLAGS) -c -o mcpp-system.obj `if test -f 'system.c'; then $(CYGPATH_W) 'system.c'; else $(CYGPATH_W) '$(srcdir)/system.c'; fi`
 
+mcpp-main_libmcpp.o: main_libmcpp.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mcpp_CFLAGS) $(CFLAGS) -c -o mcpp-main_libmcpp.o `test -f 'main_libmcpp.c' || echo '$(srcdir)/'`main_libmcpp.c
+
+mcpp-main_libmcpp.obj: main_libmcpp.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mcpp_CFLAGS) $(CFLAGS) -c -o mcpp-main_libmcpp.obj `if test -f 'main_libmcpp.c'; then $(CYGPATH_W) 'main_libmcpp.c'; else $(CYGPATH_W) '$(srcdir)/main_libmcpp.c'; fi`
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -434,6 +450,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-includeHEADERS: $(include_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(includedir)" || $(mkdir_p) "$(DESTDIR)$(includedir)"
+	@list='$(include_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
+	  $(includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
+	done
+
+uninstall-includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(include_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(includedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(includedir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -512,11 +545,11 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) config.h
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS) config.h
 install-binPROGRAMS: install-libLTLIBRARIES
 
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(cc1dir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(cc1dir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -567,7 +600,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-cc1PROGRAMS
+install-data-am: install-cc1PROGRAMS install-includeHEADERS
 
 install-exec-am: install-binPROGRAMS install-libLTLIBRARIES
 	@$(NORMAL_INSTALL)
@@ -597,7 +630,8 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-cc1PROGRAMS \
-	uninstall-info-am uninstall-libLTLIBRARIES
+	uninstall-includeHEADERS uninstall-info-am \
+	uninstall-libLTLIBRARIES
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 
@@ -608,13 +642,14 @@ uninstall-am: uninstall-binPROGRAMS uninstall-cc1PROGRAMS \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-binPROGRAMS install-cc1PROGRAMS \
 	install-data install-data-am install-exec install-exec-am \
-	install-exec-hook install-info install-info-am \
-	install-libLTLIBRARIES install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-binPROGRAMS \
-	uninstall-cc1PROGRAMS uninstall-hook uninstall-info-am \
+	install-exec-hook install-includeHEADERS install-info \
+	install-info-am install-libLTLIBRARIES install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-cc1PROGRAMS uninstall-hook \
+	uninstall-includeHEADERS uninstall-info-am \
 	uninstall-libLTLIBRARIES
 
 
