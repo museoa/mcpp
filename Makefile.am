@@ -24,8 +24,6 @@ EXTRA_DIST = $(top_srcdir)/LICENSE $(top_srcdir)/INSTALL*   \
   $(top_srcdir)/doc $(top_srcdir)/doc-jp
 
 if ! REPLACE_CPP 
-if ! MCPP_LIB
-
 install-exec-hook:
 	$(top_srcdir)/config/install-sh -d "$(DESTDIR)$(prefix)/share/doc/mcpp"
 	cp -pf $(top_srcdir)/LICENSE $(top_srcdir)/README $(top_srcdir)/NEWS \
@@ -36,7 +34,5 @@ install-exec-hook:
             $(DESTDIR)$(prefix)/share/doc/mcpp/mcpp-manual-jp.html
 uninstall-hook:
 	rm -rf $(DESTDIR)$(prefix)/share/doc/mcpp
-
-endif
 endif
 

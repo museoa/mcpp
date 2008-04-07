@@ -1,3 +1,4 @@
+#define MCPP_LIB    1   /* enable declaration of public functions   */
 #include "mcpp_lib.h"
 
 int

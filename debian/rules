@@ -45,10 +45,28 @@ install: build
 #	LICENSE is included in debian/copyright
 	rm -f $(CURDIR)/debian/tmp/usr/share/doc/mcpp/LICENSE
 
+	mkdir -p debian/mcpp-doc/usr/share/doc/mcpp
+	mkdir -p debian/mcpp-doc/usr/share/doc/mcpp-doc
+	mv debian/tmp/usr/share/doc/mcpp/*.html \
+		debian/mcpp-doc/usr/share/doc/mcpp/
+	for i in debian/mcpp-doc/usr/share/doc/mcpp/*.html; do \
+	  i=$$(basename $$i); \
+	  dh_link -pmcpp-doc \
+	    /usr/share/doc/mcpp/$$i /usr/share/doc/mcpp-doc/$$i; \
+	done
 
 # Build architecture-independent files here.
 binary-indep: build install
-# We have nothing to do by default.
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol -pmcpp-doc
+	dh_md5sums -pmcpp-doc
+	dh_builddeb -pmcpp-doc
 
 # Build architecture-dependent files here.
 binary-arch: build install
@@ -77,9 +95,9 @@ binary-arch: build install
 	dh_makeshlibs
 	dh_installdeb
 	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
+	dh_gencontrol -pmcpp -plibmcpp0 -plibmcpp-dev
+	dh_md5sums -pmcpp -plibmcpp0 -plibmcpp-dev
+	dh_builddeb -pmcpp -plibmcpp0 -plibmcpp-dev
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install 
