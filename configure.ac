@@ -1,10 +1,10 @@
-dnl configure.ac for MCPP   2003/11, 2008/03  kmatsui
+dnl configure.ac for MCPP   2003/11, 2008/05  kmatsui
 dnl Process this file with autoconf to produce a configure script.
 
 dnl WARNING: This script does not assume cross-compiling.
 dnl To cross-compile you must edit here and there of this file.
 
-AC_INIT( mcpp, 2.7, kmatsui@t3.rim.or.jp)
+AC_INIT( mcpp, 2.7.1, kmatsui@t3.rim.or.jp)
 AC_CONFIG_SRCDIR( src/main.c)
 AM_CONFIG_HEADER( src/config.h)
 AC_CONFIG_AUX_DIR( config)
@@ -124,21 +124,33 @@ dnl Define target specific predefined macros.
 
 AC_MSG_NOTICE( [setting predefined macros for target cpu])
 
+## If $target_cpu is x86_64, $Target_Cpu is x86_64, which is the default,
+## and $Target_Cpu32 should be i386.
+## If $target_cpu is ppc64, $Target_Cpu is ppc64, which is the default,
+## and $Target_Cpu32 should be ppc.
+## If $target_cpu is neither x86_64 nor ppc64, both of $Target_Cpu and 
+## $Target_Cpu32 are $target_cpu.
+
 case $target_cpu in
-i?86*)
-    Target_Cpu=i386
-    ;;
 x86_64|amd64)
     Target_Cpu=x86_64
+    Target_Cpu32=i386
+    ;;
+i?86*)
+    Target_Cpu=i386
+    Target_Cpu32=i386
     ;;
 powerpc64|ppc64)
     Target_Cpu=ppc64
+    Target_Cpu32=ppc
     ;;
 powerpc|ppc|ppc7400)
     Target_Cpu=ppc
+    Target_Cpu32=ppc
     ;;
 *)
     Target_Cpu=$target_cpu
+    Target_Cpu32=$target_cpu
     ;;
 esac
 
@@ -293,10 +305,16 @@ if test x$ac_cv_c_compiler_gnu = xyes; then
     AC_DEFINE_UNQUOTED( [GCC_MINOR_VERSION], "$gcc_min_ver",
         [Define gcc minor version.])
 
+    cw=`pwd`
+    if test x$srcdir = "x." || test x$srcdir = x; then
+        src_dir=$cw
+    else
+        src_dir=$srcdir
+    fi
     if test $ac_c_define_HOST_SYSTEM = SYS_CYGWIN; then
         AC_CACHE_CHECK( the root directory,
             ac_cv_cygwin_root,
-            [ac_cv_cygwin_root=`mount | grep ' on / ' | sed 's, on / .*,,' | tr '\\\' '/'`]
+            [ac_cv_cygwin_root=`$src_dir/config/cygwin_root`]
         )
         AC_DEFINE_UNQUOTED( [CYGWIN_ROOT_DIRECTORY], "$ac_cv_cygwin_root",
             [Define root directory of CYGWIN.])
@@ -304,8 +322,7 @@ if test x$ac_cv_c_compiler_gnu = xyes; then
     if test $ac_c_define_HOST_SYSTEM = SYS_MINGW; then
         AC_CACHE_CHECK( the root directory,
             ac_cv_msys_root,
-            cw=`pwd`
-            cd /
+            cd /tmp
             cat > getcwd.c <<\_EOF
 #include <stdio.h>
 #include <unistd.h>
@@ -318,16 +335,16 @@ int main( int argc, char ** argv)
 }
 _EOF
             $CC getcwd.c
-            [ac_cv_msys_root=`./a.exe | tr '\\\', '/'`]
-            ## redundant \ to work around MinGW's problem
+            cd /
+            [ac_cv_msys_root=`$src_dir/config/mingw_root`]
         )
         AC_CACHE_CHECK( the /mingw directory,
             ac_cv_mingw_dir,
             cd /mingw
-            [ac_cv_mingw_dir=`/a.exe | tr '\\\', '/'`]
+            [ac_cv_mingw_dir=`$src_dir/config/mingw_root`]
         )
-        rm -f /getcwd.c /a.exe
         cd $cw
+        rm -f /tmp/getcwd.c /tmp/a.exe
         AC_DEFINE_UNQUOTED( [MSYS_ROOT_DIRECTORY], "$ac_cv_msys_root",
             [Define root directory of MSYS.])
         AC_DEFINE_UNQUOTED( [MINGW_DIRECTORY], "$ac_cv_mingw_dir",
@@ -707,6 +724,7 @@ if test x$ac_cv_c_compiler_gnu = xyes; then
     AC_SUBST( [CPPFLAGS])
     AC_SUBST( [host_system])
     AC_SUBST( [Target_Cpu])
+    AC_SUBST( [Target_Cpu32])
     AC_SUBST( [inc_dir])
     AC_SUBST( [gcc_maj_ver])
     AC_SUBST( [gcc_min_ver])

@@ -1,5 +1,5 @@
-# makefile to compile MCPP version 2.7 and later for CygWIN / GCC / GNU make
-# 2008/03   kmatsui
+# makefile to compile MCPP version 2.7.1 and later for CygWIN / GCC / GNU make
+# 2008/05   kmatsui
 #
 # First, you must edit GCCDIR, BINDIR, INCDIR, gcc_maj_ver and gcc_min_ver.
 # To make compiler-independent-build of MCPP do:
@@ -15,8 +15,8 @@
 #       make MCPP_LIB=1 mcpplib
 #       make MCPP_LIB=1 mcpplib_install
 # To make testmain using libmcpp (add 'DLL_IMPORT=1' to link against DLL):
-#       make MCPP_LIB=1 [OUT2MEM=1] testmain
-#       make MCPP_LIB=1 [OUT2MEM=1] testmain_install
+#       make [OUT2MEM=1] testmain
+#       make [OUT2MEM=1] testmain_install
 
 # COMPILER:
 #   Specify whether make a compiler-independent-build or GCC-specific-build
@@ -42,8 +42,8 @@ ifeq    ($(COMPILER), )
 CPPOPTS =
 # BINDIR:   directory to install mcpp: /usr/bin or /usr/local/bin
 BINDIR = /usr/local/bin
-# INCDIR:   empty
-INCDIR =
+# INCDIR:   directory to install mcpp_lib.h, mcpp_out.h for libmcpp
+INCDIR = /usr/local/include
 
 else
 # compiler-specific-build:  Adjust for your system
@@ -64,6 +64,11 @@ CPPOPTS = -DCOMPILER=$(COMPILER)
 #BINDIR = /usr/lib/gcc-lib/i686-pc-cygwin/2.95.3-5
 BINDIR = /usr/lib/gcc/i686-pc-cygwin/3.4.4
 target = i686-pc-cygwin
+cpu = i386
+#cpu = x86_64
+# If cpu is x86_64, set cpu32 as i386
+# If cpu is not x86_64, set cpu32 as cpu
+cpu32 = i386
 ifeq ($(gcc_maj_ver), 2)
 cpp_call = $(BINDIR)/cpp0.exe
 else
@@ -109,7 +114,7 @@ install :
 ifeq    ($(COMPILER), GNUC)
 	@./set_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'        \
             '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(CPPFLAGS)' 'x' 'ln -s'   \
-            '$(INCDIR)' SYS_CYGWIN
+            '$(INCDIR)' SYS_CYGWIN $(cpu) $(cpu32)
 endif
 
 clean	:
@@ -126,7 +131,7 @@ ifeq    ($(COMPILER), )
 ifeq    ($(MCPP_LIB), 1)
 # compiler-independent-build and MCPP_LIB=1
 CFLAGS += -DMCPP_LIB
-LIBDIR=/usr/local/lib
+LIBDIR = /usr/local/lib
 
 mcpplib :   mcpplib_a mcpplib_dll
 
@@ -146,29 +151,33 @@ mcpplib_install:
 	cp libmcpp.a libmcpp.dll.a $(LIBDIR)
 	cp cygmcpp-$(DLL_VER).dll $(BINDIR)
 	ranlib $(LIBDIR)/libmcpp.a
+	cp mcpp_lib.h mcpp_out.h $(INCDIR)
+	$(CC) -o $(NAME) main_libmcpp.c $(LIBDIR)/libmcpp.dll.a
+	install -s -b $(NAME).exe $(BINDIR)/$(NAME).exe
 mcpplib_uninstall:
 	rm -f $(LIBDIR)/libmcpp.a $(LIBDIR)/libmcpp.dll.a $(BINDIR)/cygmcpp-$(DLL_VER).dll
+	rm -f $(BINDIR)/$(NAME).exe
+	rm -f $(INCDIR)/mcpp*
+endif
 
 # use mcpp as a subroutine from testmain.c
-NAME = testmain
 ifeq    ($(OUT2MEM), 1)
 # output to memory buffer
 CFLAGS += -DOUT2MEM
 endif
-LINKFLAGS = $(NAME).o -o $(NAME).exe
+TMAIN_LINKFLAGS = testmain.o -o testmain.exe
 ifeq    ($(DLL_IMPORT), 1)
-LINKFLAGS += $(LIBDIR)/libmcpp.dll.a
+TMAIN_LINKFLAGS += $(LIBDIR)/libmcpp.dll.a
 CFLAGS += -DDLL_IMPORT
 else
-LINKFLAGS += $(LIBDIR)/libmcpp.a
+TMAIN_LINKFLAGS += $(LIBDIR)/libmcpp.a
 endif
-$(NAME) :   $(NAME).o
-	$(CC) $(LINKFLAGS)
-$(NAME)_install :
-	install -s $(NAME).exe $(BINDIR)/$(NAME).exe
-$(NAME)_uninstall   :
-	rm -f $(BINDIR)/$(NAME).exe
+testmain :   testmain.o
+	$(CC) $(TMAIN_LINKFLAGS)
+testmain_install :
+	install -s testmain.exe $(BINDIR)/testmain.exe
+testmain_uninstall   :
+	rm -f $(BINDIR)/testmain.exe
 
-endif
 endif
 

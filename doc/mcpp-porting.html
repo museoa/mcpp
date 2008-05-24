@@ -11,7 +11,7 @@
 <h2>== How to Port MCPP ==</h2>
 </div>
 <div align="right">
-<h4>for V.2.7 (2008/03)<br>
+<h4>for V.2.7.1 (2008/05)<br>
 Kiyoshi Matsui (kmatsui@t3.rim.or.jp)</h4>
 </div>
 <div align="center">
@@ -168,17 +168,21 @@ In November 2006, V.2.6.2 was released.  In this version, most of the text file 
 In April 2007, V.2.6.3 was released.  In this version, compatibility of GCC-specific-build to GCC was increased, and output to memory buffer was implemented in subroutine-build by contribution from Greg Kress.  In addition, binary packages for some systems were begun to be provided.<br>
 In May 2007, V.2.6.4 was released.  This is a bug-fixed version of V.2.6.3.<br>
 <br>
-<li>In February 2008, V.2.7 was released.
+<li>In March 2008, V.2.7 was released.
 In this version, 'macro notification mode' to embed macro informations into comments was implemented, and much codes were added.
 This mode enables to know the line and column position of macro calls on the source file from the preprocessed output.
 It was implemented for C/C++ refactoring tools.<br>
 A porting to Mac OS X / Apple-GCC was added.
 Also a porting to Visual C++ 2008 was done.
 GCC-specific-build became more close to GCC.
-Some bugs of the previous version were fixed.
+Some bugs of the previous version were fixed.<br>
+<br>
+<li>In May 2008, V.2.7.1 was released.
+This is a bug-fixed version of V.2.7.
+This version changed each binary package on UNIX-like systems to install a shared library or DLL of mcpp and an mcpp executable linking the library.<br>
 </ol>
 <p>Note:</p>
-<p>*1 The outline of the "Exploratory Software Project" can be seen at the following site (the documents are only in Japanese).</p>
+<p>*1 The outline of the "Exploratory Software Project" can be seen at the following site (Japanese pages only).</p>
 <blockquote>
 <p><a href="http://www.ipa.go.jp/jinzai/esp/">http://www.ipa.go.jp/jinzai/esp/</a></p>
 </blockquote>
@@ -442,11 +446,11 @@ For CygWIN V.1.5.18 / GCC V.3.4.4, apply cyg1518.dif.</p>
 <p>In LCC-WIN32 2003-08 or 2006-03, it needs to be changed as per lcc0308.dif, lcc0603.dif respectively.  In other versions, the <i>VERSION_MSG</i> macro needs to be modified.</p>
 
 <h3><a name="3.1.8" href="#toc.3.1.8">3.1.8. Visual C++ 2002, 2003, 2005, 2008</a></h3>
-<p>In Visual C++ 2002, 2003, 2005, 2008, it needs modifications as vc2002.dif, vc2003.dif, vc2005.dif, vc2008.dif respectively.  For the compiler-specific-build, modify <i>COMPILER</i> or overwrite it by the nmake option, of course.</p>
+<p>In Visual C++ 6.0, 2002, 2003, 2005, 2008, it needs modifications as vc6.dif, vc2002.dif, vc2003.dif, vc2005.dif, vc2008.dif respectively.  For the compiler-specific-build, modify <i>COMPILER</i> or overwrite it by the nmake option, of course.</p>
 <p>For other versions of Visual C, besides modifying <i>VERSION_MSG</i> macro, the values of predefined macros, <tt>_MSC_VER</tt> and <tt>_MSC_FULL_VER</tt>, should be changed by modifying the definition of <i>COMPILER_EXT_VAL</i> and <i>COMPILER_EXT2_VAL</i> respectively.</p>
 
 <h3><a name="3.1.9" href="#toc.3.1.9">3.1.9. Borland C++ V.4.*, V.5.*</a></h3>
-<p>In Borland C V.4.0, V.5.5 / bcc32, it needs to be changed with bc40.dif or bc55.dif respectively.</p>
+<p>In Borland C V.4.0, V.5.5, V.5.9 (C++Builder 2007) / bcc32, it needs to be changed with bc40.dif, bc55.dif, bc59.dif respectively.</p>
 <p>In other versions of Borland C++, besides the <i>VERSION_MSG</i> macro, the values of predefined macros, <tt>__TURBOC__</tt>, <tt>__BORLANDC__</tt> and <tt>__BCPLUSPLUS__</tt> should be changed by modifying macros <i>COMPILER_STD2_VAL</i>, <i>COMPILER_EXT_VAL</i> and <i>COMPILER_CPLUS_VAL</i>, in <samp>noconfig.H</samp>.  (Refer Sec 
 <a href="#4.1.1.1">4.1.1.1</a>.)  If the version can handle digraphs, the definition of <i>HAVE_DIGRAPHS</i> needs to be changed.  If the version has <tt>__STDC_VERSION__</tt> macro, change the definition of <i>STDC_VERSION</i>.</p>
 <p>For the versions till Borland C 4.*, change the line as:</p>
@@ -638,7 +642,8 @@ sudo make install
 Then libmcpp.so and libmcpp.so.0 will be created as links to libmcpp.so.$(SHLIB_VER).
 The *.a is a static library, and the *.so is a shared library.
 The file named libmcpp.la will also be created, which is for the tool 'libtool'.
-$(SHLIB_VER) is 0.0.0 on <b>mcpp</b> V.2.6.3, 0.0.1 on V.2.6.4, 0.1.0 on V.2.7 and later.</p>
+$(SHLIB_VER) is 0.0.0 on <b>mcpp</b> V.2.6.3, 0.0.1 on V.2.6.4, 0.1.0 on V.2.7 and later.
+Also header files mcpp_lib.h and mcpp_out.h are installed into /usr/local/include, which are necessary for user program to use libmcpp.</p>
 <p>On Mac OS X, the name of the shared library is *.dylib, not *.so.
 And, if you specify some CPUs by -arch option, such as "<samp>make CFLAGS+='-arch i386 -arch ppc'</samp>", a universal binary for those CPUs will be generated.
 In addition, you can widen the range of Mac OS X version on which the binary will run by -isysroot and -mmacosx-version-min= options.
@@ -650,9 +655,16 @@ make CFLAGS+='-isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.
 On CygWIN, libmcpp.a, libmcpp.dll.a, libmcpp.la will be generated and installed into /usr/local/lib, and cygmcpp-0.dll will be generated and installed into /usr/local/bin.
 On MinGW, those are the same with CygWIN, except cygmcpp-0.dll changes to libmcpp-0.dll.
 To use the DLL, link your main program against libmcpp.dll.a, which is an 'import library' for the DLL.</p>
-<p>In order to test the generated libraries, compile testmain.c and link it against one of the libraries.
-This cannot be done by configure.
+<p>Also main_libmcpp.c is compiled and installed into /usr/local/bin under the name of <b>mcpp</b> which links the generated libmcpp.so.
+As you see in the source, you should include mcpp_lib.h to use libmcpp. *1</p>
+<p>Minimal documents are installed too.<p>
+<p>You can compile testmain.c as well and link it against one of the libraries.
+The configure does not do this.
 See 3.12.2.</p>
+<p>Note:</p>
+<p>*1 The compiler-independent-build of stand-alone mcpp, which does not use libmcpp, is installed into the same directory under the same name.
+So, they overwrite each other.
+As for documents, the same ones are installed into the same directory, so overwrite each other.</p>
 
 <h3><a name="3.12.2" href="#toc.3.12.2">3.12.2. Using noconfig/*.mak</a></h3>
 
@@ -664,29 +676,34 @@ make MCPP_LIB=1 mcpplib_install
 <p>While the above commands makes a compiler-independent-build, you can also make a compiler-specific-build by adding an option <samp>'COMPILER=MSC'</samp> or the like, unless the compiler is GCC.<br>
 For Visual C, use <samp>'nmake'</samp> instead of <samp>'make'</samp>.<br>
 Since the 'make' command attached to LCC-Win32 cannot handle 'if' directive, you must edit the makefile whenever you do different 'make's.</p>
-<p>On Linux, FreeBSD, Max OS X, CygWIN and MinGW, the result is the same with that of the configure above, except libmcpp.la is not created.<br>
+<p>On Linux, FreeBSD, Max OS X, CygWIN and MinGW, the result is the same with that of the configure above, except libmcpp.la is not created and the documents are not installed.<br>
 On Mac OS X, if you remove the '#' which comments out the definition of variable UFLAGS in mac_osx.mak, universal binary will be generated for each library.<br>
 On Windows, the name of the libraries are different from those on Linux as shown in the table below.</p>
 
 <table border='1' frame='below'>
-  <tr><th></th><th>Linux, FreeBSD / GCC</th><th>Mac OS X / GCC</th><th>CygWIN / GCC</th><th>MinGW / GCC</th><th>Visual C, Borland C, LCC-Win32</th></tr>
-  <tr><th>static library</th><td>libmcpp.a</td><td>libmcpp.a</td><td>libmcpp.a</td><td>libmcpp.a</td><td>mcpp.lib</td></tr>
-  <tr><th>shared library or DLL</th><td>libmcpp.so.$(SHLIB_VER)</td><td>libmcpp.$(SHLIB_VER).dylib</td><td>cygmcpp-$(DLL_VER).dll<td>libmcpp-$(DLL_VER).dll</td><td>mcpp$(DLL_VER).dll</td></tr>
-  <tr><th>import library of DLL</th><td></td><td></td><td>libmcpp-$(DLL_VER).dll.a</td><td>libmcpp-$(DLL_VER).dll.a</td><td>mcpp$(DLL_VER).lib</td></tr>
+  <tr><th></th><th>FreeBSD / GCC</th><th>Linux / GCC</th><th>Mac OS X / GCC</th><th>CygWIN / GCC</th><th>MinGW / GCC</th><th>Visual C, Borland C, LCC-Win32</th></tr>
+  <tr><th>static library</th><td>libmcpp.a</td><td>libmcpp.a</td><td>libmcpp.a</td><td>libmcpp.a</td><td>libmcpp.a</td><td>mcpp.lib</td></tr>
+  <tr><th>shared library or DLL</th><td>libmcpp.so.$(SHL_VER)</td><td>libmcpp.so.$(SHLIB_VER)</td><td>libmcpp.$(SHLIB_VER).dylib</td><td>cygmcpp-$(DLL_VER).dll<td>libmcpp-$(DLL_VER).dll</td><td>mcpp$(DLL_VER).dll</td></tr>
+  <tr><th>import library of DLL</th><td></td><td></td><td></td><td>libmcpp-$(DLL_VER).dll.a</td><td>libmcpp-$(DLL_VER).dll.a</td><td>mcpp$(DLL_VER).lib</td></tr>
 </table>
 
-<p>$(SHLIB_VER) is 0.0.0, 0.0.1, 0.1.0 on <b>mcpp</b> V.2.6.3, V.2.6.4, V.2.7 and later, respectively.  $(DLL_VER) is 0 on any of <b>mcpp</b> V.2.6.3, V.2.6.4 and V.2.7 and later.
+<p>
+$(SHL_VER) is 0, 1, 2 on <b>mcpp</b> V.2.6.3-V.2.6.4, V.2.7, V.2.7.1 and later, respectively.
+$(SHLIB_VER) is 0.0.0, 0.0.1, 0.1.0, 0.2.0 on <b>mcpp</b> V.2.6.3, V.2.6.4, V.2.7, V.2.7.1 and later, respectively.
+$(DLL_VER) is 0 on any of <b>mcpp</b> V.2.6.3, V.2.6.4, V.2.7, V.2.7.1 and later.
 If the first digit of $(SHLIB_VER) or $(DLL_VER) is the same, the versions with the higher second or third digit of $(SHLIB_VER) are upper-compatible to the one with lower second or third digit.</p>
 <p>On Windows, so-called 'import library' is generated too, which is to use the DLL.
 In order to use the DLL, you must link your main program against this import library.
 The static library and the import library are installed into the $(LIBDIR) specified in the makefile, and the DLL itself is installed into the $(BINDIR).
 Note that any DLL must be located at some of the execution directories specified by the environment variable PATH on Windows.</p>
-<p>After installing the libraries, you can test them by compiling testmain.c as a main program and linking it against one of the libraries as follows.</p>
+<p>mcpp_lib.h and mcpp_out.h are installed into $(INCDIR).</p>
+<p>main_mcpplib.c is compiled and installed into $(BINDIR) under the name of <b>mcpp</b>, which links libmcpp.
+On Windows, an option <samp>'DLL_IMPORT=1'</samp> specifies to link against DLL.</p>
+<p>You can test libmcpp further by compiling testmain.c as a main program and linking it against one of the libraries as follows.</p>
 <pre>
-make MCPP_LIB=1 testmain
-make MCPP_LIB=1 testmain_install
+make testmain
+make testmain_install
 </pre>
-<p>On Windows, an option <samp>'DLL_IMPORT=1'</samp> specifies to link against DLL.</p>
 <p>testmain.c also has a sample to pass output via memory buffer.
 To enable the memory buffer, include the header file <samp>'mcpp_lib.h'</samp> in your main program, and use the functions declared in it.
 The option <samp>'OUT2MEM=1'</samp> will enable this in testmain.c.
@@ -704,10 +721,12 @@ On the other hand, a shared library (or a DLL) is linked at run time, and shared
 From the DLL of <b>mcpp</b>, for example, only the names in mcpp_lib.h can be imported.</p>
 <p>On UNIXes, the global names in the shared library are all visible from outside by default, hence you have to be sensitive to name collisions.
 GCC 4.0 and later, however, can cope with this problem.
-From the shared library of <b>mcpp</b> V.2.7 and later, compiled by GCC V.4.0 or later, only the names in mcpp_lib.h are visible. *1</p>
+From the shared library of <b>mcpp</b> V.2.7 and later, compiled by GCC V.4.0 or later, only the names in mcpp_lib.h are visible. *1, *2</p>
 <p>To sum up, it is recommended to use DLL on Windows and shared library compiled by GCC 4.0 or later on UNIXes, because you need not to worry about name collision on these libraries.</p>
 <p>Note:</p>
 <p>*1 <b>mcpp</b> V.2.7 and later uses <samp>'#pragma GCC visibility *'</samp> directive which has been implemented since GCC V.4.0.</p>
+<p>*2 Though GCC V.4.1 and later have '-fstack-protector' option, the option does not seem to coexist with <samp>'#pragma GCC visibility hidden'</samp> directive.
+So, the option can't be used to compile libmcpp.</p>
 <br>
 
 <h1><a name="4" href="#toc.4">4. How to port <b>mcpp</b> to each compiler system: Details</a></h1>

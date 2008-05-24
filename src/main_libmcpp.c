@@ -1,8 +1,9 @@
-#define MCPP_LIB    1   /* enable declaration of public functions   */
+/* most simple sample source to use libmcpp */
+
 #include "mcpp_lib.h"
 
 int
-main (int argc, const char *argv[])
+main (int argc, char *argv[])
 {
-  return mcpp_lib_main (argc, argv);
+    return mcpp_lib_main (argc, argv);
 }

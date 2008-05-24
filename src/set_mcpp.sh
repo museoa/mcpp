@@ -1,7 +1,8 @@
 #!/bin/sh
 # script to set MCPP to be called from gcc
 # ./set_mcpp.sh $gcc_path $gcc_maj_ver $gcc_min_ver $cpp_call $CC   \
-#       $CXX x$CPPFLAGS x$EXEEXT $LN_S $inc_dir $host_system $cpu $target_cc
+#       $CXX x$CPPFLAGS x$EXEEXT $LN_S $inc_dir $host_system $cpu $cpu32
+#       $target_cc
 
 gcc_maj_ver=$2
 gcc_min_ver=$3
@@ -12,9 +13,10 @@ CPPFLAGS=`echo $7 | sed 's/^x//'`
 LN_S=$9
 inc_dir=${10}
 host_system=${11}
+cpu=${12}
+cpu32=${13}
 if test $host_system = SYS_MAC; then
-    cpu=${12}
-    target_cc=${13}
+    target_cc=${14}
     target=`echo $target_cc | sed 's/-gcc.*$//'`
 fi
 cpp_name=`echo $cpp_call | sed 's,.*/,,'`
@@ -31,7 +33,7 @@ fi
 
 if test $host_system = SYS_MINGW && test ! -f cc1$EXEEXT; then
     ## cc1.exe has not yet compiled
-    echo "  do 'make COMPILER=GNUC mcpp cc1'; then do 'make COMPILER=GNUC install'"
+    echo "  first do 'make COMPILER=GNUC mcpp cc1'; then do 'make COMPILER=GNUC install'"
     exit 1
 fi
 
@@ -62,35 +64,49 @@ cd $inc_dir
 if test $host_system = SYS_MAC; then
 ## Apple-GCC changes architecture and predefined macros by -arch * option
     if test $cpu = i386 || test $cpu = x86_64; then
-        arch0=i386
-        arch1=x86_64
-    else
-        arch0=ppc
-        arch1=ppc64
+        cpu=x86_64
+        cpu32=i386
+    else 
+        if test $cpu = ppc || $cpu = ppc64; then
+            cpu=ppc64
+            cpu32=ppc
+        fi
     fi
-    for arch in $arch0 $arch1
+fi
+
+arch_headers() {
+    for arch in $cpu $cpu32
     do                              ## generate headers for 2 architectures
-        hdir=mcpp-gcc-$arch
-        arg="-arch $arch"
-        gen_headers
-    done
-else
-if test $host_system = SYS_CYGWIN; then
-    ## CYGWIN has 'mingw' include directory for '-mno-cygwin' option
-    for hdir in mcpp-gcc mingw/mcpp-gcc
-    do
-        if test $hdir = mingw/mcpp-gcc; then
-            arg='-mno-cygwin'
+        hdir=${idir}-$arch
+        if test $host_system = SYS_MAC; then
+            arg="-arch $arch"
         else
-            arg=
+            if test $cpu = x86_64 || test $cpu = ppc64; then
+                if test $arch = $cpu; then
+                    arg="$ar -m64"
+                else
+                    arg="$ar -m32"
+                fi
+            else
+                arg=
+            fi
         fi
         gen_headers
+        if test $cpu32 = $cpu; then
+            break;
+        fi
     done
-else
-    hdir=mcpp-gcc
-    arg=
-    gen_headers
-fi
+}
+
+idir=mcpp-gcc
+ar=
+arch_headers
+
+if test $host_system = SYS_CYGWIN; then
+    ## CYGWIN has 'mingw' include directory for '-mno-cygwin' option
+    idir=mingw/mcpp-gcc
+    ar="-mno-cygwin"
+    arch_headers
 fi
 
 # write shell-script so that call of 'cpp0', 'cc1 -E' or so is replaced to

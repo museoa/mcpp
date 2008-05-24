@@ -1,5 +1,5 @@
-# makefile to compile MCPP version 2.7 for FreeBSD / GCC / UCB make
-#       2008/03 kmatsui
+# makefile to compile MCPP version 2.7.1 for FreeBSD / GCC / UCB make
+#       2008/05 kmatsui
 #
 # First, you must edit GCCDIR, BINDIR, INCDIR, gcc_maj_ver and gcc_min_ver.
 # To make compiler-independent-build of MCPP do:
@@ -18,8 +18,8 @@
 #       make MCPP_LIB=1 mcpplib
 #       make MCPP_LIB=1 mcpplib_install
 # To make testmain using libmcpp:
-#       make MCPP_LIB=1 [OUT2MEM=1] testmain
-#       make MCPP_LIB=1 [OUT2MEM=1] testmain_install
+#       make [OUT2MEM=1] testmain
+#       make [OUT2MEM=1] testmain_install
 # It usually needs root privilege to do 'make *install'.
 
 # COMPILER:
@@ -32,21 +32,23 @@ NAME ?= mcpp
 CC = gcc
 CXX = g++
 CFLAGS = -c -O2 -Wall   # -ggdb -v
-#CFLAGS += -fstack-protector        # for gcc 4.1 or later
+# for gcc 4.1 or later (Don't use this option to compile libmcpp)
+#CFLAGS += -fstack-protector
 CPPFLAGS =
 #CPPFLAGS = -Wp,-v,-Q,-W3
     # for MCPP to output a bit verbose diagnosis to "mcpp.err"
 
 LINKFLAGS = -o $(NAME)
-#LINKFLAGS += -fstack-protector     # for gcc 4.1 or later
+# for gcc 4.1 or later (Don't use this option to compile libmcpp)
+#LINKFLAGS += -fstack-protector
 
 .if     empty(COMPILER)
 # compiler-independent-build
 CPPOPTS =
 # BINDIR:   directory to install mcpp: /usr/bin or /usr/local/bin
 BINDIR = /usr/local/bin
-# INCDIR:   empty
-INCDIR =
+# INCDIR:   directory to install mcpp_lib.h, mcpp_out.h for libmcpp
+INCDIR = /usr/local/include
 
 .else
 # compiler-specific-build:  Adjust for your system
@@ -68,6 +70,14 @@ BINDIR ?= /usr/libexec
 #BINDIR ?= /usr/local/gcc-4.1.1/lib/gcc-lib/i386-unknown-freebsd6.2/4.1.1
 target = ''
 #target = i386-unknown-freebsd6.2
+cpu = i386
+#cpu = ppc
+#cpu = x86_64
+#cpu = ppc64
+# If cpu is x86_64 or ppc64, set cpu32 as i386 or ppc respectively
+# If cpu is neither x86_64 nor ppc64, set cpu32 as cpu
+cpu32 = i386
+#cpu32 = ppc
 .if $(gcc_maj_ver) == 2
 cpp_call = $(BINDIR)/cpp0
 .else
@@ -122,7 +132,7 @@ install :
 .if ! empty(COMPILER) && $(COMPILER) == GNUC
 	@./set_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'    \
             '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(CPPFLAGS)' 'x' 'ln -s'  \
-            '$(INCDIR)' SYS_FREEBSD
+            '$(INCDIR)' SYS_FREEBSD $(cpu) $(cpu32)
 .endif
 
 clean	:
@@ -147,12 +157,12 @@ mcpplib_a:  $(OBJS)
 	ar -rv libmcpp.a $(OBJS)
 
 # shared library
-# mcpp 2.6.*: 0, mcpp 2.7: 1
-CUR = 1
-# mcpp 2.6.3: 0, mcpp 2.6.4: 1, mcpp 2.7: 0
+# mcpp 2.6.*: 0, mcpp 2.7: 1, mcpp 2.7.1: 2
+CUR = 2
+# mcpp 2.6.3: 0, mcpp 2.6.4: 1, mcpp 2.7: 0, mcpp 2.7.1: 0
 REV = 0
-# mcpp 2.6.*: 0, mcpp 2.7: 1
-AGE = 1
+# mcpp 2.6.*: 0, mcpp 2.7: 1, mcpp 2.7.1: 2
+AGE = 2
 SHLIB_VER = 0.$(CUR).$(REV)
 SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so
 .SUFFIXES: .so
@@ -168,26 +178,30 @@ mcpplib_install:
 	ln -sf libmcpp.so.$(SHLIB_VER) $(LIBDIR)/libmcpp.so
 	ln -sf libmcpp.so.$(SHLIB_VER) $(LIBDIR)/libmcpp.so.$(CUR)
 	# You should do 'ldconfig' as a root after install.
+	cp mcpp_lib.h mcpp_out.h $(INCDIR)
+	$(CC) -o $(NAME) main_libmcpp.c -l $(NAME)
+	install -s $(NAME) $(BINDIR)
+
 mcpplib_uninstall:
 	rm -f $(LIBDIR)/libmcpp.a $(LIBDIR)/libmcpp.so.$(SHLIB_VER) $(LIBDIR)/libmcpp.so.$(CUR) $(LIBDIR)/libmcpp.so
+	rm -f $(BINDIR)/$(NAME)
+	rm -f $(INCDIR)/mcpp*
+.endif
 
 # use mcpp as a subroutine from testmain.c
-NAME = testmain
 .if ! empty(OUT2MEM) && $(OUT2MEM) == 1
 # output to memory buffer
 CFLAGS += -DOUT2MEM
 .endif
-LINKFLAGS = $(NAME).o -o $(NAME) -L/usr/local/lib -lmcpp
+TMAIN_LINKFLAGS = testmain.o -o testmain -L /usr/local/lib -l $(NAME)
 .if ! empty(MALLOC) && $(MALLOC) == KMMALLOC
-    LINKFLAGS += -lkmmalloc_debug
+    TMAIN_LINKFLAGS += -l kmmalloc_debug
 .endif
-#LINKFLAGS += -fstack-protector-all
-$(NAME) :   $(NAME).o
-	$(CC) $(LINKFLAGS)
-$(NAME)_install :
-	install -s $(NAME) $(BINDIR)/$(NAME)
-$(NAME)_uninstall   :
-	rm -f $(BINDIR)/$(NAME)
-.endif
+testmain :   testmain.o
+	$(CC) $(TMAIN_LINKFLAGS)
+testmain_install :
+	install -s testmain $(BINDIR)/testmain
+testmain_uninstall   :
+	rm -f $(BINDIR)/testmain
 .endif
 

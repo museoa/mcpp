@@ -1,8 +1,14 @@
+mcpp (2.7.1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Kiyoshi Matsui <kmatsui@t3.rim.or.jp>  Sat, 24 May 2008 18:40:22 +0900
+
 mcpp (2.7-3) unstable; urgency=low
 
   * Provide mcpp-doc package as well.  Thanks to 2.6.4-2ubuntu1 package.
 
- -- Kiyoshi Matsui <kmatsui@t3.rim.or.jp>  Mon, 07 Apr 2008 18:46:03 +0900
+ -- Kiyoshi Matsui <kmatsui@t3.rim.or.jp>  Mon, 07 Apr 2008 18:08:47 +0900
 
 mcpp (2.7-2) unstable; urgency=low
 
