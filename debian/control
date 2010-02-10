@@ -4,11 +4,12 @@ Priority: optional
 Maintainer: Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
 Uploaders: NIIBE Yutaka <gniibe@fsij.org>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 3.7.3
+Standards-Version: 3.8.4
+DM-Upload-Allowed: yes
 
 Package: mcpp
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Suggests: mcpp-doc
 Description: Alternative C/C++ preprocessor
  C/C++ preprocessor defines and expands macros and processes '#if',
@@ -27,14 +28,14 @@ Description: Alternative C/C++ preprocessor
 Package: libmcpp0
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: Alternative C/C++ preprocessor (shared library)
  This package installs the shared library version of mcpp.
 
 Package: libmcpp-dev
 Section: libdevel
 Architecture: any
-Depends: libmcpp0 (= ${binary:Version})
+Depends: ${misc:Depends}, libmcpp0 (= ${binary:Version})
 Description: Alternative C/C++ preprocessor (development files)
  This package installs the development files for the library version
  of mcpp.
@@ -42,6 +43,6 @@ Description: Alternative C/C++ preprocessor (development files)
 Package: mcpp-doc
 Architecture: all
 Section: doc
-Replaces: mcpp (<< 2.7.1)
+Depends: ${misc:Depends}
 Description: Alternative C/C++ preprocessor (manual)
  This package contains the manual.
