@@ -1,3 +1,9 @@
+mcpp (2.7.2-1.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+
+ -- Cleto Martin Angelina <cleto.martin@gmail.com>  Tue, 01 Feb 2011 12:38:46 +0100
+
 mcpp (2.7.2-1) unstable; urgency=low
 
   * New upstream release.
@@ -110,5 +116,5 @@ mcpp (2.4.1-1) unstable; urgency=low
     config/config.guess, config/config.sub: Import up-to-date version.
     src/mcpp.1: Added.
     closes: Bug#239704
-  
+
  -- NIIBE Yutaka <gniibe@fsij.org>  Mon,  2 Aug 2004 22:04:32 +0900
