@@ -3858,9 +3858,6 @@ static int  chk_dirp(
 }
 #endif
 
-FILEINFO*       sh_file;
-int             sh_line;
-
 void    sharp(
     FILEINFO *  sharp_file,
     int         flag        /* Flag to append to the line for GCC   */
@@ -3871,6 +3868,8 @@ void    sharp(
  * else (i.e. 'sharp_file' is NULL) 'infile'.
  */
 {
+    static FILEINFO *   sh_file;
+    static int  sh_line;
     FILEINFO *  file;
     int         line;
 

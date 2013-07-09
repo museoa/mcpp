@@ -1,3 +1,23 @@
+mcpp (2.7.2-2) unstable; urgency=low
+
+  * debian/control (DM-Upload-Allowed): Remove.
+    (Build-Depends): Require debhelper >= 9.
+    (Standards-Version): Conforms to 3.9.4.
+    [libmcpp0] (Multi-Arch, Pre-Depends): Add.
+    (Homepage): New.
+    (Description): Fix  (Closes: #703462).  Thanks to Erik Esterer.
+  * debian/compat: Require 9.
+  * debian/source/format: New.
+  * Incorporate NMU (Closes: #611749).  Thanks to Cleto Martin Angelina.
+  * debian/patches/01-zeroc-fixes.patch: New.
+  * debian/mcpp-doc.install: New.
+  * debian/{libmcpp0.install,libmcpp-dev.install}: Update for Multi-arch
+    support.  Remove *.la.
+  * debian/patches/02-gniibe-fixes.patch: New.  Thanks to Alexandre Rebert
+    for finding this bug.
+
+ -- NIIBE Yutaka <gniibe@fsij.org>  Tue, 09 Jul 2013 01:06:21 +0000
+
 mcpp (2.7.2-1.1) unstable; urgency=low
 
   * Non-maintainer upload.
