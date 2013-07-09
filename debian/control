@@ -3,7 +3,7 @@ Section: devel
 Priority: optional
 Maintainer: Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
 Uploaders: NIIBE Yutaka <gniibe@fsij.org>
-Build-Depends: debhelper (>= 9)
+Build-Depends: debhelper (>= 9), autotools-dev
 Standards-Version: 3.9.4
 Homepage: http://mcpp.sourceforge.net/
 
