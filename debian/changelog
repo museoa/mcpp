@@ -1,3 +1,12 @@
+mcpp (2.7.2-4) unstable; urgency=medium
+
+  * Fix for ppc64el.  Thanks to Fernando Seiti Furusato (Closes: #752826).
+  * debian/control (Build-Depends): Require dh-autoreconf.
+    (Standards-Version): Conforms to 3.9.5.
+  * debian/rules: Add --with autoreconf.
+
+ -- NIIBE Yutaka <gniibe@fsij.org>  Fri, 27 Jun 2014 13:38:05 +0000
+
 mcpp (2.7.2-3) unstable; urgency=low
 
   * debian/control (Build-Depends): Require autotools-dev.

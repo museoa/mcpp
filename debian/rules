@@ -2,7 +2,7 @@
 # -*- makefile-gmake -*-
 
 %:
-	dh $@
+	dh $@ --with autoreconf
 
 override_dh_auto_clean:
 	dh_auto_clean
