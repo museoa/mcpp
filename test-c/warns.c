@@ -58,7 +58,7 @@ main( void)
     a0 ## b0 ## c0 ## d0 ## e0 ## f0 ## g0 ## h0 ## \
     o0 ## o1 ## o2 ## o3 ## p0 ## p1 ## p2
 
-/*          Number of arguments in macro call: more than 31.    */
+/* w.3.2:   Number of arguments in macro call: more than 31.    */
     assert(
         glue63(
             A0, B0, C0, D0, E0, F0, G0, H0, I0, J0, K0, L0, M0, N0, O0, P0,
@@ -67,7 +67,7 @@ main( void)
             A3, B3, C3, D3, E3, F3, G3, H3, I3, J3, K3, L3, M3, N3, O3)
         == 123);
 
-/* w.3.2:   Initial significant characters in an identifier: more than 31.  */
+/* w.3.3:   Initial significant characters in an identifier: more than 31.  */
         {
     int A23456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef = 63;
     assert(
@@ -75,19 +75,19 @@ main( void)
         == 63);
         }
 
-/* w.3.3:   Nested conditional inclusion: more than 8 levels.   */
+/* w.3.4:   Nested conditional inclusion: more than 8 levels.   */
     nest = 0;
 #define X0F
 #include    "ifdef15.h"
     assert( nest == 0x0f);
 
-/* w.3.4:   Nested source file inclusion: more than 8 levels.   */
+/* w.3.5:   Nested source file inclusion: more than 8 levels.   */
     nest = 0;
 #define X0F
 #include    "nest1.h"
     assert( nest == 0x0f);
 
-/* w.3.5:   Parenthesized expression: more than 32 levels.  */
+/* w.3.6:   Parenthesized expression: more than 32 levels.  */
     nest = 0;
 #if \
         (0x00 + (0x01 - (0x02 + (0x03 - (0x04 + (0x05 - (0x06 + (0x07 - \
@@ -105,7 +105,7 @@ main( void)
     assert( nest == 63);
     }
 
-/* w.3.6:   Characters in a string (after concatenation): more than 509.    */
+/* w.3.7:   Characters in a string (after concatenation): more than 509.    */
     {
     char    *string1023 =
 "123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\
@@ -128,7 +128,7 @@ f123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     assert( strlen( string1023) == 1023);
     }
 
-/* w.3.7:   Characters in a logical source line: more than 509. */
+/* w.3.8:   Characters in a logical source line: more than 509. */
     {
     int a123456789012345678901234567890 = 123450;   \
     int b123456789012345678901234567890 = 123451;   \
@@ -152,7 +152,7 @@ f123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     int t1234567890123456 = 123469;
     }
 
-/* w.3.8:   Macro definitions: more than 1024 (including predefined ones).  */
+/* w.3.9:   Macro definitions: more than 1024 (including predefined ones).  */
 #include    "m1024.h"
     assert( ZX == 1);
 

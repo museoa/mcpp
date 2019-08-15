@@ -227,7 +227,7 @@
 /* 19.3:    */
 #define OBJ_LIKE        (0)     /* different token sequence     */
 
-/*  (1-1);  */
+/*  (1-1); or (0);  */
     OBJ_LIKE;
 
 /* 19.4:    */
@@ -238,7 +238,7 @@
 /* 19.5:    */
 #define FTN_LIKE(b)     ( a )   /* different parameter usage    */
 
-/*  ( x );  */
+/*  ( x ); or ( a); */
     FTN_LIKE(x);
 
 /* 19.6:    */
@@ -262,10 +262,10 @@
 #define CAT( b, c)  b ## c ##
 
 
-/* e_24_5.t:    Operand of # operator in function-like macro definition shall
+/* e_24_6.t:    Operand of # operator in function-like macro definition shall
         be a parameter name.    */
 
-/* 24.5:    */
+/* 24.6:    */
 #define FUNC( a)    # b
 
 
@@ -283,9 +283,9 @@
     head_body_tail( head, body(a,b), tail);
 
 
-/* e_27_6.t:    Error of rescanning.    */
+/* e_27_7.t:    Error of rescanning.    */
 
-/* 27.6:    */
+/* 27.7:    */
 #define TWO_ARGS        a,b
 #define SUB( x, y)      sub( x, y)
 /* Too many arguments error while rescanning after once replaced to:

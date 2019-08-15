@@ -1,7 +1,7 @@
-*** noconfig.H	2004-01-18 00:31:38.000000000 +0900
---- noconfig.H.vc2003	2004-01-18 00:35:14.000000000 +0900
+*** noconfig.H	2005-01-28 18:51:45.000000000 +0900
+--- noconfig.H.vc2003	2005-01-28 23:55:01.000000000 +0900
 ***************
-*** 17,26 ****
+*** 20,29 ****
    */
   
   /* Define target operating-system.  */
@@ -12,7 +12,7 @@
   
   /* Define host operating-system.    */
   #define HOST_SYSTEM         SYSTEM
---- 17,26 ----
+--- 20,29 ----
    */
   
   /* Define target operating-system.  */
@@ -24,15 +24,15 @@
   /* Define host operating-system.    */
   #define HOST_SYSTEM         SYSTEM
 ***************
-*** 31,37 ****
+*** 34,40 ****
   /* Version message.                 */
   /* "MCPP V.2.* (200y/mm) $(MODE) mode for " precedes VERSION_MSG    */
   #define VERSION_MSG     \
-!     "GNU C compiled by GNU C 2.95"
+!     "GNU C compiled by GNU C 3.4"
   #if     0
       "DJGPP compiled by DJGPP (GNU C 2.7.1)"
       "LCC-Win32 compiled by LCC-Win32 V.3.2"
---- 31,37 ----
+--- 34,40 ----
   /* Version message.                 */
   /* "MCPP V.2.* (200y/mm) $(MODE) mode for " precedes VERSION_MSG    */
   #define VERSION_MSG     \

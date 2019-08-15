@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1998, 2002-2004 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2005 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * Some parts of this code are derived from the public domain software
@@ -92,12 +92,20 @@
  */
 
 /*
+ * MCPP Version 2.5
+ * 2005/03      kmatsui
+ *      Absorbed POST_STANDARD into STANDARD and OLD_PREPROCESSOR into
+ *          PRE_STANDARD.
+ *      Changed to use only (signed) long in PRE_STANDARD.
+ */
+
+/*
  * The routines to evaluate #if expression are placed here.
  * Some routines are used also to evaluate the value of numerical tokens.
  */
 
 #if PREPROCESSED
-#include    "cpp.H"
+#include    "mcpp.H"
 #else
 #include    "system.H"
 #include    "internal.H"
@@ -113,13 +121,11 @@ typedef struct optab {
 
 static int      eval_lex( void);
 static int      chk_ops( void);
-#if MODE != POST_STANDARD
 static VAL_SIGN *   eval_char( char * const token);
 static expr_t   eval_one( char ** seq_pp, int wide, int mbits, int * ucn8);
-#endif
 static VAL_SIGN *   eval_eval( VAL_SIGN * valp, int op);
 static expr_t   eval_signed( VAL_SIGN ** valpp, expr_t v1, expr_t v2, int op);
-#if HAVE_UNSIGNED_LONG
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
 static expr_t   eval_unsigned( VAL_SIGN ** valpp, uexpr_t v1u, uexpr_t v2u
         , int op);
 #endif
@@ -138,13 +144,11 @@ static void     dump_stack( const OPTAB * opstack, const OPTAB * opp
 
 static int      eval_lex();         /* Get type and value of token  */
 static int      chk_ops();          /* Check identifier-like ops    */
-#if MODE != POST_STANDARD
 static VAL_SIGN *   eval_char();    /* Evaluate character constant  */
 static expr_t   eval_one();         /* Evaluate a character         */
-#endif
 static VAL_SIGN *   eval_eval();    /* Entry to #if arithmetic      */
 static expr_t   eval_signed();      /* Do signed arithmetic of expr.*/
-#if HAVE_UNSIGNED_LONG
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
 static expr_t   eval_unsigned();    /* Do unsigned arithmetic       */
 #endif
 static void     overflow();         /* Diagnose overflow of expr.   */
@@ -157,7 +161,7 @@ static void     dump_val();         /* Print value of an operand    */
 static void     dump_stack();       /* Print stacked operators      */
 #endif
 
-#endif  /* ! PROTO  */
+#endif
 
 /* For debug and error messages.    */
 static const char * const   opname[ OP_END + 1] = {
@@ -249,8 +253,13 @@ static const char * const   non_eval
 #define S_PDOUBLE   (sizeof (double *))
 #define S_PFPTR     (sizeof (int (*)()))
 #if HAVE_LONG_LONG
+#if COMPILER == BORLANDC
+#define S_LLINT     (sizeof (__int64))
+#define S_PLLINT    (sizeof (__int64 *))
+#else
 #define S_LLINT     (sizeof (long long int))
 #define S_PLLINT    (sizeof (long long int *))
+#endif
 #endif
 #if HAVE_LONG_DOUBLE
 #define S_LDOUBLE   (sizeof (long double))
@@ -281,7 +290,11 @@ static const TYPES basic_types[] = {
     { T_INT,        "int",          ANYFLOAT | T_CHAR | T_INT },
     { T_LONG,       "long",         ANYFLOAT | ANYINT },
 #if HAVE_LONG_LONG
+#if COMPILER == BORLANDC
+    { T_LONGLONG,   "__int64",      ANYFLOAT | ANYINT },
+#else
     { T_LONGLONG,   "long long",    ANYFLOAT | ANYINT },
+#endif
 #endif
     { T_FLOAT,      "float",        ANYFLOAT | ANYINT | ANYSIGN },
     { T_DOUBLE,     "double",       ANYFLOAT | ANYINT | ANYSIGN },
@@ -337,7 +350,7 @@ eval()
 {
     VAL_SIGN        value[ NEXP * 2 + 1];   /* Value stack          */
     OPTAB           opstack[ NEXP * 3 + 1]; /* Operator stack       */
-#if MODE >= STANDARD
+#if MODE == STANDARD
     int             parens = 0;     /* Nesting levels of (, )       */
 #endif
     int             prec;           /* Operator precedence          */
@@ -427,7 +440,7 @@ eval()
             if (opp->prec < prec) {
                 if (op == OP_LPA) {
                     prec = OP_RPA_PREC;
-#if MODE >= STANDARD
+#if MODE == STANDARD
                     if ((warn_level & 4) && ++parens == exp_nest_min + 1)
                         cwarn(
                     "More than %.0s%ld nesting of parens"   /* _W4_ */
@@ -505,7 +518,7 @@ eval()
                     return  0L;
                 }
                 opp--;                      /* Unstack it           */
-#if MODE >= STANDARD
+#if MODE == STANDARD
                 parens--;                   /* Count down nest level*/
 #endif
                 break;
@@ -567,10 +580,10 @@ eval_lex()
  *      eval_char()     called to evaluate 'x'
  *      eval_num()      called to evaluate numbers
  * C++98 treats 11 identifier-like tokens as operators.
- * POST_STANDARD forbids character constants in #if expression.
+ * POST_STD forbids character constants in #if expression.
  */
 {
-#if MODE >= STANDARD
+#if MODE == STANDARD
     int     c1;
 #endif
     VAL_SIGN *  valp;
@@ -586,7 +599,7 @@ eval_lex()
         return  OP_EOE;                     /* End of expression    */
     }
     token_type = get_unexpandable( c, warn);
-#if MODE >= STANDARD
+#if MODE == STANDARD
     if (macro_line == MACRO_ERROR)      /* Unterminated macro call  */
         return  OP_FAIL;
 #endif
@@ -595,7 +608,7 @@ eval_lex()
 
     switch (token_type) {
     case NAM:
-#if MODE >= STANDARD
+#if MODE == STANDARD
         if (str_eq( identifier, "defined")) {   /* defined name     */
             c1 = c = skip_ws();
             if (c == '(')                   /* Allow defined (name) */
@@ -617,17 +630,17 @@ eval_lex()
             } else if (str_eq( identifier, "false")) {
                 ev.val = 0L;
                 return  VAL;
-#if MODE == STANDARD
-            } else if ((openum = id_operator( identifier)) != 0) {
+            } else if (mode != POST_STD
+                    && (openum = id_operator( identifier)) != 0) {
                 /* Identifier-like operator in C++98    */
                 strcpy( work, identifier);
                 return  chk_ops();
-#endif
             }
         }
-#endif  /* MODE >= STANDARD     */
+#endif
 #if OK_SIZE
-        if (str_eq( identifier, "sizeof"))  /* sizeof hackery       */
+        if (mode != POST_STD && str_eq( identifier, "sizeof"))
+            /* sizeof hackery       */
             return  do_sizeof();            /* Gets own routine     */
 #endif
         /*
@@ -641,14 +654,14 @@ eval_lex()
                     , identifier, 0L, skip ? non_eval : ", evaluated to 0");
         return  VAL;
     case CHR:                               /* Character constant   */
-#if MODE >= STANDARD
+#if MODE == STANDARD
     case WCHR:                              /* Wide char constant   */
+        if (mode == POST_STD) {
+            cerror( "Can't use a character constant %s"     /* _E_  */
+                    , work, 0L, NULLST);
+            break;
+        }
 #endif
-#if MODE == POST_STANDARD
-        cerror( "Can't use a character constant %s"         /* _E_  */
-                , work, 0L, NULLST);
-        break;
-#else   /* MODE != POST_STANDARD    */
         valp = eval_char( work);            /* 'valp' points 'ev'   */
         if (valp->sign == VAL_ERROR)
             break;
@@ -659,9 +672,8 @@ eval_lex()
         }
 #endif
         return  VAL;                        /* Return a value       */
-#endif  /* MODE != POST_STANDARD    */
     case STR:                               /* String literal       */
-#if MODE >= STANDARD
+#if MODE == STANDARD
     case WSTR:                              /* Wide string literal  */
 #endif
         cerror( "Can't use a string literal %s", work, 0L, NULLST); /* _E_  */
@@ -702,7 +714,7 @@ chk_ops()
  */
 {
     switch (openum) {
-#if MODE >= STANDARD
+#if MODE == STANDARD
     case OP_STR:    case OP_CAT:    case OP_ELL:
 #endif
     case OP_1:      case OP_2:      case OP_3:
@@ -727,6 +739,7 @@ do_sizeof()
  * Sets ev.val to the size and returns
  *      VAL             success
  *      OP_FAIL         bad parse or something.
+ * This routine is never called in POST_STD mode.
  */
 {
     const char * const  no_type = "sizeof: No type specified";      /* _E_  */
@@ -832,7 +845,7 @@ do_sizeof()
                     , sizp->bits, sizp->size, sizp->psize, ev.val);
     }
 #endif
-#if MODE >= STANDARD
+#if MODE == STANDARD
     if (warn_level & 8)
         cwarn( "sizeof is disallowed in Standard"           /* _W8_ */
                 , NULLST, 0L, NULLST);
@@ -942,15 +955,15 @@ eval_num( nump)
     const char * const  out_of_range
             = "Constant \"%s\"%.0ld%s is out of range"; /* _E_ _W8_ */
     expr_t          value;
-#if HAVE_UNSIGNED_LONG
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
     uexpr_t         v, v1;  /* unsigned long or unsigned long long  */
 #else
     expr_t          v, v1;                  /* signed long          */
 #endif
-#if MODE >= STANDARD
+#if MODE == STANDARD
     int             uflag = FALSE;
 #endif
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
     int             llflag = FALSE;
 #endif
     int             lflag = FALSE;
@@ -988,7 +1001,7 @@ eval_num( nump)
             break;
         v1 *= base;
         v1 += c1;
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
         if (!stdc3) {
             if (v1 > ULONGMAX) {
                 if (! skip)
@@ -1020,7 +1033,7 @@ eval_num( nump)
 #endif
         }
         if (c == 'l' || c == 'L') {
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
             if (llflag) {
                 goto  num_err;
             } else if (lflag) {
@@ -1048,8 +1061,7 @@ eval_num( nump)
     if (c != EOS)
         goto  num_err;
 
-#if HAVE_UNSIGNED_LONG
-#if MODE >= STANDARD
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
     if (uflag)  /* If 'U' suffixed, uexpr_t is treated as unsigned  */
         ev.sign = UNSIGNED;
     else
@@ -1062,11 +1074,10 @@ eval_num( nump)
     }
 #else   /* ! HAVE_LONG_LONG */
         ev.sign = (value >= 0L);
-#endif  /* ! HAVE_LONG_LONG */
-#else   /* MODE == PRE_STANDARD */
+#endif
+#else   /* ! HAVE_UNSIGNED_LONG || MODE == PRE_STANDARD */
     ev.sign = (value >= 0L);
-#endif  /* MODE == PRE_STANDARD */
-#endif  /* HAVE_UNSIGNED_LONG   */
+#endif
 
     ev.val = value;
     if (erange && (warn_level & 8))
@@ -1083,8 +1094,6 @@ num_err:
     return  & ev;
 }
 
-#if MODE != POST_STANDARD
-
 static VAL_SIGN *
 #if PROTO
 eval_char( char * const token)
@@ -1094,6 +1103,7 @@ eval_char( token)
 #endif
 /*
  * Evaluate a character constant.
+ * This routine is never called in POST_STD mode.
  */
 {
 #if MODE == STANDARD
@@ -1102,7 +1112,7 @@ eval_char( token)
 #endif
     const char * const  c_out_of_range
     = "Integer character constant %s%.0ld%s is out of range";   /* _E_ _W8_ */
-#if HAVE_UNSIGNED_LONG
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
     register uexpr_t    value;
     uexpr_t         tmp;
 #else
@@ -1119,11 +1129,11 @@ eval_char( token)
 
     bits = CHARBIT;
     u8bits = CHARBIT * 4;
-#if MODE == STANDARD
     if (mbchar & UTF8)
         mbits = CHARBIT * 4;
     else
         mbits = CHARBIT * 2;
+#if MODE == STANDARD
     if (wide) {                         /* Wide character constant  */
         cp++;                           /* Skip 'L'                 */
         bits = mbits;
@@ -1176,8 +1186,8 @@ eval_char( token)
         }
     }
 
-#if HAVE_UNSIGNED_LONG
-#if HAVE_LONG_LONG && MODE == STANDARD
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
+#if HAVE_LONG_LONG
     if (!stdc3)
         ev.sign = (value <= LONGMAX);
     else
@@ -1185,6 +1195,8 @@ eval_char( token)
 #else
     ev.sign = ((expr_t) value >= 0L);
 #endif
+#else   /* ! HAVE_UNSIGNED_LONG || MODE == PRE_STANDARD */
+    ev.sign = ((expr_t) value >= 0L);
 #endif
     ev.val = value;
 
@@ -1257,7 +1269,7 @@ eval_one( seq_pp, wide, mbits, ucn8)
 #endif
     const char * const  out_of_range
         = "%s%ld bits can't represent escape sequence '%s'";    /* _E_ _W8_ */
-#if HAVE_UNSIGNED_LONG
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
     uexpr_t         value;
 #else
     expr_t          value;
@@ -1394,7 +1406,7 @@ eval_one( seq_pp, wide, mbits, ucn8)
         value &= UCHARMAX;
         goto  range_err;
     }
-#endif  /* MODE == PRE_STANDARD */
+#endif
     return  (expr_t) value;
 
 undefined:
@@ -1428,7 +1440,7 @@ range_err:
         cerror( out_of_range, NULLST, (long) CHARBIT, seq);
     else if (warn_level & 8)
         cwarn( out_of_range, non_eval, (long) CHARBIT, seq);
-#endif  /* MODE == PRE_STANDARD */
+#endif
 
     **seq_pp = uc1;
     if (! skip)
@@ -1436,8 +1448,6 @@ range_err:
     else
         return  (expr_t) value;
 }
-
-#endif  /* MODE != POST_STANDARD    */
 
 static VAL_SIGN *
 #if PROTO
@@ -1456,7 +1466,7 @@ eval_eval( valp, op)
     const char * const  zero_div = "%sDivision by zero%.0ld%s"; /* _E_ _W8_ */
     const char * const  neg_long =
 "Negative value \"%ld\" is converted to positive \"%lu\"%%s";   /* _W1_ _W8_*/
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
     const char * const  neg_llong =
 "Negative value \"%" LL_FORM "d\" is converted to positive \"%" /* _W1_ _W8_*/
                     LL_FORM "u\"%%s";
@@ -1484,10 +1494,10 @@ eval_eval( valp, op)
     }
 #endif
 
-#if HAVE_UNSIGNED_LONG                  /* Usual arithmetic conversion  */
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD  /* Usual arithmetic conversion  */
     if ((sign1 == UNSIGNED || sign2 == UNSIGNED) && is_binary( op)
             && op != OP_ANA && op != OP_ORO && op != OP_SR && op != OP_SL) {
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG
         if (((sign1 == SIGNED && v1 < 0L) || (sign2 == SIGNED && v2 < 0L)
                     || (!stdc3 && ((sign1 == SIGNED && v1 > LONGMAX)
                                  || (sign2 == SIGNED && v2 > LONGMAX)))
@@ -1515,7 +1525,7 @@ eval_eval( valp, op)
             }
             cwarn( negate, skip ? non_eval : NULLST, 0L, NULLST);
         }
-#else   /* ! HAVE_LONG_LONG || MODE < STANDARD  */
+#else   /* ! HAVE_LONG_LONG && HAVE_UNSIGNED_LONG && MODE == STANDARD   */
         if (((sign1 == SIGNED && v1 < 0L) || (sign2 == SIGNED && v2 < 0L))
                 && ((! skip && (warn_level & 1))
                 || (skip && (warn_level & 8)))) {
@@ -1525,13 +1535,13 @@ eval_eval( valp, op)
             sprintf( negate, neg_long, (long) v3, (unsigned long) v3);
             cwarn( negate, skip ? non_eval : NULLST, 0L, NULLST);
         }
-#endif  /* ! HAVE_LONG_LONG || MODE < STANDARD  */
+#endif
         valp->sign = sign1 = sign2 = UNSIGNED;
     }
-#endif  /* HAVE_UNSIGNED_LONG   */
+#endif
     if ((op == OP_SL || op == OP_SR)
             && (v2 < 0L || v2 >= sizeof (expr_t) * CHARBIT
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
                 || (!stdc3 && v2 >= sizeof (long) * CHARBIT)
 #endif
             ) && ((!skip && (warn_level & 1)) || (skip && (warn_level & 8))))
@@ -1551,7 +1561,7 @@ eval_eval( valp, op)
         }
     }
 
-#if HAVE_UNSIGNED_LONG
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
     if (sign1 == SIGNED)
         v1 = eval_signed( & valp, v1, v2, op);
     else
@@ -1606,7 +1616,7 @@ eval_signed( valpp, v1, v2, op)
     case OP_PLU:                        break;
     case OP_NEG:
         if ((v1 && v1 == -v1)
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
                 || (!stdc3 && (long) v1 == (long) -v1)
 #endif
             )
@@ -1619,7 +1629,7 @@ eval_signed( valpp, v1, v2, op)
         val = v1 * v2;
         if (v1 && v2) {
             if ((val / v1 != v2 || val / v2 != v1)
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
                     || (!stdc3 && ((long)val / (long)v1 != (long)v2
                                  || (long)val / (long)v2 != (long)v1))
 #endif
@@ -1632,7 +1642,7 @@ eval_signed( valpp, v1, v2, op)
     case OP_MOD:
         /* Division by 0 has been already diagnosed by eval_eval().  */
         if ((-v1 == v1 && v2 == -1)     /* LONG_MIN / -1 on two's complement*/
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
                 || (!stdc3 && (long)-v1 == (long)v1 && (long)v2 == (long)-1)
 #endif
             )
@@ -1648,7 +1658,7 @@ eval_signed( valpp, v1, v2, op)
     case OP_ADD:
         val = v1 + v2;
         if ((v2 > 0L && v1 > val) || (v2 < 0L && v1 < val)
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
                 || (!stdc3 && (((long)v2 > 0L && (long)v1 > (long)val)
                              || ((long)v2 < 0L && (long)v1 < (long)val)))
 #endif
@@ -1659,7 +1669,7 @@ eval_signed( valpp, v1, v2, op)
     case OP_SUB:
         val = v1 - v2;
         if (((v2 > 0L && val > v1) || (v2 < 0L && val < v1))
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
                 || (!stdc3 && (((long)v2 > 0L && (long)val > (long)v1)
                              || ((long)v2 < 0L && (long)val < (long)v1)))
 #endif
@@ -1709,7 +1719,7 @@ eval_signed( valpp, v1, v2, op)
     return  v1;
 }
 
-#if HAVE_UNSIGNED_LONG
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
 
 static expr_t
 #if PROTO
@@ -1746,7 +1756,7 @@ eval_unsigned( valpp, v1u, v2u, op)
         v1 = v1u * v2u;
         if (v1u && v2u && ((v1 / v2u != v1u
                 || v1 / v1u != v2u)
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG
                 || (!stdc3 && v1 > ULONGMAX)
 #endif
             ))
@@ -1762,7 +1772,7 @@ eval_unsigned( valpp, v1u, v2u, op)
     case OP_ADD:
         v1 = v1u + v2u;
         if ((v1 < v1u)
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG
                 || (!stdc3 && v1 > ULONGMAX)
 #endif
             )
@@ -1771,7 +1781,7 @@ eval_unsigned( valpp, v1u, v2u, op)
     case OP_SUB:
         v1 = v1u - v2u;
         if ((v1 > v1u)
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG
                 || (!stdc3 && v1 > ULONGMAX)
 #endif
             )
@@ -1824,7 +1834,7 @@ overflow( op_name, valpp)
         if (warn_level & 8)
             cwarn( out_of_range, op_name, 0L, non_eval);
         /* Else don't warn  */
-#if HAVE_UNSIGNED_LONG
+#if HAVE_UNSIGNED_LONG && MODE == STANDARD
     } else if ((*valpp)->sign == UNSIGNED) {     /* Never overflow  */
         if (warn_level & 1)
             cwarn( out_of_range, op_name, 0L, NULLST);
@@ -1849,14 +1859,14 @@ dump_val( msg, valp)
  * Dump a value by internal representation.
  */
 {
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
     const char * const  format_ll
                 = "%s(%ssigned long long) 0x%016" LL_FORM "x";
 #endif
     const char * const  format = "%s(%ssigned long) 0x%08lx";
     int     sign = valp->sign;
 
-#if HAVE_LONG_LONG && MODE >= STANDARD
+#if HAVE_LONG_LONG && MODE == STANDARD
     if (stdc3) {
         fprintf( fp_debug, format_ll, msg, sign ? "" : "un", valp->val);
     } else {

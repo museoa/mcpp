@@ -274,7 +274,7 @@ void    e_19_3( void)
 /*      Operand of # operator in function-like macro definition shall
         be a parameter name.    */
 
-/* 24.5:    */
+/* 24.6:    */
 #define FUNC( a)    # b
 
 
@@ -298,11 +298,11 @@ void    e_25_6( void)
 
 /*      Error of rescanning.    */
 
-/* 27.6:    */
+/* 27.7:    */
 #define TWO_ARGS        a,b
 #define SUB( x, y)      sub( x, y)
 
-void    e_27_6( void)
+void    e_27_7( void)
 {
 /* Too many arguments error while rescanning after once replaced to:
     sub( a,b, 1);   */

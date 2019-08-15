@@ -4,6 +4,8 @@
  *      1998/08 by kmatsui
  *              Made after runtest.c and summtest.c of
  *              "Plum-Hall Validation Sampler".
+ *      2005/03 by kmatsui
+ *              Decreased 'PGNUM' by 1.
  */
 
 #include    "stdio.h"
@@ -13,7 +15,7 @@
 #include    "errno.h"
 
 #define NAMEMAX     8
-#define PGMNUM      38
+#define PGMNUM      37
 
 #if     __MSDOS__ || __WIN32__ || _WIN32
 #define PATH_DELIM  '\\'

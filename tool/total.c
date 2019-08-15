@@ -5,6 +5,7 @@
  *      Specify the number of preprocessors by <n>.
  *  1998/08     kmatsui
  *  2002/08     Updated for "cpp-test.txt" V.1.3    kmatsui
+ *  2004/11     Updated for "cpp-test.txt" V.1.5    kmatsui
  */
 
 #include    "stdio.h"
@@ -12,18 +13,18 @@
 #include    "string.h"
 #include    "ctype.h"
 
-#define     MAX_COLS    (MAX_CASES + MINMAX)
+#define     MAX_COLS    (MAX_CASES + MAXC)
 #define     MAX_CASES   30
-#define     MINMAX      2
+#define     MAXC        1
 #define     OFFS        7
 #define     LEN         4
-#define     COLS        (MINMAX + cases)
+#define     COLS        (MAXC + cases)
 #define     LLEN        ((COLS * LEN) + OFFS + 2 + 2)
 #define     MAX_LLEN    ((MAX_COLS * LEN) + OFFS + 2 + 2)
 
-#define     C90         1
-#define     C99         2
-#define     CPL         3
+#define     C90         2
+#define     C99         3
+#define     CPL         4
 
 int     cases;
 int     subtotal[ MAX_COLS];
@@ -130,7 +131,7 @@ void    add_points( norm)
 {
     int     i;
     int     len;
-    int     min, max, point;
+    int     max, point;
     int     *arr;
     char    *p;
 
@@ -148,15 +149,14 @@ void    add_points( norm)
     len = strlen( buf);
 
     for (i = 0, p = buf + OFFS + 1; i < COLS && p - buf < len;
-            i++, p += LEN, i == MINMAX ? (p += 2) : 0) {
+            i++, p += LEN, i == MAXC ? (p += 2) : 0) {
         if (*(p + 2) == ' ')    /* No point written */
             continue;
         point = atoi( p);
         switch (i) {
-        case 0:     min = point;    break;
-        case 1:     max = point;    break;
+        case 0:     max = point;    break;
         default:
-            if (point < min || max < point) {
+            if (point < 0 || max < point) {
                 fprintf( stderr, "Out of range: (No.%d) %d\n"
                         , i - 1, point);
                 fputs( buf, stderr);
@@ -174,7 +174,7 @@ void    put_subtotal()
     buf[ OFFS - 1] = ' ';
 
     for (i = 0, p = buf + OFFS; i < COLS; i++, p += LEN) {
-        if (i == MINMAX)
+        if (i == MAXC)
             p = stpcpy( p, "  ");
         sprintf( p, "%4d", subtotal[ i]);
         mttl90[ i] += subtotal[ i];
@@ -205,7 +205,7 @@ void    put_mttl( norm)
     buf[ OFFS - 1] = ' ';
 
     for (i = 0, p = buf + OFFS; i < COLS; i++, p += LEN) {
-        if (i == MINMAX)
+        if (i == MAXC)
             p = stpcpy( p, "  ");
         sprintf( p, "%4d", mttl[ i]);
         grandtotal[ i] += mttl[ i];
@@ -223,7 +223,7 @@ void    put_grandtotal()
     buf[ OFFS - 1] = ' ';
 
     for (i = 0, p = buf + OFFS; i < COLS; i++, p += LEN) {
-        if (i == MINMAX)
+        if (i == MAXC)
             p = stpcpy( p, "  ");
         sprintf( p, "%4d", grandtotal[ i]);
     }

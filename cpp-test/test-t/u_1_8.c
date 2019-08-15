@@ -16,5 +16,5 @@
 
 /* u.1.10:  Unterminated header-name.   */
 #include    <assert.h
-/* { dg-error "missing terminating > character| `#include' expects | Unterminated header name" "" { target *-*-* } 18 } */
+/* { dg-error "missing terminating > character| (`#include'|#include) expects | Unterminated header name" "" { target *-*-* } 18 } */
 

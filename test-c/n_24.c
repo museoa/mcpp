@@ -24,6 +24,12 @@ main( void)
     assert( strcmp( str( "ab\
 c"), "\"abc\"") == 0);
 
+/* 24.5:    Token separator inserted by macro expansion should be removed.
+        (Meanwhile, tokens should not be merged.  See 21.2.)    */
+#define xstr( a)    str( a)
+#define f(a)        a
+    assert( strcmp( xstr( x-f(y)), "x-y") == 0);
+
     fputs( "success\n", stderr);
     return  0;
 }

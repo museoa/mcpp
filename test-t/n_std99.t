@@ -207,7 +207,7 @@ A23456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef = 63;
 
 /*  37.4L:  Nested conditional inclusion: at least 63 level.    */
 
-/* nest = 0x3f; */
+/* ifdef_nest = 0x3f;   */
 #define     X3F
 #include    "ifdef15.h"
 

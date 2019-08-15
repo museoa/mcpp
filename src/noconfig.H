@@ -7,6 +7,9 @@
  * 2004/02  Extended multi-byte character handling.
  *          Added configuration for Plan 9 / pcc.           by kmatsui
  *
+ * 2005/03  Changed default setting to FreeBSD 5.* / GNU C 3.4.
+ *                                                          by kmatsui
+ *
  * WARNING: These are default settings.  To configure for your system, you
  *      must edit this file here and there.
  */
@@ -31,7 +34,7 @@
 /* Version message.                 */
 /* "MCPP V.2.* (200y/mm) $(MODE) mode for " precedes VERSION_MSG    */
 #define VERSION_MSG     \
-    "GNU C compiled by GNU C 2.95"
+    "GNU C compiled by GNU C 3.4"
 #if     0
     "DJGPP compiled by DJGPP (GNU C 2.7.1)"
     "LCC-Win32 compiled by LCC-Win32 V.3.2"
@@ -147,9 +150,10 @@
  *
  * C_INCLUDE_DIR1, C_INCLUDE_DIR2   may be defined if you have a compiler-
  *              specific include directory which is to be searched *before*
- *              the operating-system specific directories.
- * CPLUS_INCLUDE_DIR1, CPLUS_INCLUDE_DIR2   are for C++ include directory
- *              which exist other than C include directory.
+ *              the operating-system specific directories (e.g. /usr/include).
+ * CPLUS_INCLUDE_DIR1, CPLUS_INCLUDE_DIR2, CPLUS_INCLUDE_DIR3
+ *      , CPLUS_INCLUDE_DIR4     are for C++ include directory which exist
+ *              other than C include directory.
  * ENV_C_INCLUDE_DIR    may be defined to the name of environment-variable for
  *              C include directory.
  * ENV_CPLUS_INCLUDE_DIR    is name of environment-variable for C++ include
@@ -188,7 +192,7 @@
 #endif
 
 #if     SYSTEM == SYS_ULTRIX
-#define CPU_OLD             "vax"       /* "mips"       */
+#define CPU_OLD             "vax"       /* "mips"   */
 #define CPU_STD1            "__VAX"     /* "__mips", "__MIPSEL", "__MIPSEB" */
 #define SYSTEM_OLD          "ultrix"
 #define SYSTEM_STD1          "__ULTRIX"
@@ -200,7 +204,7 @@
 
 #if     SYSTEM == SYS_FREEBSD
 #define SYSTEM_EXT          "__FreeBSD__"
-#define SYSTEM_EXT_VAL      "4" /* V.2.*: 2, V.3.*: 3, V.4.*: 4, V.5.*: 5   */
+#define SYSTEM_EXT_VAL      "5"     /* V.4.*: 4, V.5.*: 5   */
 #endif
 
 #if     SYSTEM == SYS_LINUX
@@ -227,7 +231,7 @@
 
 #if     SYS_FAMILY == SYS_UNIX
 #ifndef MBCHAR
-#define MBCHAR              EUC_JP
+#define MBCHAR              EUC_JP  /* UTF8 if you like */
 #endif
 #ifndef FNAME_FOLD
 #define FNAME_FOLD          FALSE
@@ -279,13 +283,13 @@
 #define COMPILER_EXT        "_MSC_VER"
 #define COMPILER_EXT_VAL    "1310"  /* MSC 6.0: "600", MSC 7.0: "700"
                 , VC 4.0: "1000", VC 5.0: "1100", VC 6.0: "1200"
-                , VC .NET: "1300", VC .NET 2003: "1310" */
+                , VC .NET 2002: "1300", VC .NET 2003: "1310"        */
 #define COMPILER_SP1        "_MSC_EXTENSIONS"
 #define COMPILER_SP1_VAL    "1"
 #define COMPILER_SP2        "_M_IX86"
 #define COMPILER_SP2_VAL    "600"       /* Pentium Pro and later    */
 #define HAVE_LONG_LONG      TRUE
-    /* __int64 instead of long long (VC 2.0 and later)  */
+    /* __int64 instead of long long (VC 2.0 and later)      */
 #define EXPAND_PRAGMA       TRUE
 #define HAVE_DIGRAPHS       TRUE
 #define BIGFIVE_IS_ESCAPE_FREE      TRUE 
@@ -336,7 +340,7 @@
 #endif
 
 #ifndef SJIS_IS_ESCAPE_FREE
-#define SJIS_IS_ESCAPE_FREE TRUE    /* or FALSE following your compiler */
+#define SJIS_IS_ESCAPE_FREE TRUE    /* or FALSE following your compiler     */
 #endif
 
 #endif  /* SYSTEM == SYS_MSDOS || SYSTEM == SYS_WIN32   */
@@ -355,11 +359,11 @@
 
 #if     COMPILER_FAMILY == GNUC
 #define COMPILER_EXT        "__GNUC__"
-#define COMPILER_EXT_VAL    "2"     /* "2" for V.2.*, "3" for V.3.* */
+#define COMPILER_EXT_VAL    "3"     /* "2" for V.2.*, "3" for V.3.* */
 #define COMPILER_EX2        "__GNUC_MINOR__"
-#define COMPILER_EX2_VAL    "95"    /* "95" for V.2.95.*, "2" for V.3.2     */
+#define COMPILER_EX2_VAL    "4"     /* "95" for V.2.95, "3" for V.3.3   */
 #define COMPILER_CPLUS      "__GNUG__"
-#define COMPILER_CPLUS_VAL  "2"     /* "2" for V.2.*, "3" for V.3.* */
+#define COMPILER_CPLUS_VAL  "3"     /* "2" for V.2.*, "3" for V.3.* */
 #define LINE_PREFIX         "# "
 #ifndef HAVE_DIGRAPHS
 #define HAVE_DIGRAPHS       TRUE
@@ -368,16 +372,16 @@
 #ifndef HAVE_LONG_LONG
 #define HAVE_LONG_LONG      TRUE
 #endif
-#define HAVE_INTMAX_T       FALSE   /* FALSE for V.2, TRUE for V.3  */
+#define HAVE_INTMAX_T       TRUE    /* FALSE for V.2, TRUE for V.3  */
 #if     HAVE_INTMAX_T
 #define HAVE_INTTYPES_H     TRUE
 #endif
 #define HAVE_LONG_DOUBLE    TRUE
-#define STDC_VERSION        199409L /* 199409L for V.2.9, 0L for V.3.*  */
-#define CPLUS_INCLUDE_DIR1  "/usr/include/g++"  /* "/usr/include/g++-3" */
-/* #define CPLUS_INCLUDE_DIR2  "/usr/local/gcc-3.2/lib/gcc-lib/i686-pc-linux-gnu/3.2/include/c++/3.2"   */
-/* #define C_INCLUDE_DIR1  "/usr/lib/gcc-lib/i386-redhat-linux/2.95.3/include"  */
-/* #define C_INCLUDE_DIR1  "/usr/lib/gcc-lib/i686-pc-cygwin/2.95.3-5/include"   */
+#define STDC_VERSION        0L      /* 199409L for V.2.9, 0L for V.3.*      */
+#define CPLUS_INCLUDE_DIR1  "/usr/include/c++"  /* "/usr/include/c++/3.3.2" */
+#define CPLUS_INCLUDE_DIR2  "/usr/include/c++/backward"     /* "/usr/include/c++/3.3.2/i386-vine-linux" */
+/* #define CPLUS_INCLUDE_DIR3  "/usr/include/c++/3.3.2/backward"    */
+/* #define C_INCLUDE_DIR1  "/usr/lib/gcc-lib/i386-vine-linux/3.3.2/include" */
 #ifndef ENV_C_INCLUDE_DIR
 #define ENV_C_INCLUDE_DIR   "C_INCLUDE_PATH"
 #define ENV_CPLUS_INCLUDE_DIR   "CPLUS_INCLUDE_PATH"
@@ -405,7 +409,7 @@
 #ifndef MBCHAR
 #define MBCHAR              SJIS
 #endif
-#define SJIS_IS_ESCAPE_FREE TRUE    /* Compiler can handle '\\' in SJIS */
+#define SJIS_IS_ESCAPE_FREE TRUE    /* Compiler can handle '\\' in SJIS     */
 #define C_INCLUDE_DIR1      "/D0/INCLUDE"
 #if     COMPILER == MWC68K
 #define CPU_STD2            "__m68k__"
@@ -561,7 +565,7 @@
 #endif
 #ifndef ULONGMAX
 #define ULONGMAX            0xFFFFFFFFUL
-                    /* or 2147483647L in case of !HAVE_UNSIGNED_LONG    */
+                    /* or 2147483647L in case of !HAVE_UNSIGNED_LONG        */
 #endif
 
 /*
@@ -570,14 +574,6 @@
  */
 #ifndef CAN_CONCAT_STRINGS
 #define CAN_CONCAT_STRINGS  TRUE
-#endif
-
-/*
- * FOLD_CASE    should be set TRUE if upper-case and lower-case letters are
- *              not distinguished by O.S. in the options handed to cpp.
- */
-#ifndef FOLD_CASE
-#define FOLD_CASE           FALSE
 #endif
 
 /*
@@ -680,7 +676,7 @@
 #endif
 
 #if     ! HOST_HAVE_C_BACKSLASH_A
-        /* 1: for the host compiler-proper which can't recognize \a, \v */
+        /* 1: for the host compiler-proper which can't recognize \a, \v     */
 #define ALERT               '\007'          /* '\a' is "Bell"       */
 #define VT                  '\013'          /* Vertical Tab CTRL/K  */
 #endif
@@ -745,7 +741,7 @@ extern int      ferror();
 
 #include    "string.h"
 #include    "stdlib.h"
-#include    "time.h"        /* For MODE >= STANDARD */
+#include    "time.h"        /* For MODE == STANDARD */
 
 #if     0
 #ifdef  __cplusplus
@@ -800,7 +796,7 @@ extern char *   ctime();
 extern char *   getenv();
 #endif
 
-#endif  /* declaration of standard library functions    */
+#endif  /* declaration of standard library functions        */
 
 /* Functions other than standard.   */
 #if     PROTO
@@ -813,10 +809,14 @@ extern "C" {
 }
 #else   /* #ifndef __cplusplus  */
 extern int      getopt( int argc, char * const * argv, const char * opts);
+extern int      optind;
+extern char *   optarg;
 extern char *   stpcpy( char * dest, const char * src);
 #endif
 #else   /* ! PROTO  */
 extern int      getopt();
+extern int      optind;
+extern char *   optarg;
 extern char *   stpcpy();
 #endif
 

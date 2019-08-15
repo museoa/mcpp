@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1998, 2002-2004 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2005 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * Some parts of this code are derived from the public domain software
@@ -44,12 +44,20 @@
  */
 
 /*
+ * MCPP Version 2.5
+ * 2005/03      kmatsui
+ *      Changed type[] according to the change of magic characters assignment.
+ *      Absorbed POST_STANDARD into STANDARD and OLD_PREPROCESSOR into
+ *          PRE_STANDARD.
+ */
+
+/*
  * Character handling and multi-byte character handling routines are
  * placed here.
  */
 
 #if PREPROCESSED
-#include    "cpp.H"
+#include    "mcpp.H"
 #else
 #include    "system.H"
 #include    "internal.H"
@@ -58,6 +66,9 @@
 /*
  * Tables of character types and multi-byte character types.
  * These tables must be rewritten for a non-Ascii machine.
+ *
+ * Some of these character attributes will be overwritten by
+ *      execution time option '-@post' or '-@old'.
  */
 
 #if DOLLAR_IN_NAME
@@ -78,7 +89,7 @@
 #define PNC2    (PUNC| MB2)
 #endif
 
-const char      type[ UCHARMAX + 1] = {
+char        type[ UCHARMAX + 1] = {
 
 /* Character type codes */
 /*   0,     1,     2,     3,     4,     5,     6,     7,                    */
@@ -87,7 +98,11 @@ const char      type[ UCHARMAX + 1] = {
    000,   000,   000,   000,   000,   000,   000,   000,    /* 00           */
    000,   SPA,   SPA,   SPA,   SPA,   SPA,   000,   000,    /* 08           */
    000,   000,   000,   000,   000,   000,   000,   000,    /* 10           */
-   000,   000,   000,   000,   LET,   000,   000,   SPA,    /* 18           */
+#if MODE == STANDARD
+   000,   LET,   LET,   000,   000,   000,   000,   SPA,    /* 18           */
+#else
+   000,   000,   000,   000,   000,   000,   000,   000,    /* 18           */
+#endif
    SPA,   PUNC,  QUO,   PUNC,  DOL,   PUNC,  PUNC,  QUO,    /* 20  !"#$%&'  */
    PUNC,  PUNC,  PUNC,  PUNC,  PUNC,  PUNC,  DOT,   PUNC,   /* 28 ()*+,-./  */
    DIG,   DIG,   DIG,   DIG,   DIG,   DIG,   DIG,   DIG,    /* 30 01234567  */
@@ -177,7 +192,7 @@ const char      type[ UCHARMAX + 1] = {
 #else   /* SYSTEM != SYS_MSDOS  */
 /* For 32-bit or bigger systems.    */
 
-const short   * type;       /* Pointer to one of the following type_*[].    */
+short *     type;       /* Pointer to one of the following type_*[].    */
 
 #define EJ1     0x100   /* 1st byte of EUC_JP   */
 #define EJ2     0x200   /* 2nd byte of EUC_JP   */
@@ -192,7 +207,7 @@ const short   * type;       /* Pointer to one of the following type_*[].    */
 #define EU12    (EJ12 | GB12 | KS12)
     /* 1st or 2nd byte of EUC_JP, GB2312 or KSC5601 */
 
-const short     type_euc[ UCHARMAX + 1] = {
+static short    type_euc[ UCHARMAX + 1] = {
 /*
  * For EUC_JP, GB2312, KSC5601 or other similar multi-byte char encodings.
  */
@@ -204,7 +219,11 @@ const short     type_euc[ UCHARMAX + 1] = {
    000,   000,   000,   000,   000,   000,   000,   000,    /* 00           */
    000,   SPA,   SPA,   SPA,   SPA,   SPA,   000,   000,    /* 08           */
    000,   000,   000,   000,   000,   000,   000,   000,    /* 10           */
-   000,   000,   000,   000,   LET,   000,   000,   SPA,    /* 18           */
+#if MODE == STANDARD
+   000,   LET,   LET,   000,   000,   000,   000,   SPA,    /* 18           */
+#else
+   000,   000,   000,   000,   000,   000,   000,   000,    /* 18           */
+#endif
    SPA,   PUNC,  QUO,   PUNC,  DOL,   PUNC,  PUNC,  QUO,    /* 20  !"#$%&'  */
    PUNC,  PUNC,  PUNC,  PUNC,  PUNC,  PUNC,  DOT,   PUNC,   /* 28 ()*+,-./  */
    DIG,   DIG,   DIG,   DIG,   DIG,   DIG,   DIG,   DIG,    /* 30 01234567  */
@@ -237,7 +256,7 @@ const short     type_euc[ UCHARMAX + 1] = {
    EU12,  EU12,  EU12,  EU12,  EU12,  EU12,  EU12,  000,    /*   F8 .. FF   */
 };
 
-const short     type_bsl[ UCHARMAX + 1] = {
+static short    type_bsl[ UCHARMAX + 1] = {
 /*
  * For SJIS, BIGFIVE or other similar encodings which may have '\\' value as
  * the second byte of multi-byte character.
@@ -264,7 +283,11 @@ const short     type_bsl[ UCHARMAX + 1] = {
    000,   000,   000,   000,   000,   000,   000,   000,    /* 00           */
    000,   SPA,   SPA,   SPA,   SPA,   SPA,   000,   000,    /* 08           */
    000,   000,   000,   000,   000,   000,   000,   000,    /* 10           */
-   000,   000,   000,   000,   LET,   000,   000,   SPA,    /* 18           */
+#if MODE == STANDARD
+   000,   LET,   LET,   000,   000,   000,   000,   SPA,    /* 18           */
+#else
+   000,   000,   000,   000,   000,   000,   000,   000,    /* 18           */
+#endif
    SPA,   PUNC,  QUO,   PUNC,  DOL,   PUNC,  PUNC,  QUO,    /* 20  !"#$%&'  */
    PUNC,  PUNC,  PUNC,  PUNC,  PUNC,  PUNC,  DOT,   PUNC,   /* 28 ()*+,-./  */
    DIG,   DIG,   DIG,   DIG,   DIG,   DIG,   DIG,   DIG,    /* 30 01234567  */
@@ -305,23 +328,20 @@ const short     type_bsl[ UCHARMAX + 1] = {
 #define IS2     0x80    /* 2nd byte of shift-sequence   */
 #define IS3     0x100   /* 3rd byte of shift-sequence   */
 #define IS4     0x200   /* 4th byte of shift-sequence   */
-#define IJ1     0x400   /* 1st byte of ISO-2022-JP (ISO-2022-JP1)   */
-#define IJ2     0x800   /* 2nd byte of ISO-2022-JP (ISO-2022-JP1)   */
+#define IJP     0x400   /* 1st or 2nd byte of ISO-2022-JP (ISO-2022-JP1)    */
 
-#define IJ12    (IJ1 | IJ2)
+#define PIJP    (PUNC | IJP)
+#define QIJP    (QUO | IJP)
+#define DTJP    (DOT | IJP)
+#define DGJP    (DIG | IJP)
+#define LIJP    (LET | IJP)
 
-#define PI12    (PUNC | IJ12)
-#define QI12    (QUO | IJ12)
-#define DT12    (DOT | IJ12)
-#define DG12    (DIG | IJ12)
-#define LI12    (LET | IJ12)
+#define DLJPS2  (DOL | IJP | IS2)
+#define PJPS23  (PIJP | IS2 | IS3)
+#define LJPS3   (LIJP | IS3)
+#define LJPS4   (LIJP | IS4)
 
-#define DL12S2  (DOL | IJ12 | IS2)
-#define P12S23  (PI12 | IS2 | IS3)
-#define L12S3   (LI12 | IS3)
-#define L12S4   (LI12 | IS4)
-
-const short     type_iso2022_jp[ UCHARMAX + 1] = {
+static short    type_iso2022_jp[ UCHARMAX + 1] = {
 
 /* Character type codes */
 /*   0,     1,     2,     3,     4,     5,     6,     7,                    */
@@ -330,20 +350,24 @@ const short     type_iso2022_jp[ UCHARMAX + 1] = {
    000,   000,   000,   000,   000,   000,   000,   000,    /* 00           */
    000,   SPA,   SPA,   SPA,   SPA,   SPA,   000,   000,    /* 08           */
    000,   000,   000,   000,   000,   000,   000,   000,    /* 10           */
-   000,   000,   000,   IS1,   LET,   000,   000,   SPA,    /* 18           */
-   SPA,   PI12,  QI12,  PI12,  DL12S2,PI12,  PI12,  QI12,   /* 20  !"#$%&'  */
-   P12S23,PI12,  PI12,  PI12,  PI12,  PI12,  DT12,  PI12,   /* 28 ()*+,-./  */
-   DG12,  DG12,  DG12,  DG12,  DG12,  DG12,  DG12,  DG12,   /* 30 01234567  */
-   DG12,  DG12,  PI12,  PI12,  PI12,  PI12,  PI12,  PI12,   /* 38 89:;<=>?  */
+#if MODE == STANDARD
+   000,   LET,   LET,   IS1,   000,   000,   000,   SPA,    /* 18           */
+#else
+   000,   000,   000,   000,   000,   000,   000,   000,    /* 18           */
+#endif
+   SPA,   PIJP,  QIJP,  PIJP,  DLJPS2,PIJP,  PIJP,  QIJP,   /* 20  !"#$%&'  */
+   PJPS23,PIJP,  PIJP,  PIJP,  PIJP,  PIJP,  DTJP,  PIJP,   /* 28 ()*+,-./  */
+   DGJP,  DGJP,  DGJP,  DGJP,  DGJP,  DGJP,  DGJP,  DGJP,   /* 30 01234567  */
+   DGJP,  DGJP,  PIJP,  PIJP,  PIJP,  PIJP,  PIJP,  PIJP,   /* 38 89:;<=>?  */
 
-   IJ12,  LI12,  L12S3, LI12,  L12S4, LI12,  LI12,  LI12,   /* 40 @ABCDEFG  */
-   LI12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,   /* 48 HIJKLMNO  */
-   LI12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,   /* 50 PQRSTUVW  */
-   LI12,  LI12,  LI12,  PI12,  IJ12,  PI12,  PI12,  LI12,   /* 58 XYZ[\]^_  */
-   IJ12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,   /* 60 `abcdefg  */
-   LI12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,   /* 68 hijklmno  */
-   LI12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,  LI12,   /* 70 pqrstuvw  */
-   LI12,  LI12,  LI12,  PI12,  PI12,  PI12,  PI12,  000,    /* 78 xyz{|}~   */
+   IJP,   LIJP,  LJPS3, LIJP,  LJPS4, LIJP,  LIJP,  LIJP,   /* 40 @ABCDEFG  */
+   LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,   /* 48 HIJKLMNO  */
+   LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,   /* 50 PQRSTUVW  */
+   LIJP,  LIJP,  LIJP,  PIJP,  IJP,   PIJP,  PIJP,  LIJP,   /* 58 XYZ[\]^_  */
+   IJP,   LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,   /* 60 `abcdefg  */
+   LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,   /* 68 hijklmno  */
+   LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,  LIJP,   /* 70 pqrstuvw  */
+   LIJP,  LIJP,  LIJP,  PIJP,  PIJP,  PIJP,  PIJP,  000,    /* 78 xyz{|}~   */
     /* the rests are 0 cleared  */
 };
 
@@ -362,7 +386,7 @@ const short     type_iso2022_jp[ UCHARMAX + 1] = {
 #define UT223   (U2_2 | U3_2 | U3_3)
 /* 2nd byte of 2-byte encoding, or 2nd or 3rd byte of 3-byte encoding   */
 
-const short     type_utf8[ UCHARMAX + 1] = {
+static short    type_utf8[ UCHARMAX + 1] = {
 
 /* Character type codes */
 /*   0,     1,     2,     3,     4,     5,     6,     7,                    */
@@ -371,7 +395,11 @@ const short     type_utf8[ UCHARMAX + 1] = {
    000,   000,   000,   000,   000,   000,   000,   000,    /* 00           */
    000,   SPA,   SPA,   SPA,   SPA,   SPA,   000,   000,    /* 08           */
    000,   000,   000,   000,   000,   000,   000,   000,    /* 10           */
-   000,   000,   000,   000,   LET,   000,   000,   SPA,    /* 18           */
+#if MODE == STANDARD
+   000,   LET,   LET,   000,   000,   000,   000,   SPA,    /* 18           */
+#else
+   000,   000,   000,   000,   000,   000,   000,   000,    /* 18           */
+#endif
    SPA,   PUNC,  QUO,   PUNC,  DOL,   PUNC,  PUNC,  QUO,    /* 20  !"#$%&'  */
    PUNC,  PUNC,  PUNC,  PUNC,  PUNC,  PUNC,  DOT,   PUNC,   /* 28 ()*+,-./  */
    DIG,   DIG,   DIG,   DIG,   DIG,   DIG,   DIG,   DIG,    /* 30 01234567  */
@@ -407,32 +435,32 @@ const short     type_utf8[ UCHARMAX + 1] = {
 #define SETLOCALE       2       /* #pragma setlocale (not __setlocale)  */
 
 #define NUM_ENCODING    8
-#define NUM_ALIAS       9
+#define NUM_ALIAS       7
 
 /*
  * Names of encoding recognized.  Table for search_encoding().
  * Note: GNU C documents that LANG=C-EUCJP (C-SJIS, C-JIS) is effective,
  * though this feature is not fully enabled in GNU C.
  */
-static char *   encoding_name[ NUM_ENCODING][ NUM_ALIAS] = {
+static const char * const   encoding_name[ NUM_ENCODING][ NUM_ALIAS] = {
     /* normalized LANG, Visual C full, Visual C short
         , miscellaneous  */
     { "c",        "english",    "c"
-        , "c",      "en",   "latin",    "iso8859",  "",     "" },
+        , "c",      "en",   "latin",    "iso8859"},
     { "ceucjp",  "",     ""
-        , "eucjp",  "euc",  "ujis",     "jajpeucjp",    "",     "" },
+        , "eucjp",  "euc",  "ujis",     ""},
     { "",         "chinesesimplified",  "chs"
-        , "gb2312", "cngb",     "euccn",    "zhcn",     "zhcneuccn",    "" },
+        , "gb2312", "cngb",     "euccn",    ""},
     { "",         "korean",   "kor"
-        , "ksc5601",    "ksx1001",  "wansung",  "euckr",    "kokr", "kokreuckr" },
+        , "ksc5601",    "ksx1001",  "wansung",  "euckr"},
     { "csjis",    "japanese", "jpn"
-        , "sjis",   "shiftjis", "mskanji",  "jajpsjis", "",     "" },
+        , "sjis",   "shiftjis", "mskanji",  ""},
     { "",         "chinesetraditional", "cht"
-        , "bigfive",    "big5", "cnbig5",   "euctw",    "zhtw", "zhtweuctw" },
+        , "bigfive",    "big5", "cnbig5",   "euctw"},
     { "cjis",     "",     ""
-        , "iso2022jp",  "iso2022jp1",   "jis",  "jajpjis",  "",     "" },
+        , "iso2022jp",  "iso2022jp1",   "jis",  ""},
     { "",         "",     ""
-        , "utf8",   "utf",      "",     "",     "",     "" },
+        , "utf8",   "utf",      "",     ""},
 };
 
 #endif  /* SYSTEM != SYS_MSDOS  */
@@ -443,8 +471,8 @@ static int      mb2;
 
 static size_t   mb_read_2byte( int c1, char ** in_pp, char ** out_pp);
 #if SYSTEM != SYS_MSDOS
-static char *   search_encoding( char * norm, int alias);
-static void     strip_bar( char * norm);
+static const char *     search_encoding( char * norm, int alias);
+static void     strip_bar( char * string);
 static size_t   mb_read_iso2022_jp( int c1, char ** in_pp, char ** out_pp);
 static size_t   mb_read_utf8( int c1, char ** in_pp, char ** out_pp);
 #endif
@@ -465,7 +493,7 @@ static size_t   mb_read_utf8();         /* For UTF8 mbchar encoding     */
 
 #define NAMLEN  20
 
-char *
+const char *
 #if PROTO
 set_encoding( char * name, char * env, int pragma)
 #else
@@ -483,10 +511,13 @@ set_encoding( name, env, pragma)
             = "Unknown encoding: %s%.0ld%.0s";          /* _W1_ */
     const char *    too_long
             = "Too long encoding name: %s%.0ld%.0s";    /* _E_  */
+    const char *    loc = "";
     int     alias;
-    char *  loc = "";
     char    norm[ NAMLEN];
-                /* Normalized name (stripped '_', '-', '.' and lowered  */
+            /*
+             * Normalized name (removed 'xxxxx.', stripped '_', '-', '.'
+             * and lowered.
+             */
 
     if (strlen( name) >= NAMLEN) {
         if ((env || pragma) && (warn_level & 1)) {
@@ -497,17 +528,18 @@ set_encoding( name, env, pragma)
         }
     }
     strcpy( norm, name);
+    if (norm[ 5] == '.')
+        memmove( norm, norm + 5, strlen( norm + 5) + 1);
+        /* Remove initial 'xxxxx.' as 'ja_JP.', 'en_US.' or any other   */
     conv_case( norm, norm + strlen( norm), LOWER);
     strip_bar( norm);
 
     if (strlen( name) == 0) {                       /* ""       */
         mbchar = MBCHAR;    /* Restore to the default encoding  */
-    } else if (memcmp( norm, "iso8859", 7) == 0     /* iso8895* */
+    } else if (memcmp( norm, "iso8859", 7) == 0     /* iso8859* */
             || memcmp( norm, "latin", 5) == 0       /* latin*   */
             || memcmp( norm, "en", 2) == 0) {       /* en*      */
         mbchar = 0;                 /* No multi-byte character  */
-    } else if (str_eq( norm + strlen( norm) - 4, "utf8")) {
-        mbchar = UTF8;                              /* *utf8    */
     } else {
         alias = 3;
 #if COMPILER == GNUC
@@ -533,7 +565,7 @@ set_encoding( name, env, pragma)
     return  loc;
 }
 
-static char *
+static const char *
 #if PROTO
 search_encoding( char * norm, int alias)
 #else
@@ -542,8 +574,8 @@ search_encoding( norm, alias)
     int     alias;          /* The number of alias to start searching   */
 #endif
 {
-    char *  loc;
-    int     lo, al;
+    const char *    loc;
+    int             lo, al;
 
     for (lo = 0; lo < NUM_ENCODING; lo++) {
         for (al = alias ; al < NUM_ALIAS; al++) {
@@ -615,26 +647,26 @@ mb_init()
      * may contain the byte of value 0x5c.
      */
     switch (mbchar) {
-    case (0)    :
-    case (EUC_JP)   :
-    case (GB2312)   :
-    case (KSC5601)  :
+    case 0      :
+    case EUC_JP     :
+    case GB2312     :
+    case KSC5601    :
         type = type_euc;
         bsl_in_mbchar = FALSE;
         mb_read = mb_read_2byte;
         break;
-    case (SJIS) :
-    case (BIGFIVE)  :
+    case SJIS   :
+    case BIGFIVE    :
         type = type_bsl;
         bsl_in_mbchar = TRUE;
         mb_read = mb_read_2byte;
         break;
-    case (ISO2022_JP)    :
+    case ISO2022_JP :
         type = type_iso2022_jp;
         bsl_in_mbchar = TRUE;
         mb_read = mb_read_iso2022_jp;
         break;
-    case (UTF8) :
+    case UTF8   :
         type = type_utf8;
         bsl_in_mbchar = FALSE;
         mb_read = mb_read_utf8;
@@ -644,7 +676,7 @@ mb_init()
 
     /* Set the bit patterns for character classification.   */
     switch (mbchar) {
-    case (0)    :
+    case 0      :
         mbstart = 0;
         mbmask = ~0;
         break;
@@ -655,36 +687,36 @@ mb_init()
         mb2 = MB2;
         break;
 #else
-    case (EUC_JP)   :
+    case EUC_JP :
         mbstart = EJ1;
         mbmask = ~EU12;
         mb2 = EJ2;
         break;
-    case (GB2312)   :
+    case GB2312 :
         mbstart = GB1;
         mbmask = ~EU12;
         mb2 = GB2;
         break;
-    case (KSC5601)  :
+    case KSC5601:
         mbstart = KS1;
         mbmask = ~EU12;
         mb2 = KS2;
         break;
-    case (SJIS) :
+    case SJIS   :
         mbstart = SJ1;
         mbmask = ~SB12;
         mb2 = SJ2;
         break;
-    case (BIGFIVE)  :
+    case BIGFIVE:
         mbstart = BF1;
         mbmask = ~SB12;
         mb2 = BF2;
         break;
-    case (ISO2022_JP)    :
+    case ISO2022_JP :
         mbstart = IS1;
-        mbmask = ~(IS1 | IS2 | IS3 | IS4 | IJ12);
+        mbmask = ~(IS1 | IS2 | IS3 | IS4 | IJP);
         break;
-    case (UTF8) :
+    case UTF8   :
         mbstart = (U2_1 | U3_1);
         mbmask = ~(U2_1 | U2_2 | U3_1 | U3_2 | U3_3);
         break;
@@ -696,18 +728,18 @@ mb_init()
      * deficiency.
      */
     switch (mbchar) {
-    case (SJIS) :
+    case SJIS   :
 #if ! SJIS_IS_ESCAPE_FREE
         bsl_need_escape = TRUE;
 #endif
         break;
-    case (BIGFIVE)  :
+    case BIGFIVE:
 #if ! BIGFIVE_IS_ESCAPE_FREE
         bsl_need_escape = TRUE;
 #endif
         break;
 #if SYSTEM != SYS_MSDOS
-    case (ISO2022_JP)    :
+    case ISO2022_JP :
 #if ! ISO2022_JP_IS_ESCAPE_FREE
         bsl_need_escape = TRUE;
 #endif
@@ -717,6 +749,18 @@ mb_init()
         bsl_need_escape = FALSE;
         break;
     }
+
+/* Modify table according to 'mode'.    */
+#if MODE == STANDARD
+    if (mode == POST_STD)
+        type[ IN_SRC] = type[ TOK_SEP] = 0;
+    else if (compat_mode)
+        type[ IN_SRC] = 0;
+#else
+    if (mode == OLD_PREP)
+        type[ COM_SEP] = SPA;
+#endif
+
 }
 
 static size_t
@@ -785,11 +829,11 @@ mb_read_iso2022_jp( c1, in_pp, out_pp)
         }
 
         switch (c2) {
-        case (0x24) :
+        case 0x24   :
             switch (c3) {
-            case (0x42) :   /* 0x1b 0x24 0x42:  JIS X 0208-1983 */
+            case 0x42   :   /* 0x1b 0x24 0x42:  JIS X 0208-1983 */
                 break;
-            case (0x28) :
+            case 0x28   :
                 *out_p++ = c4 = *in_p++;
                 if (! (type[ c4 & UCHARMAX] & IS4))
                     error = TRUE;
@@ -799,9 +843,9 @@ mb_read_iso2022_jp( c1, in_pp, out_pp)
                 error = TRUE;
             }
             break;
-        case (0x28) :
+        case 0x28   :
             switch (c3) {
-            case (0x42) :   /* 0x1b 0x28 0x42:  ASCII   */
+            case 0x42   :   /* 0x1b 0x28 0x42:  ASCII   */
                 c1 = *out_p++ = *in_p++ & UCHARMAX;
                 continue;
             default :
@@ -812,8 +856,8 @@ mb_read_iso2022_jp( c1, in_pp, out_pp)
         if (error)
             break;
 
-        while (type[ c1 = *out_p++ = (*in_p++ & UCHARMAX)] & IJ1) {
-            if (! (type[ *out_p++ = (*in_p++ & UCHARMAX)] & IJ2)) {
+        while (type[ c1 = *out_p++ = (*in_p++ & UCHARMAX)] & IJP) {
+            if (! (type[ *out_p++ = (*in_p++ & UCHARMAX)] & IJP)) {
                 error = TRUE;
                 break;
             }
@@ -879,8 +923,6 @@ mb_read_utf8( c1, in_pp, out_pp)
 
 #endif  /* SYSTEM != SYS_MSDOS */
 
-#if MODE != POST_STANDARD
-
 uexpr_t
 #if PROTO
 mb_eval( char ** seq_pp)
@@ -892,6 +934,7 @@ mb_eval( seq_pp)
  * Evaluate the value of a multi-byte character.
  * This routine does not check the legality of the sequence.
  * This routine is called from eval_char().
+ * This routine is never called in POST_STD mode.
  */
 {
     char *      seq = *seq_pp;
@@ -899,16 +942,16 @@ mb_eval( seq_pp)
     int         c, c1;
 
     switch (mbchar) {
-    case (EUC_JP)   :
-    case (GB2312)   :
-    case (KSC5601)  :
-    case (SJIS) :
-    case (BIGFIVE)  :
+    case EUC_JP :
+    case GB2312 :
+    case KSC5601:
+    case SJIS   :
+    case BIGFIVE:
         val = (*seq++ & UCHARMAX) << 8;
         val += *seq++ & UCHARMAX;       /* Evaluate the 2-byte sequence */
         break;
 #if SYSTEM != SYS_MSDOS
-    case (ISO2022_JP)   :
+    case ISO2022_JP :
         if (type[ c = *seq++ & UCHARMAX] & IS1) {   /* Skip shift-sequence  */
             if (type[ c = *seq++ & UCHARMAX] & IS2) {
                 if (type[ c1 = *seq++ & UCHARMAX] & IS3) {
@@ -924,7 +967,7 @@ mb_eval( seq_pp)
         }
         val = (c << 8) + (*seq++ & UCHARMAX);       /* Evaluate the 2-byte  */
         break;
-    case (UTF8) :       /* Evaluate the sequence of 2 or 3 bytes as it is   */
+    case UTF8   :       /* Evaluate the sequence of 2 or 3 bytes as it is   */
         if (type[ c = *seq++ & UCHARMAX] & U2_1) {
             val = (c << 8) + (*seq++ & UCHARMAX);
         } else {
@@ -938,6 +981,4 @@ mb_eval( seq_pp)
     *seq_pp = seq;
     return  val;
 }
-
-#endif  /* MODE != POST_STANDARD    */
 

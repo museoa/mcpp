@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1998, 2002-2004 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2005 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * Some parts of this code are derived from the public domain software
@@ -99,6 +99,8 @@
  *           systems.                                   (all files)
  *
  *      See "cpp_20.man", "cpp_20.doc" and "cpp_test.doc" for details.
+ *      (2004/11    Those documents are later renamed as "mcpp-manual.txt"
+ *          , "mcpp-porting.txt" and "cpp-test.txt".)
  *
  *      Dependencies among the source files are as follows:
  *          main.c, control.c, eval.c, expand.c, support.c and system.c
@@ -109,7 +111,7 @@
  *              functions.
  *      You should add to stack size
  *              NMACWORK + (NEXP * 30) + (sizeof (int) * 100)
- *          and for MODE >= STANDARD
+ *          and for MODE == STANDARD
  *              (sizeof (char *) * 12 * RESCAN_LIMIT)
  *          other than the size needed by the system.
  */
@@ -128,7 +130,7 @@
  * CPP Version 2.2
  * 1998/11      kmatsui
  *      Updated according to C++ Standard (ISO/IEC 14882:1998).
- *                                              (eval.c, support.c)
+ *                                                      (eval.c, support.c)
  *      Fixed the bug of interaction of predefined non-standard macro with
  *          -D option.              (main.c, control.c, expand.c, system.c)
  */
@@ -137,13 +139,13 @@
  * CPP Version 2.3 pre-release 1
  * 2002/08      kmatsui
  *      Updated according to C99 (ISO/IEC 9899:1999).
- *      Added compatibility mode of C++ to C99.     (system.c, expand.c)
+ *      Added compatibility mode of C++ to C99.         (system.c, expand.c)
  *      Increased the class of warnings from four (OR of 1, 2, 4, 8) to
  *          five (OR of 1, 2, 4, 8, 16).
  *      Changed some errors to warnings.
  *      Changed some options on invoking.               (system.c)
  *      Added the options for compatibility to GNU C / cpp.
- *                                                  (system.c, support.c)
+ *                                                      (system.c, support.c)
  *      Added implementation for Linux, Cygwin / GNU C, LCC-Win32.
  *                                          (system.H, control.c, system.c)
  *      Fixed a few bugs.                   (control.c, expand.c, support.c)
@@ -152,23 +154,23 @@
  *
  * CPP Version 2.3 pre-release 2
  * 2002/12      kmatsui
- *      Added implementation for GNU C 3.2.         (system.H, system.c)
- *      Fixed a few bugs.                           (system.c, expand.c)
+ *      Added implementation for GNU C 3.2.             (system.H, system.c)
+ *      Fixed a few bugs.                               (system.c, expand.c)
  *
  * CPP Version 2.3 release
  * 2003/02      kmatsui
  *      Implemented identifier-like operators in C++98.
  *                                          (eval.c, control.c, support.c)
- *      Reinforced checking of __VA_ARGS__.         (control.c)
+ *      Reinforced checking of __VA_ARGS__.             (control.c)
  *      Enabled interspersed options between filename arguments on
- *          invocation.                             (system.c)
- *      Changed #pragma __debug and #pragma __warning to #pragma __debug_cpp
- *          and #pragma __warning_cpp.              (system.c)
- *      Changed macros for include directory.       (system.H, system.c)
+ *          invocation.                                 (system.c)
+ *      Renamed #pragma __debug and #pragma __warning to #pragma __debug_cpp
+ *          and #pragma __warning_cpp.                  (system.c)
+ *      Renamed macros for include directory.           (system.H, system.c)
  *
  * CPP Version 2.3 patch 1
  * 2003/03      kmatsui
- *      Revised the MODEs other than STANDARD.      (system.c)
+ *      Revised the MODEs other than STANDARD.          (system.c)
  */
 
 /*
@@ -182,12 +184,12 @@
  *      changed DEFBUF and FILEINFO structure, reorganized some functions and
  *          variables.                  (other than system.H, eval.c lib.c)
  *      Added #pragma __push_macro, #pragma __pop_macro, #pragma __preprocess,
- *          #pragma __preprocessed.                 (system.c)
- *      Added implementation for Visual C++         (system.H, system.c)
+ *          #pragma __preprocessed.                     (system.c)
+ *      Added implementation for Visual C++             (system.H, system.c)
  *      Removed settings on VMS, VAX C, DEC C and OS-9/09.
- *                                                  (system.H, system.c)
+ *                                                      (system.H, system.c)
  *      Removed CON_NOEXPAND and CON_EXPAND modes.  Renamed CON_FALSE mode as
- *          PRE_STANDARD.                           (all the files)
+ *          PRE_STANDARD.                               (all the files)
  *
  * MCPP Version 2.4 release
  * 2004/02      kmatsui
@@ -196,11 +198,28 @@
  *          simultaneously.  Created mbchar.c.  Added #pragma __setlocale.
  *          Added -m <encoding> option.  Enabled environment variable LC_ALL,
  *          LC_CTYPE and LANG to specify the encoding.  (all the files)
- *      Added implementation for Plan 9 / pcc.      (noconfig.H, system.c)
+ *      Added implementation for Plan 9 / pcc.          (noconfig.H, system.c)
  *
  * MCPP Version 2.4.1
+ * 2004/03      kmatsui
  *      Added -c option (compatible mode to GNU C expansion of recursive
- *          macro).                                 (expand.c, system.c)
+ *          macro).                                     (expand.c, system.c)
+ */
+
+/*
+ * MCPP Version 2.5
+ * 2005/03      kmatsui
+ *      Absorbed POST_STANDARD into STANDARD as an execution time mode
+ *          (POST_STD mode).                            (all the files)
+ *      Absorbed OLD_PREPROCESSOR into PRE_STANDARD as an execution time
+ *          mode (OLD_PREP mode).                       (all the files)
+ *      Revised STD mode macro expansion routine using GNU C 3.2 testsuite
+ *          and Wave 1.0 testcases.                     (expand.c)
+ *      Revised OLD_PREP mode to follow "Reiser cpp model".   (control.c)
+ *      Removed FOLD_CASE settings.                     (system.c)
+ *      Renamed most of #pragma __* as #pragma MCPP *.  (system.c)
+ *      Updated to cope with GNU C V.3.3 and 3.4, and changed some options.
+ *                                                      (system.c)
  */
 
 /*
@@ -260,30 +279,33 @@
  */
 
 /*
+ * MCPP Version 2.5 / main.c
+ * 2005/03      kmatsui
+ *      Absorbed POST_STANDARD into STANDARD and OLD_PREPROCESSOR into
+ *          PRE_STANDARD.
+ */
+
+/*
  * The main routine and it's supplementary routines are placed here.
  * The post-preprocessing routines are also placed here.
  */
 
 #if PREPROCESSED                /* Use "pre-preprocessed" header    */
-#include    "cpp.H"
+#include    "mcpp.H"
 #else
 #include    "system.H"
 #include    "internal.H"
 #endif
 
-/*
- * If eflag is set, MCPP returns "success" even if non-fatal errors were
- * detected.
- */
-    int     eflag = FALSE;          /* -E option (never fail)       */
+    int     mode = 0;               /* Mode of preprocessing        */
     int     cflag = FALSE;          /* -C option (keep comments)    */
     int     zflag = FALSE;      /* -i option (no output of included file)   */
     int     pflag = FALSE;          /* -P option (no #line output)  */
-    int     qflag = FALSE;      /* -Q option (diagnostics to "cpp.err")     */
-#if MODE == STANDARD && OK_TRIGRAPHS
+    int     qflag = FALSE;      /* -Q option (diagnostics to "mcpp.err")    */
+#if MODE == STANDARD
+#if OK_TRIGRAPHS
     int     tflag = TFLAG_INIT;     /* -3 option (trigraphs)        */
 #endif
-#if MODE >= STANDARD
 #if OK_DIGRAPHS
     int     digraphs = DIGRAPHS_INIT;       /* -2 option (digraphs) */
 #endif
@@ -295,19 +317,18 @@
         (cplus >= 199901L) specifies compatibility to C99 (extended feature
         of this cpp)    */
 #endif
-#if MODE != POST_STANDARD && TOP_SPACE
 /*
  * lang_asm allows the following non-standard features.
  * 1. #non-directive.
- * 2. <newline> in a string-literal (provided OK_UNTERM_STRING == FALSE).
+ * 2. <newline> in a string-literal.
  * 3. invalid pp-token generated by ## operator.
+ * lang_asm is not available in POST_STD mode.
  */
     int     lang_asm = FALSE;       /* -a option (assembler source) */
-#endif
     int     std_line_prefix = STD_LINE_PREFIX;
             /* Output line and file information in C source style   */
 
-#if MODE >= STANDARD
+#if MODE == STANDARD
 /*
  * Translation limits specified C90, C99 or C++.
  */
@@ -331,7 +352,7 @@
  *              embedded newline.
  * identifier   holds the last identifier scanned (which might be a candidate
  *              for macro expansion).
- * errors       is the running cpp error counter.
+ * errors       is the running mcpp error counter.
  * infile       is the head of a linked list of input files (extended by
  *              #include and macros being expanded).  'infile' always points
  *              to the current file/macro.  'infile->parent' to the includer,
@@ -441,8 +462,8 @@
                 /* Note: '+1' is necessary for the initial state.   */
     IFINFO *    ifptr = ifstack;        /* -> current ifstack[]     */
 
-#if MODE == POST_STANDARD
-/* insert_sep is set to INSERT_SEP when :
+#if MODE == STANDARD
+/* In POST_STD mode, insert_sep is set to INSERT_SEP when :
  *  1. the next get() shall insert a token separator.
  *  2. unget() has been called when insert_sep == INSERTED_SEP.
  * set to INSERTED_SEP when :
@@ -453,7 +474,7 @@
     int     insert_sep = NO_SEP;
 #endif
 
-#if MODE >= STANDARD
+#if MODE == STANDARD
 /* has_pragma is set to TRUE so as to execute _Pragma() operator when the
  * psuedo macro _Pragma() is found.
  */
@@ -498,10 +519,10 @@
 
 static void     cur_file( void);
 static void     init_defines( void);
-static void     cpp_main( void);
+static void     mcpp_main( void);
 static void     putout( char * out);
 static void     put_a_line( const char * out);
-#if MODE >= STANDARD && OK_PRAGMA_OP
+#if MODE == STANDARD && OK_PRAGMA_OP
 static void     do_pragma_op( void);
 static void     put_seq( char * begin, char * seq);
 static char *   de_stringize( char * in, char * out);
@@ -532,10 +553,10 @@ static char *   esc_mbchar( char * str, char * str_end);
 
 static void     cur_file();     /* Print source file name           */
 static void     init_defines(); /* Predefine macros                 */
-static void     cpp_main();     /* Main loop to process input lines */
+static void     mcpp_main();    /* Main loop to process input lines */
 static void     putout();       /* May concatenate adjacent string  */
 static void     put_a_line();   /* Put out the processed line       */
-#if MODE >= STANDARD && OK_PRAGMA_OP
+#if MODE == STANDARD && OK_PRAGMA_OP
 static void     do_pragma_op(); /* Exucute the _Pragma() operator   */
 static void     put_seq();      /* Put out the failed sequence      */
 static char *   de_stringize(); /* "De-stringize" for _Pragma() op. */
@@ -604,7 +625,7 @@ main( argc, argv)
         }
         strcpy( work, in_file);     /* Remember input filename      */
     } else {
-        strcpy( work, "stdin");
+        strcpy( work, "<stdin>");
     }
     /* Open output file, "-" means stdout.  */
     if (out_file != NULL && ! str_eq( out_file, "-")) {
@@ -614,8 +635,8 @@ main( argc, argv)
         }
     }
     if (qflag) {                            /* Redirect diagnostics */
-        if (freopen( "cpp.err", "a", fp_err) == NULL) {
-            fprintf( fp_out, "Can't open \"cpp.err\"\n");
+        if (freopen( "mcpp.err", "a", fp_err) == NULL) {
+            fprintf( fp_out, "Can't open \"mcpp.err\"\n");
             exit( IO_ERROR);
         }
     }
@@ -623,12 +644,12 @@ main( argc, argv)
     infile->dirp = inc_dirp;
     strcpy( cur_fullname, work);
 #if OK_MAKE
-    if (mkdep)
+    if (mkdep && str_eq( infile->filename, "<stdin>") == FALSE)
         put_depend( work);          /* Putout target file name      */
 #endif
     at_start();                     /* Do the pre-main commands     */
 
-    cpp_main();                     /* Process main file            */
+    mcpp_main();                    /* Process main file            */
 
 #if OK_MAKE
     if (mkdep)
@@ -640,8 +661,7 @@ main( argc, argv)
     if (errors > 0 && no_source_line == FALSE) {
         fprintf( fp_err, "%d error%s in preprocessor.\n",
                 errors, (errors == 1) ? "" : "s");
-        if (! eflag)
-            exit( IO_ERROR);
+        exit( IO_ERROR);
     }
     exit( IO_SUCCESS);              /* No errors or -E option set   */
     return  IO_SUCCESS;             /* Never reach here             */
@@ -787,7 +807,7 @@ static PRESET   preset[] = {
 #ifdef  COMPILER_SP3
         { COMPILER_SP3, COMPILER_SP3_VAL},
 #endif
-#if     MODE >= STANDARD
+#if     MODE == STANDARD
 #ifdef  COMPILER_CPLUS
         { COMPILER_CPLUS, COMPILER_CPLUS_VAL},
 #endif
@@ -815,7 +835,7 @@ init_defines()
  * command-line scanning.
  */
 {
-#if MODE >= STANDARD
+#if MODE == STANDARD
     char    tmp[ 16];
     char    timestr[ 14];
     time_t  tvec;
@@ -830,7 +850,7 @@ init_defines()
             look_and_install( pp->name, DEF_NOARGS - 1, null, pp->val);
     }
 
-#if MODE >= STANDARD
+#if MODE == STANDARD
 /*
  * The magic pre-defines (Standard predefined macros) are initialized with
  * negative argument counts.  expand() notices this and calls the appropriate
@@ -860,8 +880,12 @@ init_defines()
     sprintf( tmp, "%d", STDC);
     look_and_install( "__STDC__", DEF_NOARGS - 2, null, tmp);
     sprintf( tmp, "%d", STDC_HOSTED);
-    look_and_install( "__STDC_HOSTED__", DEF_NOARGS - 2, null, tmp);
-#endif  /* MODE >= STANDARD */
+    look_and_install( "__STDC_HOSTED__", DEF_NOARGS - 1, null, tmp);
+    /*
+     * Some compilers, e.g. GNU C older than 3.3, define this macro by
+     * -D option.
+     */
+#endif  /* MODE == STANDARD */
 /* Not define __STDC__ for pre-Standard compiler.   */
 
     look_and_install( "__MCPP", DEF_NOARGS - 1, null, "2");
@@ -949,12 +973,12 @@ static     int          catflag;    /* Flag returned from post_preproc()    */
 
 static void
 #if PROTO
-cpp_main( void)
+mcpp_main( void)
 #else
-cpp_main()
+mcpp_main()
 #endif
 /*
- * Main process for cpp -- copies tokens from the current input stream
+ * Main process for mcpp -- copies tokens from the current input stream
  * (main file or included file) to the output file.
  */
 {
@@ -985,22 +1009,20 @@ cpp_main()
         while (1) {                         /* For each line, ...   */
             c = get();                      /* First of the line    */
             out_ptr = output;               /* Top of the line buf  */
-#if TOP_SPACE
-            if (c == ' ') {
+            if (c == ' ') {         /* Dosen't occur in POST_STD    */
                 *out_ptr++ = ' ';           /* Retain a space       */
                 c = get();          /* First of token (else '\n')   */
             }
-#if COMMENT_INVISIBLE
-            if (c == COM_SEP)               /* Skip 0-length comment*/
-                 c = get();
-#endif
-            /* Else line top spaces are already skipped */
+#if MODE == PRE_STANDARD
+            if (mode == OLD_PREP && c == COM_SEP)
+                 c = get();                 /* Skip 0-length comment*/
 #endif
             if (c == '#') {                 /* Is 1st non-space '#' */
                 newlines = control( newlines);      /* Do a #command*/
 #if MODE == STANDARD && OK_DIGRAPHS
-            } else if (digraphs && c == '%') {
-                if (get() == ':') {  /* '%:' i.e. '#'*/
+            } else if (mode == STD && digraphs && c == '%') {
+                    /* In POST_STD digraphs are already converted   */
+                if (get() == ':') {         /* '%:' i.e. '#'        */
                     newlines = control( newlines);  /* Do a #command*/
                 } else {
                     unget();
@@ -1063,7 +1085,7 @@ cpp_main()
                     && (defp = is_macro( &wp)) != NULL) {   /* A macro  */
                 wp = expand( defp, out_ptr, out_wend);
                                             /* Expand it completely */
-#if MODE >= STANDARD && OK_PRAGMA_OP
+#if MODE == STANDARD && OK_PRAGMA_OP
                 if (has_pragma) {           /* Found _Pramga()      */
                     do_pragma_op();         /* Do _Pragma() operator*/
                     has_pragma = FALSE;     /* Reset signal         */
@@ -1087,8 +1109,8 @@ cpp_main()
                 *out_ptr++ = ' ';
                 c = get();                  /* First of token       */
             }
-#if COMMENT_INVISIBLE
-            if (c == COM_SEP)
+#if PRE_STANDARD
+            if (mode == OLD_PREP && c == COM_SEP)
                 c = get();                  /* Skip 0-length comment*/
 #endif
         }                                   /* Line for loop        */
@@ -1102,7 +1124,7 @@ cpp_main()
 #endif
 }
 
-#if MODE >= STANDARD && OK_PRAGMA_OP
+#if MODE == STANDARD && OK_PRAGMA_OP
 
 static void
 #if PROTO
@@ -1228,7 +1250,7 @@ de_stringize( in, out)
     return  out;
 }
 
-#endif  /* MODE >= STANDARD && OK_PRAGMA_OP */
+#endif  /* MODE == STANDARD && OK_PRAGMA_OP */
 
 #if NWORK < NMACWORK
 static void
@@ -1251,10 +1273,10 @@ devide_line()
 
     file = unget_string( output, NULLST);   /* To re-read the line  */
     wp = out_ptr = output;
-#if ! TOP_SPACE
-    skip_ws();
-    unget();
-#endif
+    if (mode != POST_STD) {
+        skip_ws();
+        unget();
+    }
 
     while ((c = get()), file == infile) {
         if (c == ' ') {
@@ -1266,7 +1288,7 @@ devide_line()
         if (NWORK-1 <= wp - out_ptr) {          /* Too long a token */
             cfatal( "Too long token %s", out_ptr, 0L, NULLST);      /* _F_  */
         } else if (out_end <= wp || token_type == STR
-#if MODE >= STANDARD
+#if MODE == STANDARD
                     || token_type == WSTR
 #endif
                 ) {
@@ -1327,7 +1349,7 @@ putout( out)
     post_preproc( out);
 #else
 #if MODE == STANDARD && OK_DIGRAPHS && ! HAVE_DIGRAPHS
-    if (digraphs)
+    if (mode == STD && digraphs)
         post_preproc( out);
 #endif
 #endif
@@ -1399,7 +1421,7 @@ put_a_line( out)
 
 #if ! CONCAT_STRINGS
 
-#if (MODE != STANDARD || !OK_DIGRAPHS || HAVE_DIGRAPHS) \
+#if (MODE == PRE_STANDARD || !OK_DIGRAPHS || HAVE_DIGRAPHS) \
         && ! (BSL_IN_MBCHAR && ! MBCHAR_IS_ESCAPE_FREE) && HAVE_C_BACKSLASH_A
     /* No post_preproc()    */
 #else
@@ -1434,7 +1456,7 @@ post_preproc( out)
         token_type = scan_token( c, &cp, out_end);
         switch (token_type) {
 #if (BSL_IN_MBCHAR && ! MBCHAR_IS_ESCAPE_FREE) || ! HAVE_C_BACKSLASH_A
-#if MODE >= STANDARD
+#if MODE == STANDARD
         case WSTR   :
         case WCHR   :
             str++;                          /* Skip prefix 'L'      */
@@ -1452,17 +1474,18 @@ post_preproc( out)
             || ! HAVE_C_BACKSLASH_A */
 #if MODE == STANDARD && OK_DIGRAPHS && ! HAVE_DIGRAPHS
         case OPE    :
-            if (openum & OP_DIGRAPH) {
+            if (mode == STD && (openum & OP_DIGRAPH)) {
                 cp = conv_a_digraph( cp);   /* Convert a digraph    */
                 di_count++;
             }
+            break;
 #endif
         }
     }
     *cp++ = '\n';
     *cp = EOS;
 #if MODE == STANDARD && OK_DIGRAPHS && ! HAVE_DIGRAPHS
-    if (di_count && (warn_level & 16))
+    if (mode == STD && di_count && (warn_level & 16))
         cwarn( "%.0s%ld digraph(s) converted"           /* _W16_    */
                 , NULLST, (long) di_count, NULLST);
 #endif
@@ -1518,7 +1541,7 @@ post_preproc( out)
         token_type = scan_token( c, &catp, catbuf_end);
 
         switch (token_type) {
-#if MODE >= STANDARD
+#if MODE == STANDARD
         case WCHR   :   cp++;           /* Wide-character constant  */
             /* Fall through */
 #endif
@@ -1531,7 +1554,7 @@ post_preproc( out)
                 catp = esc_mbchar( cp, catp);
 #endif
             break;
-#if MODE >= STANDARD
+#if MODE == STANDARD
         case WSTR   :   cp++;           /* Wide string literal      */
             /* Fall through */
 #endif
@@ -1540,7 +1563,7 @@ post_preproc( out)
                 if (warn_level & 8)             /*   to conversion. */
                     cwarn( catenated, prev_token, 0L, NULLST);
             }
-#if MODE >= STANDARD
+#if MODE == STANDARD
             else if (prev_type == WSTR) {
                 if (warn_level & 8)
                     cwarn( catenated, prev_token, 0L, NULLST);
@@ -1563,7 +1586,7 @@ post_preproc( out)
                     memmove( catp1, catp2, (size_t)(catp - cp));
                     catp -= (size_t)(catp2 - catp1);    /* End of string    */
                 }
-#if MODE >= STANDARD
+#if MODE == STANDARD
                 if (token_type == WSTR && *prev_token != 'L') {
                     memmove( prev_token + 1, prev_token
                             , (size_t)(catp - prev_token));
@@ -1576,7 +1599,7 @@ post_preproc( out)
             break;
 #if MODE == STANDARD && OK_DIGRAPHS && ! HAVE_DIGRAPHS
         case OPE    :
-            if (openum & OP_DIGRAPH) {                  /* Digraph  */
+            if (mode == STD && (openum & OP_DIGRAPH)) { /* Digraph  */
                 catp = conv_a_digraph( catp);
                 di_count++;
             }
@@ -1588,7 +1611,7 @@ post_preproc( out)
 
 #if BSL_IN_MBCHAR && ! MBCHAR_IS_ESCAPE_FREE
         if ((prev_type == STR
-#if MODE >= STANDARD
+#if MODE == STANDARD
                     || prev_type == WSTR
 #endif
                 ) && prev_type != token_type && bsl_need_escape)
@@ -1609,7 +1632,7 @@ post_preproc( out)
     }
 
     if (token_type == STR
-#if MODE >= STANDARD
+#if MODE == STANDARD
             || token_type == WSTR
 #endif
             )
@@ -1620,7 +1643,7 @@ ret:
     *catp++ = '\n';
     *catp = EOS;
 #if MODE == STANDARD && OK_DIGRAPHS && ! HAVE_DIGRAPHS
-    if (di_count && (warn_level & 16))
+    if (mode == STD && di_count && (warn_level & 16))
         cwarn( "%.0s%ld digraph(s) converted"           /* _W16_    */
                 , NULLST, (long) di_count, NULLST);
 #endif
@@ -1651,7 +1674,7 @@ is_last_esc( cp)
     int     i;
     register int    c;
 
-#if MODE >= STANDARD
+#if MODE == STANDARD
     if (*cp++ == 'L')
 #endif
         cp++;                           /* The content of string    */
@@ -1798,6 +1821,7 @@ conv_a_digraph( cp)
 #endif
 /*
  * Convert a digraph to usual token in place.
+ * This routine is never called in POST_STD mode.
  */
 {
     cp -= 2;
@@ -1845,11 +1869,11 @@ esc_mbchar( str, str_end)
 {
     char *  cp;
     int     delim;
-    register int    c, c1;
+    register int    c;
 
     if (! bsl_need_escape)
         return  str_end;
-#if MODE >= STANDARD
+#if MODE == STANDARD
     if ((delim = *str++) == 'L')
 #endif
         delim = *str++;                         /* The quote character  */

@@ -12,11 +12,19 @@
     str(    ab  /* comment */   +
         cd  );
 
+/* 24.5:    Token separator inserted by macro expansion should be removed.
+        (Meanwhile, tokens should not be merged.  See 21.2.)    */
+#define xstr( a)    str( a)
+#define f(a)        a
+/*  "x-y";  */
+    xstr( x-f(y));
+
 /* { dg-do preprocess }
    { dg-final { if ![file exist n_24.i] { return }                      } }
    { dg-final { if \{ [grep n_24.i "\"a\\+b\""] != ""           \} \{   } }
    { dg-final { if \{ [grep n_24.i "\"ab \\+ cd\""] != ""       \} \{   } }
-   { dg-final { return \} \}                                            } }
+   { dg-final { if \{ [grep n_24.i "\"x-y\""] != ""             \} \{   } }
+   { dg-final { return \} \} \}                                         } }
    { dg-final { fail "n_24.c: #operator"                                } }
  */
 

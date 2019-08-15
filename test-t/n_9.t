@@ -2,6 +2,6 @@
 
 /* 9.1: Any #pragma directive should be processed or ignored, should not
     be diagnosed as an error.   */
-#pragma __once
+#pragma once
 #pragma who knows ?
 

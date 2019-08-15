@@ -1,6 +1,6 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define if '0x5c' in BIGFIVE multi-byte character is safe. */
+/* Define if '0x5c' in BIG5 multi-byte character is safe. */
 #undef BIGFIVE_IS_ESCAPE_FREE
 
 /* Define if adjacent string literals are concatenated. */
@@ -30,11 +30,17 @@
 /* Define the value of COMPILER-specific STD-style predefined macro. */
 #undef COMPILER_SP_STD_VAL
 
-/* Define the C++ include directory. */
+/* Define compiler-specific C include directory 1. */
 #undef CPLUS_INCLUDE_DIR1
 
-/* Define compiler-specific C++ include directory 2. */
+/* Define compiler-specific C include directory 2. */
 #undef CPLUS_INCLUDE_DIR2
+
+/* Define compiler-specific C include directory 3. */
+#undef CPLUS_INCLUDE_DIR3
+
+/* Define compiler-specific C include directory 4. */
+#undef CPLUS_INCLUDE_DIR4
 
 /* Define the cpu-specific-predefined-macro. */
 #undef CPU_OLD
@@ -57,8 +63,11 @@
 /* Define the cpu-specific-predefined-macro. */
 #undef CPU_STD2
 
-/* Define compiler-specific include directory 1. */
+/* Define compiler-specific C include directory 1. */
 #undef C_INCLUDE_DIR1
+
+/* Define compiler-specific C include directory 2. */
+#undef C_INCLUDE_DIR2
 
 /* Define if the argument of pragma is macro expanded. */
 #undef EXPAND_PRAGMA
@@ -162,7 +171,7 @@
 /* Define the host system. */
 #undef HOST_SYSTEM
 
-/* Define if '0x5c' in ISO2022_JP multi-byte character is safe. */
+/* Define if '0x5c' in ISO2022-JP multi-byte character is safe. */
 #undef ISO2022_JP_IS_ESCAPE_FREE
 
 /* Define if the library is glibc. */

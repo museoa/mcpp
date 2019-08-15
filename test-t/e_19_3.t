@@ -10,7 +10,7 @@
 /* 19.3:    */
 #define OBJ_LIKE        (0)     /* different token sequence     */
 
-/*  (1-1);  */
+/*  (1-1); or (0);  */
     OBJ_LIKE;
 
 /* 19.4:    */
@@ -21,7 +21,7 @@
 /* 19.5:    */
 #define FTN_LIKE(b)     ( a )   /* different parameter usage    */
 
-/*  ( x );  */
+/*  ( x ); or ( a); */
     FTN_LIKE(x);
 
 /* 19.6:    */

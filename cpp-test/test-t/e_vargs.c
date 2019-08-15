@@ -14,7 +14,7 @@
  * corresponding to '...'.
  */
     #define wrong_macro( a, b, __VA_ARGS__) (a + b - __VA_ARGS__)
-/* { dg-error "variadic macro\n\[\^ \]* __VA_ARGS__| reserved name `__VA_ARGS__'| Illegal parameter" "" { target *-*-* } 16 } */
+/* { dg-error "variadic macro\n\[\^ \]*( error:|) __VA_ARGS__| reserved name `__VA_ARGS__'| Illegal parameter" "" { target *-*-* } 16 } */
 
 /* e_vargs2:    Erroneous macro invocation of variable arguments    */
     /* No argument to correspond __VA_ARGS__    */

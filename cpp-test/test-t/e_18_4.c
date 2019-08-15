@@ -26,7 +26,7 @@
         character.
 */
 /*  From ISO 9899:1990 / Corrigendum 1. */
-#define THIS$AND$THAT(a, b)     ((a) + (b))     /* { dg-error "ISO C requires whitespace after the macro name| No space between macro name \"THIS\" and repl-text" } */
+#define THIS$AND$THAT(a, b)     ((a) + (b))     /* { dg-error "ISO C requires whitespace after the macro name| '\\$' in identifier or number| No space between macro name \"THIS\" and repl-text" } */
 /* Note: the following definition is legal (object-like macro).
 #define THIS $AND$THAT(a, b)    ((a) + (b))
 */

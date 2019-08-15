@@ -106,7 +106,7 @@ int e_1;
         decimal digits. */
 #line   0x1000
 
-#line   109     /* Restore to correct line number.  */
+#line   110     /* Restore to correct line number.  */
 
 /* u.1.19:  A macro expanded to "defined" in #if expression.    */
 #define DEFINED     defined

@@ -11,7 +11,7 @@
 
 /* 19.3:    */
 /* different token sequence     */
-#define OBJ_LIKE        (0)     /* { dg-error "redefined\n\[\^ \]* this is the location | The macro is redefined" } */
+#define OBJ_LIKE        (0)     /* { dg-error "redefined\n\[\^ \]*( error:|) this is the location | The macro is redefined" } */
 
 /*  (1-1);  */
     OBJ_LIKE;
@@ -20,11 +20,11 @@
 #undef  OBJ_LIKE
 #define OBJ_LIKE        (1-1)
 /* different white space        */
-#define OBJ_LIKE        (1 - 1) /* { dg-error "redefined\n\[\^ \]* this is the location | The macro is redefined" } */
+#define OBJ_LIKE        (1 - 1) /* { dg-error "redefined\n\[\^ \]*( error:|) this is the location | The macro is redefined" } */
 
 /* 19.5:    */
 /* different parameter usage    */
-#define FTN_LIKE(b)     ( a )   /* { dg-error "redefined\n\[\^ \]* this is the location | The macro is redefined" } */
+#define FTN_LIKE(b)     ( a )   /* { dg-error "redefined\n\[\^ \]*( error:|) this is the location | The macro is redefined" } */
 
 /*  ( x );  */
     FTN_LIKE(x);
@@ -33,8 +33,8 @@
 #undef  FTN_LIKE
 #define FTN_LIKE(a)     ( a )
 /* different parameter spelling */
-#define FTN_LIKE(b)     ( b )   /* { dg-error "redefined\n\[\^ \]* this is the location | The macro is redefined" } */
+#define FTN_LIKE(b)     ( b )   /* { dg-error "redefined\n\[\^ \]*( error:|) this is the location | The macro is redefined" } */
 
 /* 19.7:    Not in ISO C "Examples" */
-#define FTN_LIKE        OBJ_LIKE    /* { dg-error "redefined\n\[\^ \]* this is the location | The macro is redefined" } */
+#define FTN_LIKE        OBJ_LIKE    /* { dg-error "redefined\n\[\^ \]*( error:|) this is the location | The macro is redefined" } */
 

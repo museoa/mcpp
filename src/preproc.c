@@ -1,15 +1,15 @@
 /* preproc.c:   to "pre-preprocess" header files.   */
 
-#pragma __preprocess
+#pragma MCPP preprocess
 
 #include    "system.H"
 #include    "internal.H"
 
 #ifdef  __STDC__
-#pragma __put_defines
+#pragma MCPP put_defines
 #else
 #ifdef  __cplusplus
-#pragma __put_defines
+#pragma MCPP put_defines
 #else
 #put_defines
 #endif

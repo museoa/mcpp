@@ -3,6 +3,7 @@
  *
  * 1998/08      made public                                     kmatsui
  * 2002/08      revised not to conflict with C99 Standard       kmatsui
+ * 2004/10      added a few testcases for macro expansion       kmatsui
  *
  *   Samples to test C++ Standard preprocessing.
  *   Preprocessor must process these samples as shown in each comments.
@@ -164,14 +165,14 @@ de
     __LINE__; __FILE__;
 
 /* Restore to correct line number and filename. */
-#line   167 "n_std.t"
+#line   169 "n_std.t"
 
 
 /* n_9.t:   #pragma directive.  */
 
 /* 9.1: Any #pragma directive should be processed or ignored, should not
         be diagnosed as an error.   */
-#pragma __once
+#pragma once
 #pragma who knows ?
 
 
@@ -483,6 +484,13 @@ de
 #define MINUS   -
     -MINUS-a;
 
+/* 21.2:    */
+#undef  sub
+#define sub( a, b)  a-b     /* '(a)-(b)' is better  */
+#define Y   -y              /* '(-y)' is better     */
+/*  x- -y;  */
+    sub( x, Y);
+
 
 /* n_22.t:  Tokenization of preprocessing number.   */
 
@@ -538,10 +546,20 @@ de
     str( "ab\
 c");
 
+/* 24.5:    Token separator inserted by macro expansion should be removed.
+        (Meanwhile, tokens should not be merged.  See 21.2.)    */
+#define xstr( a)    str( a)
+#define f(a)        a
+/*  "x-y";  */
+    xstr( x-f(y));
+
 
 /* n_25.t:  Macro arguments are pre-expanded (unless the argument is an
         operand of # or ## operator) separately, that is, are macro-replaced
         completely prior to rescanning. */
+
+#undef sub
+#define sub( x, y)      (x - y)
 
 /* 25.1:    "TWO_ARGS" is read as one argument to "sub", then expanded to
         "a,b", then "x" is substituted by "a,b".    */
@@ -580,6 +598,7 @@ c");
 
 /* 26.3:    Directly recursive function-like macro definition.  */
 /*  x + f(x);   */
+#undef f
 #define f(a)    a + f(a)
     f( x);
 
@@ -635,6 +654,13 @@ c");
 /*  (a - b);    */
     head a,b );
 
+/* 27.6:    Recursive macro (the 2nd 'm' is expanded to 'n' since it is in
+        source file).   */
+/*  n;  */
+#define m       n
+#define n( a)   a
+    m( m);
+
 
 /* n_28.t:  __FILE__, __LINE__, __DATE__, __TIME__, __STDC__ and
         __STDC_VERSION__ are predefined.    */
@@ -644,7 +670,7 @@ c");
     __FILE__;
 
 /* 28.2:    */
-/*  647;    */
+/*  674;    */
     __LINE__;
 
 /* 28.3:    */

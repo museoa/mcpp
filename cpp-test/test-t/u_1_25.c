@@ -10,7 +10,7 @@
 /*  "#define NAME"; or other undefined behaviour.   */
     str(
 #define NAME
-/* { dg-error "directives may not be used \[a-z \]*\n\[\^ \]* unterminated| directive-like line" "" { target *-*-* } 12 } */
+/* { dg-error "directives may not be used \[a-z \]*\n\[\^ \]* unterminated| embedding a directive within macro arguments | directive-like line" "" { target *-*-* } 12 } */
     );
 
 #if 0   /* Added by C90: Corrigendum 1 (1994) and deleted by C99    */

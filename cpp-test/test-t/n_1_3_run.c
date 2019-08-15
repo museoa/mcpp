@@ -14,7 +14,7 @@ int main( void)
 }
 
 /* { dg-do run }
- * { dg-options "-ansi" }
+ * { dg-options "-ansi -no-integrated-cpp" }
  */
 
 /*
