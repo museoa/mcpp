@@ -1,6 +1,7 @@
-# makefile to compile MCPP version 2.7 and later for Borland C / BC make
-#       2008/03 kmatsui
-# You must first edit BINDIR, LIBDIR and LINKER according to your system.
+# makefile to compile MCPP version 2.7.1 and later for Borland C / BC make
+#       2008/11 kmatsui
+# You must first edit BINDIR, INCDIR, LIBDIR and LINKER according to your
+#		system.
 # To make compiler-independent-build of MCPP do:
 #       make
 #       make install
@@ -18,8 +19,8 @@
 #       make -DMCPP_LIB mcpplib_install
 # To make testmain.c (sample to use mcpp.lib) against mcpp.lib do
 #   (add '-DDLL_IMPORT' to link against the DLL):
-#       make -DMCPP_LIB [-DOUT2MEM] testmain
-#       make -DMCPP_LIB [-DOUT2MEM] testmain_install
+#       make [-DOUT2MEM] testmain
+#       make [-DOUT2MEM] testmain_install
 
 NAME = mcpp
 
@@ -34,14 +35,9 @@ CPPFLAGS = -DCOMPILER=BORLANDC
 #	for Borland C V.5.5
 CFLAGS = $(CFLAGS) -Oi
 BINDIR = \PUB\COMPILERS\BCC55\BIN
-#	for Borland C V.4.0
-#BINDIR = E:\BC4\BIN
 !else
 BINDIR = \PUB\BIN
 !endif
-
-# '-N -D__BORLANDC__=0x0452' to work around bugs of bcc32 V.4.0
-#CFLAGS = $(CFLAGS) -N -D__BORLANDC__=0x0452
 
 !if 	$d( KMMALLOC)
 MEM_MACRO = -DKMMALLOC=1 -D_MEM_DEBUG=1 -DXMALLOC=1
@@ -54,13 +50,15 @@ MEM_LIB =
 OBJS = main.obj directive.obj eval.obj expand.obj support.obj system.obj  \
 		mbchar.obj
 
+all:	$(NAME).exe
+
 $(NAME).exe : $(OBJS)
 	$(CC) $(LINKFLAGS) $(OBJS) $(MEMLIB)
 
 !if 	$d( PREPROCESSED)
 # Make a "pre-preprocessed" header file to recompile MCPP with MCPP.
 mcpp.H	: system.H noconfig.H internal.H
-	$(NAME) $(CPPFLAGS) $(MEM_MACRO) preproc.c mcpp.H
+	$(BINDIR)\$(NAME) $(CPPFLAGS) $(MEM_MACRO) preproc.c mcpp.H
 $(OBJS) : mcpp.H
 !else
 main.obj directive.obj eval.obj expand.obj support.obj system.obj mbchar.obj: \
@@ -69,7 +67,7 @@ main.obj directive.obj eval.obj expand.obj support.obj system.obj mbchar.obj: \
 
 !if 	$d( PREPROCESSED)
 .c.obj	:
-	$(NAME) -DPREPROCESSED=1 $(CPPFLAGS) $< $(<B).i
+	$(BINDIR)\$(NAME) -DPREPROCESSED=1 $(CPPFLAGS) $< $(<B).i
 	$(CC) $(CFLAGS) $(<B).i
 !else
 .c.obj	:
@@ -86,8 +84,8 @@ clean	:
 # subroutine-build
 CFLAGS = $(CFLAGS) -DMCPP_LIB=1
 LIBDIR = \PUB\COMPILERS\BCC55\LIB
-#LINKER = tlink32   # BCC40
-LINKER = ilink32   # BCC55
+INCDIR = \PUB\COMPILERS\BCC55\INCLUDE
+LINKER = ilink32
 ADD_OBJS = +main +directive +eval +expand +support +system +mbchar
 
 mcpplib:	mcpplib_lib mcpplib_dll
@@ -110,13 +108,19 @@ mcpplib_install:
 	copy mcpp.lib $(LIBDIR)
 	copy mcpp$(DLL_VER).lib $(LIBDIR)
 	copy mcpp$(DLL_VER).dll $(BINDIR)
+	copy mcpp_lib.h $(INCDIR)
+	copy mcpp_out.h $(INCDIR)
+	$(CC) -e$(NAME).exe main_libmcpp.c mcpp$(DLL_VER).lib
+	copy $(NAME).exe $(BINDIR)
 
 mcpplib_uninstall:
 	del $(LIBDIR)\mcpp.lib $(LIBDIR)\mcpp$(DLL_VER).lib \
             $(BINDIR)\mcpp$(DLL_VER).dll
+	del $(BINDIR)\$(NAME).exe
+	del $(INCDIR)\mcpp*
+!endif
 
 # use mcpp as a subroutine from testmain.c
-NAME = testmain
 !if	$d( DLL_IMPORT)
 CFLAGS = $(CFLAGS) -DDLL_IMPORT=1
 LINKLIB = mcpp$(DLL_VER).lib
@@ -127,12 +131,10 @@ LINKLIB = mcpp.lib
 # output to memory buffer
 CFLAGS = $(CFLAGS) -DOUT2MEM=1
 !endif
-LINKFLAGS = $(NAME).obj -e$(NAME).exe $(LINKLIB)
-$(NAME)	:	$(NAME).obj
-	$(CC) $(LINKFLAGS)
-$(NAME)_install	:
-	copy $(NAME).exe $(BINDIR)
-$(NAME)_uninstall	:
-	del $(BINDIR)\$(NAME).exe
-
-!endif
+TMAIN_LINKFLAGS = testmain.obj -etestmain.exe $(LINKLIB)
+testmain	:	testmain.obj
+	$(CC) $(TMAIN_LINKFLAGS)
+testmain_install	:
+	copy testmain.exe $(BINDIR)
+testmain_uninstall	:
+	del $(BINDIR)\testmain.exe

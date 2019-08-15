@@ -1,6 +1,6 @@
 #!/bin/sh
 # script to set MCPP to be called from gcc
-# ./set_mcpp.sh $gcc_path $gcc_maj_ver $gcc_min_ver $cpp_call $CC   \
+# ./set_mcpp.sh $gcc_path $gcc_maj_ver $gcc_min_ver $cpp_call $CC
 #       $CXX x$CPPFLAGS x$EXEEXT $LN_S $inc_dir $host_system $cpu $target_cc
 
 gcc_maj_ver=$2
@@ -12,8 +12,8 @@ CPPFLAGS=`echo $7 | sed 's/^x//'`
 LN_S=$9
 inc_dir=${10}
 host_system=${11}
+cpu=${12}
 if test $host_system = SYS_MAC; then
-    cpu=${12}
     target_cc=${13}
     target=`echo $target_cc | sed 's/-gcc.*$//'`
 fi
@@ -31,8 +31,14 @@ fi
 
 if test $host_system = SYS_MINGW && test ! -f cc1$EXEEXT; then
     ## cc1.exe has not yet compiled
-    echo "  do 'make COMPILER=GNUC mcpp cc1'; then do 'make COMPILER=GNUC install'"
+    echo "  first do 'make COMPILER=GNUC mcpp cc1'; then do 'make COMPILER=GNUC install'"
     exit 1
+fi
+if test x$cpp_base = xcc1; then
+    # for GCC V.3.3 and later
+    no_m64=0
+else
+    no_m64=1
 fi
 
 gen_headers() {
@@ -59,38 +65,54 @@ cwd=`pwd`
 echo "  cd $inc_dir"
 cd $inc_dir
 
-if test $host_system = SYS_MAC; then
-## Apple-GCC changes architecture and predefined macros by -arch * option
-    if test $cpu = i386 || test $cpu = x86_64; then
-        arch0=i386
-        arch1=x86_64
-    else
-        arch0=ppc
-        arch1=ppc64
+if test $cpu = i386 || test $cpu = x86_64; then
+    cpu32=i386
+    cpu64=x86_64
+else 
+    if test $cpu = ppc || $cpu = ppc64; then
+        cpu32=ppc
+        cpu64=ppc64
     fi
-    for arch in $arch0 $arch1
+fi
+
+arch_headers() {
+    for arch in $cpu32 $cpu64
     do                              ## generate headers for 2 architectures
-        hdir=mcpp-gcc-$arch
-        arg="-arch $arch"
-        gen_headers
-    done
-else
-if test $host_system = SYS_CYGWIN; then
-    ## CYGWIN has 'mingw' include directory for '-mno-cygwin' option
-    for hdir in mcpp-gcc mingw/mcpp-gcc
-    do
-        if test $hdir = mingw/mcpp-gcc; then
-            arg='-mno-cygwin'
+        hdir=${idir}-$arch
+        if test $host_system = SYS_MAC; then
+            arg="-arch $arch"
         else
-            arg=
+            if test $arch = $cpu; then
+                arg="$ar"
+            else
+                if test $host_system = SYS_MINGW || test $no_m64; then
+                    continue;
+                fi
+                if test $cpu = $cpu64; then
+                    arg="$ar -m32"
+                else
+                    arg="$ar -m64"
+                fi
+                # Test if the architecture is supported.
+                $CC -E -xc $arg /dev/null > /dev/null
+                if test $? != 0; then
+                    continue
+                fi
+            fi
         fi
         gen_headers
     done
-else
-    hdir=mcpp-gcc
-    arg=
-    gen_headers
-fi
+}
+
+idir=mcpp-gcc
+ar=
+arch_headers
+
+if test $host_system = SYS_CYGWIN; then
+    ## CYGWIN has 'mingw' include directory for '-mno-cygwin' option
+    idir=mingw/mcpp-gcc
+    ar="-mno-cygwin"
+    arch_headers
 fi
 
 # write shell-script so that call of 'cpp0', 'cc1 -E' or so is replaced to
@@ -100,6 +122,7 @@ cd $cpp_path
 
 # other than MinGW
 if test $host_system != SYS_MINGW; then
+    echo '#!/bin/sh'                    >  mcpp.sh
     # for GCC V.3.3 and later
     if test x$cpp_base = xcc1; then
         for cpp in cc1 cc1plus
@@ -109,8 +132,10 @@ if test $host_system != SYS_MINGW; then
             else
                 shname=mcpp_plus
             fi
-            cat > $shname.sh <<_EOF
-#!/bin/sh
+            if test $cpp = cc1plus; then
+                echo '#!/bin/sh'        >  mcpp_plus.sh
+            fi
+            cat >> $shname.sh <<_EOF
 for i in \$@
 do
     case \$i in
@@ -128,10 +153,10 @@ _EOF
     if test $host_system = SYS_MAC && test -f ${target}-mcpp; then
         mcpp_name=${target}-mcpp    ## long name of Mac OS X cross-compiler
     fi
-    echo $cpp_path/$mcpp_name '"$@"'   >>  mcpp.sh
+    echo $cpp_path/$mcpp_name '"$@"'    >>  mcpp.sh
     chmod a+x mcpp.sh
     if test x$cpp_base = xcc1; then
-        echo $cpp_path/$mcpp_name -+ '"$@"'  >> mcpp_plus.sh
+        echo $cpp_path/$mcpp_name -+ '"$@"' >> mcpp_plus.sh
         chmod a+x mcpp_plus.sh
     fi
 fi
@@ -174,6 +199,7 @@ else
     echo "  $LN_S mcpp.sh $cpp_name"
     $LN_S mcpp.sh $cpp_name
 fi
+
 if test x$cpp_base = xcc1; then
     if test $host_system = SYS_MINGW; then
         echo "  cp cc1$EXEEXT cc1plus$EXEEXT"

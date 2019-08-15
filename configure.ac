@@ -1,10 +1,10 @@
-dnl configure.ac for MCPP   2003/11, 2008/03  kmatsui
+dnl configure.ac for MCPP   2003/11, 2008/11  kmatsui
 dnl Process this file with autoconf to produce a configure script.
 
 dnl WARNING: This script does not assume cross-compiling.
 dnl To cross-compile you must edit here and there of this file.
 
-AC_INIT( mcpp, 2.7, kmatsui@t3.rim.or.jp)
+AC_INIT( mcpp, 2.7.2, kmatsui@t3.rim.or.jp)
 AC_CONFIG_SRCDIR( src/main.c)
 AM_CONFIG_HEADER( src/config.h)
 AC_CONFIG_AUX_DIR( config)
@@ -107,29 +107,27 @@ AC_ARG_WITH( target_cc,
         target_cc=$withval
         target_name=`echo $target_cc | sed 's/-gcc.*$//'`
         if test $target_name != $target_alias; then
-            AC_MSG_ERROR( [The argument of --with-target-cc option conflicts with --target option])
+            AC_MSG_ERROR( [The argument of --with-target-cc option conflicts with --target option.])
         fi
         AC_SUBST( [target_cc])
     fi
 )
 fi
 
-## compiler-specific or not Mac OS
-## To enable "universal binary" by Apple-GCC, CPU-dependent macros should be
-## defined at compile time rather than configuration time.
-if test x$enable_replace_cpp = xyes    \
-        || test $ac_c_define_HOST_SYSTEM != SYS_MAC; then
+dnl Define a target specific macro.
 
-dnl Define target specific predefined macros.
+AC_MSG_CHECKING( for target cpu)
 
-AC_MSG_NOTICE( [setting predefined macros for target cpu])
+## These are not predefined macros of MCPP.  MCPP will define predefined macros
+## on compile time based on the CPU macro, and possibly redefine them at an
+## execution time.
 
 case $target_cpu in
-i?86*)
-    Target_Cpu=i386
-    ;;
 x86_64|amd64)
     Target_Cpu=x86_64
+    ;;
+i?86*)
+    Target_Cpu=i386
     ;;
 powerpc64|ppc64)
     Target_Cpu=ppc64
@@ -142,20 +140,8 @@ powerpc|ppc|ppc7400)
     ;;
 esac
 
-if test x$mcpp_ac_c_define_CPU_STD != x__$Target_Cpu; then
-    AC_DEFINE_UNQUOTED( [CPU_STD1], "__$Target_Cpu",
-        [Define the cpu-specific-predefined-macro.])
-fi
-if test x$mcpp_ac_c_define_CPU_STD != x__${Target_Cpu}__; then
-    AC_DEFINE_UNQUOTED( [CPU_STD2], "__${Target_Cpu}__",
-        [Define the cpu-specific-predefined-macro.])
-fi
-if test x$mcpp_ac_c_define_CPU_OLD != x$Target_Cpu; then
-    AC_DEFINE_UNQUOTED( [CPU_OLD], "$Target_Cpu",
-        [Define the cpu-specific-predefined-macro.])
-fi
-
-fi  ## compiler-specific or not Mac OS
+AC_MSG_RESULT( $Target_Cpu)
+AC_DEFINE_UNQUOTED( [CPU], "$Target_Cpu", [Define the cpu-specific-macro.])
 
 ## Build into cross-compiler on Mac OS
 if test x$enable_replace_cpp = xyes    \
@@ -293,10 +279,16 @@ if test x$ac_cv_c_compiler_gnu = xyes; then
     AC_DEFINE_UNQUOTED( [GCC_MINOR_VERSION], "$gcc_min_ver",
         [Define gcc minor version.])
 
+    cw=`pwd`
+    if test x$srcdir = "x." || test x$srcdir = x; then
+        src_dir=$cw
+    else
+        src_dir=$srcdir
+    fi
     if test $ac_c_define_HOST_SYSTEM = SYS_CYGWIN; then
         AC_CACHE_CHECK( the root directory,
             ac_cv_cygwin_root,
-            [ac_cv_cygwin_root=`mount | grep ' on / ' | sed 's, on / .*,,' | tr '\\\' '/'`]
+            [ac_cv_cygwin_root=`$src_dir/config/cygwin_root`]
         )
         AC_DEFINE_UNQUOTED( [CYGWIN_ROOT_DIRECTORY], "$ac_cv_cygwin_root",
             [Define root directory of CYGWIN.])
@@ -304,8 +296,7 @@ if test x$ac_cv_c_compiler_gnu = xyes; then
     if test $ac_c_define_HOST_SYSTEM = SYS_MINGW; then
         AC_CACHE_CHECK( the root directory,
             ac_cv_msys_root,
-            cw=`pwd`
-            cd /
+            cd /tmp
             cat > getcwd.c <<\_EOF
 #include <stdio.h>
 #include <unistd.h>
@@ -318,16 +309,16 @@ int main( int argc, char ** argv)
 }
 _EOF
             $CC getcwd.c
-            [ac_cv_msys_root=`./a.exe | tr '\\\', '/'`]
-            ## redundant \ to work around MinGW's problem
+            cd /
+            [ac_cv_msys_root=`$src_dir/config/mingw_root`]
         )
         AC_CACHE_CHECK( the /mingw directory,
             ac_cv_mingw_dir,
             cd /mingw
-            [ac_cv_mingw_dir=`/a.exe | tr '\\\', '/'`]
+            [ac_cv_mingw_dir=`$src_dir/config/mingw_root`]
         )
-        rm -f /getcwd.c /a.exe
         cd $cw
+        rm -f /tmp/getcwd.c /tmp/a.exe
         AC_DEFINE_UNQUOTED( [MSYS_ROOT_DIRECTORY], "$ac_cv_msys_root",
             [Define root directory of MSYS.])
         AC_DEFINE_UNQUOTED( [MINGW_DIRECTORY], "$ac_cv_mingw_dir",
@@ -345,12 +336,12 @@ AC_DEFUN([mcpp_AC_C_DEFINE], [
     if test x$stripped_mcpp_macro != x$mcpp_macro; then
         stripped_name=`echo $name | sed 's/^_//'`
         if test x$stripped_name = x$name; then
-            AC_MSG_ERROR( the macro name '$name' should begin with '_')
+            AC_MSG_ERROR( The macro name '$name' should begin with '_'.)
         fi
     else
         stripped_name=`echo $name | sed 's/^@<:@A-Za-z@:>@//'`
         if test x$stripped_name = x$name; then
-            AC_MSG_ERROR( the macro name '$name' should begin with an alphabetic letter)
+            AC_MSG_ERROR( The macro name '$name' should begin with an alphabetic letter.)
         fi
     fi
     if test x$name = x$3; then
@@ -370,7 +361,7 @@ AC_DEFUN([mcpp_AC_C_PREDEF], [
         AC_HELP_STRING( --enable-$1-$2-macro=name@<:@=replace@:>@,
             [specify the $1-specific $2-style predefined macro.  $3]),
         if test x$enableval = xyes || test x$enableval = xno; then
-            AC_MSG_ERROR( This option requires an argument as 'name@<:@=replace@:>@')
+            AC_MSG_ERROR( This option requires an argument as 'name@<:@=replace@:>@'.)
         fi
         mcpp_AC_C_DEFINE( $1, $2, $enableval)
         AH_TEMPLATE( [$1_SP_$2],
@@ -567,7 +558,7 @@ AC_ARG_WITH( compiler-name,
     AC_HELP_STRING( [--with-compiler-name=NAME],
         [specify the compiler name which is used as the definition of COMPILER macro]),
     AC_DEFINE_UNQUOTED( [COMPILER], $compiler_name, [specify the compiler name]),
-    AC_MSG_ERROR( --with-compiler-name=NAME option should be specified to define [COMPILER] macro)
+    AC_MSG_ERROR( --with-compiler-name=NAME option should be specified to define [COMPILER] macro.)
 )
 
 # Specify the C++ header file directory
@@ -580,7 +571,7 @@ AC_ARG_WITH( cxx-include-dir,
         AC_DEFINE_UNQUOTED( [CPLUS_INCLUDE_DIR1], $cxx_include_dir,
             [Define the C++ include directory.])
         ;;
-    *)  AC_MSG_ERROR( $withval should be an absolute path) ;;
+    *)  AC_MSG_ERROR( $withval should be an absolute path.) ;;
     esac]
 )
 
@@ -602,6 +593,10 @@ if test x$ac_cv_c_compiler_gnu = xyes; then
     AC_MSG_RESULT( $bindir)
 
     AC_PATH_PROG( [gcc_path], [$CC], , [$PATH])
+    cc_path=`echo $CC | $EGREP "/"`
+    if test x$cc_path != x; then
+        AC_MSG_ERROR( [Environment variables CC and CXX for GCC-specific-build should not contain a directory part.]);
+    fi
     ## force to set $prefix to GCC's prefix
     ## (i.e. "/usr/local" of "/usr/local/bin/gcc")
     gcc_prefix=`echo $gcc_path | $EGREP "/bin/$CC\$" | sed "s,/bin/$CC\$,,"`
@@ -766,10 +761,10 @@ AC_ARG_WITH( [gcc-testsuite-dir],
         if test x$enable_replace_cpp = xyes; then
             [gcc_testsuite_dir=`echo $withval | sed 's,/$,,'`]
         else
-            AC_MSG_ERROR( [--with-gcc-testsuite-dir option requires --enable-replace-cpp option])
+            AC_MSG_ERROR( [--with-gcc-testsuite-dir option requires --enable-replace-cpp option.])
         fi
     else
-        AC_MSG_ERROR( [--with-gcc-testsuite-dir option requires an argument])
+        AC_MSG_ERROR( [--with-gcc-testsuite-dir option requires an argument.])
     fi
 )
 AC_SUBST( [gcc_testsuite_dir])
