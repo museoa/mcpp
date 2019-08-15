@@ -9,11 +9,11 @@ Author: NIIBE Yutaka
 ## Fixes the issue reported at:
 ## http://www.forallsecure.com/bug-reports/6b11b6fccda17cc467e055ccf7fec3fa2d89ec00/
 
-Index: mcpp-2.7.2/src/main.c
+Index: mcpp/src/main.c
 ===================================================================
---- mcpp-2.7.2.orig/src/main.c	2013-07-09 03:03:05.610947658 +0000
-+++ mcpp-2.7.2/src/main.c	2013-07-09 03:03:05.534947624 +0000
-@@ -428,16 +428,11 @@
+--- mcpp.orig/src/main.c
++++ mcpp/src/main.c
+@@ -428,16 +428,11 @@ int     main
  
  fatal_error_exit:
  #if MCPP_LIB

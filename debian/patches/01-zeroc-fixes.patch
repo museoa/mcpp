@@ -2,8 +2,10 @@ Description: Fixes by ZeroC, Inc.
 Author: ZeroC, Inc.
 Bug-Debian: http://bugs.debian.org/611749
 
---- mcpp-2.7.2.orig/src/main.c
-+++ mcpp-2.7.2/src/main.c
+Index: mcpp/src/main.c
+===================================================================
+--- mcpp.orig/src/main.c
++++ mcpp/src/main.c
 @@ -326,6 +326,8 @@ static void     init_main( void)
              = FALSE;
      option_flags.trig = TRIGRAPHS_INIT;
@@ -13,8 +15,10 @@ Bug-Debian: http://bugs.debian.org/611749
  }
  
  int     mcpp_lib_main
---- mcpp-2.7.2.orig/src/support.c
-+++ mcpp-2.7.2/src/support.c
+Index: mcpp/src/support.c
+===================================================================
+--- mcpp.orig/src/support.c
++++ mcpp/src/support.c
 @@ -188,7 +188,7 @@ static char *   append_to_buffer(
      size_t      length
  )
@@ -33,8 +37,10 @@ Bug-Debian: http://bugs.debian.org/611749
                  }
                  goto  end_line;
              default:                        /* Not a comment        */
---- mcpp-2.7.2.orig/src/internal.H
-+++ mcpp-2.7.2/src/internal.H
+Index: mcpp/src/internal.H
+===================================================================
+--- mcpp.orig/src/internal.H
++++ mcpp/src/internal.H
 @@ -390,6 +390,8 @@ extern char * const     work_end;   /* E
  extern char     identifier[];       /* Lastly scanned name          */
  extern IFINFO   ifstack[];          /* Information of #if nesting   */
@@ -52,8 +58,10 @@ Bug-Debian: http://bugs.debian.org/611749
 +#if HOST_HAVE_STPCPY && !defined(stpcpy)
  extern char *   stpcpy( char * dest, const char * src);
  #endif
---- mcpp-2.7.2.orig/src/system.c
-+++ mcpp-2.7.2/src/system.c
+Index: mcpp/src/system.c
+===================================================================
+--- mcpp.orig/src/system.c
++++ mcpp/src/system.c
 @@ -3858,6 +3858,9 @@ static int  chk_dirp(
  }
  #endif

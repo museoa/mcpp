@@ -1,0 +1,135 @@
+Description: Fix for newer autotools
+Author: NIIBE Yutaka
+
+Index: mcpp/configure.ac
+===================================================================
+--- mcpp.orig/configure.ac
++++ mcpp/configure.ac
+@@ -164,11 +164,11 @@ AC_CHECK_FUNCS( [stpcpy])
+ 
+ dnl Checks for some system characteristics.
+ 
+-AC_CACHE_CHECK( if the cases of filename are folded,
++AC_CACHE_CHECK(if the cases of filename are folded,
+     ac_cv_fname_fold,
+     [touch hJkL
+     [ac_cv_fname_fold=no]
+-    AC_RUN_IFELSE( [[
++    AC_RUN_IFELSE([AC_LANG_SOURCE([
+ #include    <stdio.h>
+ #include    <errno.h>
+     void exit();
+@@ -178,7 +178,7 @@ int main( void)
+         exit( errno);
+     else
+         exit( 0);
+-} ]],
++} ])],
+         [ac_cv_fname_fold=yes],
+         [],
+         AC_MSG_WARN( cannot run on cross-compiling so assumes that the cases of filename are not folded.)
+@@ -202,9 +202,9 @@ dnl Check printf length modifier of the
+ # The redundant sscanf() is for some compilers which cannot handle
+ # long long integer token.
+ AC_DEFUN([AC_CHECK_MOD_LL], [
+-    AC_CACHE_CHECK( [printf length modifier for the longest integer],
++    AC_CACHE_CHECK([printf length modifier for the longest integer],
+         [ac_cv_c_printf_modifier],
+-        AC_RUN_IFELSE( [[
++        AC_RUN_IFELSE([AC_LANG_SOURCE([
+ #include    <stdio.h>
+ #include    <assert.h>
+     int     strcmp();
+@@ -217,7 +217,7 @@ int main( void)
+     sprintf( buf, "%$2d", num);
+     assert( strcmp( buf, "1234567890123456789") == 0);
+     exit( 0);
+-} ]],
++} ])],
+             [ac_cv_c_printf_modifier=$2],
+             ,
+             AC_MSG_WARN( cannot run on cross-compiling so assumes the length modifier of long long is "%ll")
+@@ -229,7 +229,7 @@ int main( void)
+ ] )
+ 
+ if test x$ac_cv_type_intmax_t = xyes; then
+-    AC_CHECK_MOD_LL( [intmax_t], [j], [#include <stdint.h>])
++    AC_CHECK_MOD_LL([intmax_t], [j], [#include <stdint.h>])
+     if test $ac_c_define_HOST_SYSTEM = SYS_CYGWIN \
+             || test $ac_c_define_HOST_SYSTEM = SYS_MINGW; then
+         sleep 1         # wait for cleanup
+@@ -239,7 +239,7 @@ fi
+ if test x$ac_cv_type_long_long = xyes; then
+     for modifier in ll I64 q L
+     do
+-        AC_CHECK_MOD_LL( [long long], ${modifier})
++        AC_CHECK_MOD_LL([long long], ${modifier})
+         if test x${ac_cv_c_printf_modifier+set} = xset; then
+             break
+         fi
+@@ -485,11 +485,12 @@ AC_CACHE_CHECK( include preference - rel
+ AC_DEFINE_UNQUOTED( [SEARCH_INIT], $ac_cv_c_include_pref,
+     [Define include preference.])
+  
+-AC_CACHE_CHECK( if the argument of pragma is macro expanded,
++AC_CACHE_CHECK(if the argument of pragma is macro expanded,
+     ac_cv_c_pragma_is_expanded,
+-    AC_COMPILE_IFELSE( [[
++    AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+ #define once
+-#pragma once]],
++#pragma once
++])],
+         [ac_cv_c_pragma_is_expanded=no],
+         [ac_cv_c_pragma_is_expanded=yes]
+     )
+@@ -501,9 +502,9 @@ fi
+ 
+ AC_CACHE_CHECK( if digraphs can be used,
+     ac_cv_c_digraph,
+-    [AC_PREPROC_IFELSE( [
++    [AC_PREPROC_IFELSE([AC_LANG_SOURCE([
+ %:if 1
+-%:endif],
++%:endif])],
+         [ac_cv_c_digraph=yes],
+         [ac_cv_c_digraph=no]
+     )]
+@@ -710,25 +711,25 @@ if test x$ac_cv_c_compiler_gnu = xyes; t
+ 
+     if test x$gcc_maj_ver = x2; then
+ 
+-        AC_CACHE_CHECK( for value of predefined macro '__SIZE_TYPE__',
+-            size_type,
+-            [size_type=`echo '__SIZE_TYPE__' | $CPP - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *//'`]
++        AC_CACHE_CHECK(for value of predefined macro '__SIZE_TYPE__',
++            mcpp_cv_size_type,
++            [mcpp_cv_size_type=`echo '__SIZE_TYPE__' | $CPP - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *//'`]
+         )
+-        AC_DEFINE_UNQUOTED( [COMPILER_SP1_VAL], "$size_type",
++        AC_DEFINE_UNQUOTED([COMPILER_SP1_VAL], "$mcpp_cv_size_type",
+             [Define the type of size_t.])
+ 
+-        AC_CACHE_CHECK( for value of predefined macro '__PTRDIFF_TYPE__',
+-            ptrdiff_type,
+-            [ptrdiff_type=`echo '__PTRDIFF_TYPE__' | $CPP - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *$//'`]
++        AC_CACHE_CHECK(for value of predefined macro '__PTRDIFF_TYPE__',
++            mcpp_cv_ptrdiff_type,
++            [mcpp_cv_ptrdiff_type=`echo '__PTRDIFF_TYPE__' | $CPP - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *$//'`]
+         )
+-        AC_DEFINE_UNQUOTED( [COMPILER_SP2_VAL], "$ptrdiff_type",
++        AC_DEFINE_UNQUOTED([COMPILER_SP2_VAL], "$mcpp_cv_ptrdiff_type",
+             [Define the type of ptrdiff_t.])
+ 
+-        AC_CACHE_CHECK( for value of predefined macro '__WCHAR_TYPE__',
+-            wchar_type,
+-            [wchar_type=`echo '__WCHAR_TYPE__' | $CPP - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *$//'`]
++        AC_CACHE_CHECK(for value of predefined macro '__WCHAR_TYPE__',
++            mcpp_cv_wchar_type,
++            [mcpp_cv_wchar_type=`echo '__WCHAR_TYPE__' | $CPP - | sed 's/^ *//' | $EGREP -v '^#|^$' | sed 's/ *$//'`]
+         )
+-        AC_DEFINE_UNQUOTED( [COMPILER_SP3_VAL], "$wchar_type",
++        AC_DEFINE_UNQUOTED( [COMPILER_SP3_VAL], "$mcpp_cv_wchar_type",
+         [Define the type of wchar_t.])
+ 
+     fi

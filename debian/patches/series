@@ -1,2 +1,6 @@
 01-zeroc-fixes.patch
 02-gniibe-fixes.patch
+03-gniibe-fix-11.patch
+04-gniibe-fix-12.patch
+05-gniibe-fix-13.patch
+06-gniibe-fix-autotools.patch

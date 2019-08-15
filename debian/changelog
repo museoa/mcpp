@@ -1,3 +1,18 @@
+mcpp (2.7.2-5) unstable; urgency=medium
+
+  * debian/compat: Require 10.
+  * debian/control (Build-Depends): Remove dh-autoreconf.
+    (Standards-Version): Conforms to 4.4.0.
+    (Multi-Arch): Add with same for libmcpp-dev (Closes: #818402).
+  * debian/rules: Remove --with autoreconf.
+  * debian/patches/03-gniibe-fix-11.patch: New.
+  * debian/patches/04-gniibe-fix-12.patch: New.
+  * debian/patches/05-gniibe-fix-13.patch: New (Closes: #933497),
+    fixing vulnerability of CVE-2019-14274.
+  * debian/patches/06-gniibe-fix-autotools.patch: New.
+
+ -- NIIBE Yutaka <gniibe@fsij.org>  Thu, 15 Aug 2019 15:50:38 +0900
+
 mcpp (2.7.2-4) unstable; urgency=medium
 
   * Fix for ppc64el.  Thanks to Fernando Seiti Furusato (Closes: #752826).

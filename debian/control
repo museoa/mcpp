@@ -3,9 +3,11 @@ Section: devel
 Priority: optional
 Maintainer: Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
 Uploaders: NIIBE Yutaka <gniibe@fsij.org>
-Build-Depends: debhelper (>= 9), dh-autoreconf
-Standards-Version: 3.9.5
+Build-Depends: debhelper (>= 10)
+Standards-Version: 4.4.0
 Homepage: http://mcpp.sourceforge.net/
+Vcs-Git: https://salsa.debian.org/debian/mcpp.git
+Vcs-Browser: https://salsa.debian.org/debian/mcpp
 
 Package: mcpp
 Architecture: any
@@ -37,6 +39,7 @@ Description: Alternative C/C++ preprocessor (shared library)
 Package: libmcpp-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, libmcpp0 (= ${binary:Version})
 Description: Alternative C/C++ preprocessor (development files)
  This package installs the development files for the library version
