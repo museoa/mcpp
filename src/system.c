@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1998, 2002-2007 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2008 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * Some parts of this code are derived from the public domain software
@@ -31,8 +31,8 @@
  *                          S Y S T E M . C
  *          S y s t e m   D e p e n d e n t   R o u t i n e s
  *
- * Routines dependent on character set, O.S., compiler or compiler-driver.
- * To implement MCPP for the systems not yet implemented, you must
+ * Routines dependent on O.S., compiler or compiler-driver.
+ * To port MCPP for the systems not yet ported, you must
  *      1. specify the constants in "configed.H" or "noconfig.H",
  *      2. append the system-dependent routines in this file.
  */
@@ -44,7 +44,7 @@
 #endif
 
 #if     HOST_SYS_FAMILY == SYS_UNIX
-#include    "unistd.h"              /* For getcwd(), readlink(), getopt()   */
+#include    "unistd.h"              /* For getcwd(), readlink() */
 #elif   HOST_COMPILER == MSC || HOST_COMPILER == LCC
 #include    "direct.h"
 #define getcwd( buf, size)  _getcwd( buf, size)
@@ -52,11 +52,31 @@
 #include    "dir.h"
 #endif
 
-/* Functions other than standard.   */
-#if     HOST_SYS_FAMILY != SYS_UNIX     /* On UNIX "unistd.h" will suffice  */
-extern int      getopt( int argc, char * const * argv, const char * opts);
-extern int      optind;
-extern char *   optarg;
+#include    "sys/types.h"
+#include    "sys/stat.h"                        /* For stat()       */
+#if     ! defined( S_ISREG)
+#define S_ISREG( mode)  (mode & S_IFREG)
+#define S_ISDIR( mode)  (mode & S_IFDIR)
+#endif
+#if     HOST_COMPILER == MSC
+#define S_IFREG     _S_IFREG
+#define S_IFDIR     _S_IFDIR
+#define stat( path, stbuf)  _stat( path, stbuf)
+#endif
+
+/* Function to compare path-list    */
+#if     FNAME_FOLD
+#if     HOST_COMPILER == GNUC   /* CYGWIN, MINGW, MAC   */
+#include    <strings.h>         /* POSIX 1, 2001        */
+#define str_case_eq( str1, str2)    (strcasecmp( str1, str2) == 0)
+#else   /* MSC, BORLANDC, LCC   */
+#if     HOST_COMPILER == MSC
+#define stricmp( str1, str2)        _stricmp( str1, str2)
+#endif
+#define str_case_eq( str1, str2)    (stricmp( str1, str2) == 0)
+#endif
+#else   /* ! FNAME_FOLD */
+#define str_case_eq( str1, str2)    (strcmp( str1, str2) == 0)
 #endif
 
 /*
@@ -67,11 +87,7 @@ extern char *   optarg;
 #if SYS_FAMILY == SYS_UNIX || SYS_FAMILY == SYS_WIN || SYSTEM == SYS_UNKNOWN
 #define PATH_DELIM      '/'
 #define SPECIAL_PATH_DELIM  FALSE
-#else
-#if SYSTEM == SYS_MAC
-#define PATH_DELIM      ':'         /* ?? I don't know  */
-#else   /* Any other path-delimiter, define by yourself */
-#endif
+#else   /* Any other path-delimiter, define PATH_DELIM by yourself  */
 #define SPECIAL_PATH_DELIM  TRUE    /* Any path-delimiter other than '/'    */
 #endif
 
@@ -94,13 +110,13 @@ static void     usage( int opt);
                 /* Putout usage of MCPP             */
 static void     set_opt_list( char * optlist);
                 /* Set list of legal option chars   */
-static int      parse_warn_level( const char * optarg, int opt);
+static int      parse_warn_level( const char * mcpp_optarg, int opt);
                 /* Parse warning level option       */
 static void     def_a_macro( int opt, char * def);
                 /* Do a -D option                   */
-static void     chk_opts( int sflag, long std_val, int ansi, int trad);
+static void     chk_opts( int sflag, int trad);
                 /* Check consistency of options     */
-static void     init_predefines( int nflag, long std_val);
+static void     init_predefines( void);
                 /* Set and unset predefined macros  */
 static void     init_std_defines( void);
                 /* Predefine Standard macros        */
@@ -108,6 +124,8 @@ static void     set_limit( void);
                 /* Set minimum translation limits   */
 static void     set_pragma_op( void);
                 /* Set the _Pragma() operator       */
+static void     put_info( FILEINFO * sharp_file);
+                /* Print compiler-specific-inf      */
 static char *   set_files( int argc, char ** argv, char ** in_pp
         , char ** out_pp);
                 /* Set input, output, diagnostic    */
@@ -119,23 +137,27 @@ static void     parse_env( const char * env);
                 /* Parse environment variables      */
 static void     set_a_dir( const char * dirname);
                 /* Append an include directory      */
-static char *   norm_path( const char * dir, const char * fname);
-                /* Normalize pathname to compare    */
+static char *   norm_dir( const char * dirname, int framework);
+                /* Normalize include directory path */
+static char *   norm_path( const char * dir, const char * fname, int inf
+        , int hmap);    /* Normalize pathname to compare    */
 #if SYS_FAMILY == SYS_UNIX
 static void     deref_syml( char * slbuf1, char * slbuf2, char * chk_start);
-                /* Dereference symbolic linked dir  */
+                /* Dereference symbolic linked directory and file   */
 #endif
 #if COMPILER == GNUC
-static void     init_gcc_macro( int gcc_maj_ver, int gcc_min_ver);
-                /* Predefine GCC macros             */
-static void     undef_gcc_macro( int clearall);
-                /* Undefine GCC predef-macros       */
+static void     init_gcc_macro( void);
+                /* Predefine GCC-specific macros    */
 static void     chk_env( void);
                 /* Check the environment variables  */
 #elif   COMPILER == MSC
-static void     init_msc_macro( int wchar_t_modified);
-                /* Predefine Visual C macros        */
+static void     init_msc_macro( void);
+                /* Predefine Visual C-specific macros       */
 #endif
+static void     def_macros( void);
+                /* Define macros specified by -D    */
+static void     undef_macros( void);
+                /* Undefine macros specified by -U  */
 static char *   md_init( const char * filename, char * output);
                 /* Initialize makefile dependency   */
 static char *   md_quote( char * output);
@@ -144,18 +166,46 @@ static int      open_include( char * filename, int searchlocal, int next);
                 /* Open the file to include         */
 static int      has_directory( const char * source, char * directory);
                 /* Get directory part of fname      */
+static int      is_full_path( const char * path);
+                /* The path is absolute path list ? */
 static int      search_dir( char * filename, int searchlocal, int next);
                 /* Search the include directories   */
-static int      open_file( const char ** dirp, const char * filename
-        , int local);
-                /* Open a source file               */
+static int      open_file( const char ** dirp, const char * src_dir
+        , const char * filename, int local, int include_opt, int sys_frame);
+                /* Open a source file       */
 static const char *     set_fname( const char * filename);
                 /* Remember the source filename     */
+#if SYSTEM == SYS_MAC
+#if COMPILER == GNUC
+static char *   search_header_map( const char * hmap_file
+        , const char * filename, char * pathlist);
+                /* Search header map file for a header  */
+static unsigned hmap_hash( const char * fname);
+                /* Get hash value for the fname     */
+#endif
+static void     init_framework( void);
+                /* Initialize framework[]           */
+static int      search_framework( char * filename);
+                /* Search "Framework" directories   */
+static int      search_subdir( char * fullname, char * cp, char * frame
+        , char * fname, int sys_frame);
+                /* Search "Headers" and other dirs  */
+#endif  /* SYSTEM == SYS_MAC    */
+#if 0   /* This function is only for debugging use  */
+static int      chk_dirp( const char ** dirp);
+                /* Check validity of dirp arg for open_file()   */
+#endif
+static void     cur_file( FILEINFO * file, FILEINFO * sharp_file, int marker);
+                /* Output current source file name  */
+#if SYS_FAMILY == SYS_WIN
+static char *   bsl2sl( char * filename);
+                /* Convert \ to / in path-list      */
+#endif
 static int      is_junk( void);
                 /* The directive has trailing junk? */
-static void     do_once( const char * dir, const char * filename);
+static void     do_once( const char * fullname);
                 /* Process #pragma once             */
-static int      included( const char * dir, const char * filename);
+static int      included( const char * fullname);
                 /* The file has been once included? */
 static void     push_or_pop( int direction);
                 /* Push or pop a macro definition   */
@@ -169,38 +219,48 @@ static void     dump_path( void);
                 /* Print include search path        */
 static void     do_asm( int asm_start);
                 /* Process #asm, #endasm            */
+static int      mcpp_getopt( int argc, char * const * argv, const char * opts);
+                /* getopt() to prevent linking of glibc getopt  */
 
-#if SYS_FAMILY == SYS_WIN
-static char *   bsl2sl( char * filename);       /* Convert \ to /   */
-#endif
+/* for mcpp_getopt()    */
+static int      mcpp_optind = 1;
+static int      mcpp_opterr = 1;
+static int      mcpp_optopt;
+static char *   mcpp_optarg;
 
 static int      mb_changed = FALSE;     /* Flag of -e option        */
-static char     cur_work_dir[ FILENAMEMAX + 1]; /* Current working directory*/
+static char     cur_work_dir[ PATHMAX + 1];     /* Current working directory*/
 
 /*
  * incdir[] stores the -I directories (and the system-specific #include <...>
  * directories).  This is set by set_a_dir().  A trailing PATH_DELIM is
  * appended if absent.
  */
-static const char *     incdir[ NINCLUDE];      /* Include directories      */
-static const char **    incend = incdir;        /* -> active end of incdir  */
+static const char **    incdir;         /* Include directories      */
+static const char **    incend;         /* -> active end of incdir  */
+static int          max_inc;            /* Number of incdir[]       */
+
+typedef struct inc_list {       /* List of directories or files     */
+    char *      name;           /* Filename or directory-name       */
+    size_t      len;                    /* Length of 'name'         */
+} INC_LIST;
 
 /*
  * fnamelist[] stores the souce file names opened by #include directive for
  * debugging information.
  */
-#define FNAMELIST   (NINCLUDE * 4)
-static const char *     fnamelist[ FNAMELIST];  /* Source file names        */
-static const char **    fname_end = fnamelist;
-                                            /* -> active end of fnamelist   */
+static INC_LIST *   fnamelist;          /* Source file names        */
+static INC_LIST *   fname_end;          /* -> active end of fnamelist   */
+static int          max_fnamelist;      /* Number of fnamelist[]    */
 
-typedef struct inc_list {               /* List of #pragma once file*/
-    struct inc_list *   next;           /* Next file                */
-    char            fname[ 1];          /* Filename                 */
-} INC_LIST;
+/* once_list[] stores the #pragma once file names.  */
+static INC_LIST *   once_list;          /* Once opened file         */
+static INC_LIST *   once_end;           /* -> active end of once_list   */
+static int          max_once;           /* Number of once_list[]    */
 
-static INC_LIST *   start_inc = NULL;   /* The first file in list   */
-static INC_LIST *   last_inc;           /* The last file in list    */
+#define INIT_NUM_INCLUDE    32          /* Initial number of incdir[]   */
+#define INIT_NUM_FNAMELIST  256         /* Initial number of fnamelist[]    */
+#define INIT_NUM_ONCE       64          /* Initial number of once_list[]    */
 
 /*
  * 'search_rule' holds searching rule of #include "header.h" to search first
@@ -211,8 +271,15 @@ static INC_LIST *   last_inc;           /* The last file in list    */
 
 static int      search_rule = SEARCH_INIT;  /* Rule to search include file  */
 
-static int      dDflag = FALSE;         /* Flag of -dD option (for GCC)     */
 static int      nflag = FALSE;          /* Flag of -N (-undef) option       */
+static long     std_val = -1L;  /* Value of __STDC_VERSION__ or __cplusplus */
+
+#define MAX_DEF   256
+#define MAX_UNDEF (MAX_DEF/4)
+static char *   def_list[ MAX_DEF];     /* Macros to be defined     */
+static char *   undef_list[ MAX_UNDEF]; /* Macros to be undefined   */
+static int      def_cnt;                /* Count of def_list        */
+static int      undef_cnt;              /* Count of undef_list      */
 
 /* Values of mkdep. */
 #define MD_MKDEP        1   /* Output source file dependency line   */
@@ -231,15 +298,27 @@ static char *   mkdep_mt;               /* Argument of -MT option   */
 
 /* sharp_filename is filename for #line line, used only in cur_file()   */
 static char *   sharp_filename = NULL;
-
-static char *   argv0;   /* argv[ 0] for usage() and version()   */
+static char *   argv0;      /* argv[ 0] for usage() and version()   */
+static int      ansi;           /* __STRICT_ANSI__ flag for GNUC    */ 
+static int      compat_mode;
+                /* "Compatible" mode of recursive macro expansion   */
 
 #if COMPILER == GNUC
-/* sys_dirp indicates the first directory to search for system headers  */
-static const char **    sys_dirp = incdir;      /* For -I- option   */
+#define N_QUOTE_DIR     8
+/* quote_dir[]:     Include directories for "header" specified by -iquote   */
+/* quote_dir_end:   Active end of quote_dir */
+static const char *     quote_dir[ N_QUOTE_DIR];
+static const char **    quote_dir_end = quote_dir;
+/* sys_dirp indicates the first directory to search for system headers.     */
+static const char **    sys_dirp = NULL;        /* System header directory  */
+static const char *     sysroot = NULL; /* Logical root directory of header */
+static int      i_split = FALSE;                /* For -I- option   */
 static int      gcc_work_dir = FALSE;           /* For -fworking-directory  */
-static int      put_info_done = FALSE;  /* put_info() has been executed     */
 static int      no_exceptions = FALSE;  /* For -fno-deprecated option       */
+static int      gcc_maj_ver;                    /* __GNUC__         */
+static int      gcc_min_ver;                    /* __GNUC_MINOR__   */
+static int      dDflag = FALSE;         /* Flag of -dD option       */
+static int      dMflag = FALSE;         /* Flag of -dM option       */
 #endif
 
 #if COMPILER == GNUC || COMPILER == MSC
@@ -250,7 +329,10 @@ static int      no_exceptions = FALSE;  /* For -fno-deprecated option       */
 #define         NPREINCLUDE 8
 static char *   preinclude[ NPREINCLUDE];       /* File to pre-include      */
 static char **  preinc_end = preinclude;    /* -> active end of preinclude  */
-static int      dMflag = FALSE;                 /* Flag of -dM option       */
+#endif
+
+#if COMPILER == MSC
+static int      wchar_t_modified = FALSE;   /* -Zc:wchar_t flag     */
 #endif
 
 #if COMPILER == LCC
@@ -259,6 +341,18 @@ static const char *     optim_name = "__LCCOPTIMLEVEL";
 
 #if SYSTEM == SYS_CYGWIN
 static int      no_cygwin = FALSE;          /* -mno-cygwin          */
+
+#elif   SYSTEM == SYS_MAC
+#define         MAX_FRAMEWORK   8
+static char *   framework[ MAX_FRAMEWORK];  /* Framework directories*/
+static int      num_framework;          /* Current number of framework[]    */
+static int      sys_framework;          /* System framework dir     */
+static const char **    to_search_framework;
+                        /* Search framework[] next to the directory */
+static int      in_import;          /* #import rather than #include */
+#if COMPILER == GNUC
+static char *   arch = NULL;                /* -arch ppc or such    */
+#endif
 #endif
 
 #if MCPP_LIB
@@ -268,29 +362,37 @@ void    init_system( void)
     if (sharp_filename)
         free( sharp_filename);
     sharp_filename = NULL;
-    incend = incdir;
-    fname_end = fnamelist;
-    start_inc = NULL;
+    incend = incdir = NULL;
+    fnamelist = once_list = NULL;
     search_rule = SEARCH_INIT;
-    mb_changed = dDflag = nflag = FALSE;
+    mb_changed = nflag = ansi = compat_mode = FALSE;
     mkdep_fp = NULL;
     mkdep_target = mkdep_mf = mkdep_md = mkdep_mq = mkdep_mt = NULL;
+    std_val = -1L;
+    def_cnt = undef_cnt = 0;
+    mcpp_optind = mcpp_opterr = 1;
 #if COMPILER == GNUC
-    sys_dirp = incdir;
-    gcc_work_dir = put_info_done = no_exceptions = FALSE;
+    sys_dirp = NULL;
+    sysroot = NULL;
+    gcc_work_dir = no_exceptions = i_split = FALSE;
+    quote_dir_end = quote_dir;
+    dDflag = dMflag = FALSE;
+#endif
+#if COMPILER == MSC
+    wchar_t_modified = FALSE;
 #endif
 #if COMPILER == GNUC || COMPILER == MSC
     preinc_end = preinclude;
-    dMflag = FALSE;
 #endif
 #if SYSTEM == SYS_CYGWIN
     no_cygwin = FALSE;
+#elif   SYSTEM == SYS_MAC
+    num_framework = sys_framework = 0;
+    to_search_framework = NULL;
 #endif
 }
-#endif
 
-#define LINE90LIMIT         32767
-#define LINE_CPLUS_LIMIT    32767
+#endif
 
 #define OPTLISTLEN  80
 
@@ -301,50 +403,42 @@ void    do_options(
     char **     out_pp                      /* Output file name     */
 )
 /*
- * Process command line arguments (-D, etc.), called only at MCPP startup.
+ * Process command line arguments, called only at MCPP startup.
  */
 {
     char        optlist[ OPTLISTLEN];       /* List of option letter*/
     const char *    warning = "warning: -%c%s option is ignored\n";
-    int         vflag;                      /* -v option            */
+    int         opt;
     int         unset_sys_dirs;
-    /* Unset system-specific and site-specific include directories ?    */
+        /* Unset system-specific and site-specific include directories ?    */
     int         set_cplus_dir;  /* Set C++ include directory ? (for GCC)*/
     int         show_path;          /* Show include directory list  */
     DEFBUF *    defp;
-    int         i;
-    int         opt;
-    char *      cp;
-
-    long        std_val;        /* Value of __STDC_VERSION__ or __cplusplus */
-    VAL_SIGN    *valp;
+    VAL_SIGN *  valp;
     int         sflag;                      /* -S option or similar */
-    int         ansi, trad;                 /* -ansi, -traditional  */
+    int         trad;                       /* -traditional         */
     int         old_mode;                   /* backup of 'mcpp_mode'*/
+    char *      cp;
+    int         i;
 #if COMPILER == GNUC
 #define NSYSDIR   8
     /* System include directory specified by -isystem   */
     char *      sysdir[ NSYSDIR] = { NULL, };
     char **     sysdir_end = sysdir;
     int         integrated_cpp; /* Flag of cc1 which integrates cpp in it   */
-    int         gcc_maj_ver, gcc_min_ver;       /* __GNUC__, __GNUC_MINOR__ */
-#elif   COMPILER == MSC
-    int         wchar_t_modified = FALSE;   /* -Zc:wchar_t flag     */
+#if SYSTEM == SYS_MAC
+    static char ar[ 7];
+#endif
 #elif   COMPILER == LCC
     const char *    debug_name = "__LCCDEBUGLEVEL";
 #endif
 
     argv0 = argv[ 0];
-    vflag = nflag = unset_sys_dirs = show_path = FALSE;
+    nflag = unset_sys_dirs = show_path = sflag = trad = FALSE;
     set_cplus_dir = TRUE;
-    sflag = ansi = trad = FALSE;
-    std_val = -1L;
 
     /* Get current directory for -I option and #pragma once */
-    getcwd( cur_work_dir, FILENAMEMAX);
-#if FNAME_FOLD
-    conv_case( cur_work_dir, cur_work_dir + strlen( cur_work_dir), LOWER);
-#endif
+    getcwd( cur_work_dir, PATHMAX);
 #if SYS_FAMILY == SYS_WIN
     bsl2sl( cur_work_dir);
 #endif
@@ -352,25 +446,30 @@ void    do_options(
         /* Append trailing path-delimiter   */
 
 #if COMPILER == GNUC
-    defp = look_id( "__GNUC__");
+    defp = look_id( "__GNUC__");    /* Already defined by init_defines()    */
     gcc_maj_ver = atoi( defp->repl);
     defp = look_id( "__GNUC_MINOR__");
     gcc_min_ver = atoi( defp->repl);
     integrated_cpp = ((gcc_maj_ver == 3 && gcc_min_ver >= 3)
             || gcc_maj_ver == 4);
 #endif
+#if COMPILER == GNUC || COMPILER == MSC
+    option_flags.dollar_in_name = TRUE;
+    /* GCC and Visual C allows '$' in name by default   */
+#endif
 
     set_opt_list( optlist);
 
 opt_search: ;
-    while (optind < argc
-            && (opt = getopt( argc, argv, optlist)) != EOF) {
+    while (mcpp_optind < argc
+            && (opt = mcpp_getopt( argc, argv, optlist)) != EOF) {
 
         switch (opt) {          /* Command line option character    */
 
-#if COMPILER == GNUC && ! DOLLAR_IN_NAME
+#if COMPILER == GNUC
         case '$':                       /* Forbid '$' in identifier */
-            break;                          /* Ignore this option   */
+            option_flags.dollar_in_name = FALSE;
+            break;
 #endif
 
         case '+':
@@ -383,24 +482,40 @@ plus:
             }
             cplus_val = CPLUS;
             break;
+#if COMPILER == GNUC
+        case '-':
+            if (memcmp( mcpp_optarg, "sysroot", 7) == 0) {
+                if (mcpp_optarg[ 7] == '=')             /* --sysroot=DIR    */
+                    sysroot = mcpp_optarg + 8;
+                else if (mcpp_optarg[ 7] == EOS)        /* --sysroot DIR    */
+                    sysroot = argv[ mcpp_optind++];
+                else
+                    usage( opt);
+                break;
+            } else {
+                usage( opt);
+            }
+#endif
         case '2':                   /* Revert digraphs recognition  */
-            dig_flag = ! dig_flag;
+            option_flags.dig = ! option_flags.dig;
             break;
         case '3':                   /* Revert trigraph recogniion   */
-            trig_flag = ! trig_flag;
+            option_flags.trig = ! option_flags.trig;
             break;
 
         case '@':                   /* Special preprocessing mode   */
             old_mode = mcpp_mode;
-            if (str_eq( optarg, "post") || str_eq( optarg, "poststd"))
+            if (str_eq( mcpp_optarg, "post")
+                    || str_eq( mcpp_optarg, "poststd"))
                 mcpp_mode = POST_STD;   /* 'post-Standard' mode     */
-            else if (str_eq( optarg, "old") || str_eq( optarg, "oldprep"))
+            else if (str_eq( mcpp_optarg, "old")
+                    || str_eq( mcpp_optarg, "oldprep"))
                 mcpp_mode = OLD_PREP;   /* 'old-Preprocessor' mode  */
-            else if (str_eq( optarg, "kr"))
+            else if (str_eq( mcpp_optarg, "kr"))
                 mcpp_mode = KR;         /* 'K&R 1st' mode           */
-            else if (str_eq( optarg, "std"))
+            else if (str_eq( mcpp_optarg, "std"))
                 mcpp_mode = STD;        /* 'Standard' mode (default)*/
-            else if (str_eq( optarg, "compat")) {
+            else if (str_eq( mcpp_optarg, "compat")) {
                 compat_mode = TRUE;     /* 'compatible' mode        */
                 mcpp_mode = STD;
             }
@@ -408,28 +523,50 @@ plus:
                 usage( opt);
             standard = (mcpp_mode == STD || mcpp_mode == POST_STD);
             if (old_mode != STD && old_mode != mcpp_mode)
-                mcpp_fprintf( ERR, "Mode is redefined to: %s\n", optarg);
+                mcpp_fprintf( ERR, "Mode is redefined to: %s\n", mcpp_optarg);
             break;
 
 #if COMPILER == GNUC
         case 'A':       /* Ignore -A system(gnu), -A cpu(vax) or so */
             break;
         case 'a':
-            if (str_eq( optarg, "nsi")) {   /* -ansi                */
-                look_and_install( "__STRICT_ANSI__", DEF_NOARGS, "", "1");
+            if (str_eq( mcpp_optarg, "nsi")) {      /* -ansi                */
+                look_and_install( "__STRICT_ANSI__", DEF_NOARGS_PREDEF, ""
+                        , "1");
                 ansi = TRUE;
                 break;
+            } else if (memcmp( mcpp_optarg, "uxbase", 6) == 0) {
+                mcpp_optind++;
+                break;  /* Ignore '-auxbase some' or such nonsence  */
+#if SYSTEM == SYS_MAC
+            } else if (str_eq( mcpp_optarg, "rch")) {   /* -arch    */
+                arch = argv[ mcpp_optind++];
+                if (str_eq( arch, "ppc") || str_eq( arch, "ppc7400")
+                        || str_eq( arch, "ppc64")
+                        || str_eq( arch, "i386") || str_eq( arch, "i686")
+                        || str_eq( arch, "x86_64") || str_eq( arch, "amd64")) {
+                    if (str_eq( arch, "i686"))
+                        strcpy( arch, "i386");
+                    else if (str_eq( arch, "amd64"))
+                        strcpy( arch, "x86_64");
+                    else if (str_eq( arch, "ppc7400"))
+                        strcpy( arch, "ppc");
+                    break;
+                }   /* Else usage() */
+#endif
             }
             usage( opt);
 #elif   COMPILER == MSC
         case 'a':
-            if (memcmp( optarg, "rch", 3) == 0) {
-                if (str_eq( optarg + 3, ":SSE")     /* -arch:SSE    */
-                        || str_eq( optarg + 3, ":sse"))
-                    look_and_install( "_M_IX86_FP", DEF_NOARGS, null, "1");
-                else if (str_eq( optarg + 3, ":SSE2")       /* -arch:SSE2   */
-                        || str_eq( optarg + 3, ":sse2"))
-                    look_and_install( "_M_IX86_FP", DEF_NOARGS, null, "2");
+            if (memcmp( mcpp_optarg, "rch", 3) == 0) {
+                if (str_eq( mcpp_optarg + 3, ":SSE")        /* -arch:SSE    */
+                        || str_eq( mcpp_optarg + 3, ":sse"))
+                    look_and_install( "_M_IX86_FP", DEF_NOARGS_PREDEF, null
+                            , "1");
+                else if (str_eq( mcpp_optarg + 3, ":SSE2")  /* -arch:SSE2   */
+                        || str_eq( mcpp_optarg + 3, ":sse2"))
+                    look_and_install( "_M_IX86_FP", DEF_NOARGS_PREDEF, null
+                            , "2");
                 /* Else ignore  */
             } else {
                 usage( opt);
@@ -437,11 +574,11 @@ plus:
             break;
 
         case 'A':
-            lang_asm = TRUE;                /* "assembler" source   */
+            option_flags.lang_asm = TRUE;   /* "assembler" source   */
             break;
 #else
         case 'a':
-            lang_asm = TRUE;                /* "assembler" source   */
+            option_flags.lang_asm = TRUE;   /* "assembler" source   */
             break;
 #endif
 
@@ -452,7 +589,7 @@ plus:
 #endif
 
         case 'C':                           /* Keep comments        */
-            cflag = TRUE;
+            option_flags.c = TRUE;
             break;
 
 #if COMPILER == GNUC
@@ -461,14 +598,14 @@ plus:
                 usage( opt);
             break;                  /* Else ignore this option      */
         case 'd':
-            if (str_eq( optarg, "M"))       {       /* -dM          */
+            if (str_eq( mcpp_optarg, "M"))       {          /* -dM          */
                 dMflag = TRUE;
                 no_output++;
-            } else if (str_eq( optarg, "D"))  {     /* -dD          */
+            } else if (str_eq( mcpp_optarg, "D"))  {        /* -dD          */
                 dDflag = TRUE;
-            } else if (str_eq( optarg, "igraphs")) {        /* -digraphs    */
-                dig_flag = TRUE;
-            } else if (str_eq( optarg, "umpbase")) {        /* -dumpbase    */
+            } else if (str_eq( mcpp_optarg, "igraphs")) {   /* -digraphs    */
+                option_flags.dig = TRUE;
+            } else if (str_eq( mcpp_optarg, "umpbase")) {   /* -dumpbase    */
                 ;                                   /* Ignore       */
             } else {
                 usage( opt);
@@ -477,12 +614,16 @@ plus:
 #endif  /* COMPILER == GNUC */
 
         case 'D':                           /* Define symbol        */
-            def_a_macro( opt, optarg);
+            if (def_cnt >= MAX_DEF) {
+                mcpp_fputs( "Too many -D options.\n", ERR);
+                longjmp( error_exit, -1);
+            }
+            def_list[ def_cnt++] = mcpp_optarg;
             break;
 
         case 'e':
             /* Change the default MBCHAR encoding   */
-            if (set_encoding( optarg, FALSE, 0) == NULL)
+            if (set_encoding( mcpp_optarg, FALSE, 0) == NULL)
                 usage( opt);
             mb_changed = TRUE;
             break;
@@ -493,92 +634,101 @@ plus:
                 usage( opt);
             break;                          /* Ignore this option   */
         case 'f':
-            if (memcmp( optarg, "input-charset=", 14) == 0) {
+            if (memcmp( mcpp_optarg, "input-charset=", 14) == 0) {
                 /* Treat -finput-charset= as the same option as -e  */
-                if (set_encoding( optarg + 14, FALSE, 0) == NULL)
+                if (set_encoding( mcpp_optarg + 14, FALSE, 0) == NULL)
                     usage( opt);
                 mb_changed = TRUE;
-                break;
-            } else if (str_eq( optarg, "working-directory")) {
+            } else if (str_eq( mcpp_optarg, "working-directory")) {
                 gcc_work_dir = TRUE;
-                break;
-            } else if (str_eq( optarg, "no-working-directory")) {
+            } else if (str_eq( mcpp_optarg, "no-working-directory")) {
                 gcc_work_dir = FALSE;
-                break;
-            } else if (str_eq( optarg, "stack-protector")) {
-                look_and_install( "__SSP__", DEF_NOARGS, null, "1");
-                break;
-            } else if (str_eq( optarg, "stack-protector-all")) {
-                look_and_install( "__SSP_ALL__", DEF_NOARGS, null, "2");
-                break;
-            } else if (str_eq( optarg, "exceptions")) {
-                look_and_install( "__EXCEPTIONS", DEF_NOARGS, null, "1");
-                break;
-            } else if (str_eq( optarg, "no-exceptions")) {
+            } else if (str_eq( mcpp_optarg, "stack-protector")) {
+                look_and_install( "__SSP__", DEF_NOARGS_PREDEF, null, "1");
+            } else if (str_eq( mcpp_optarg, "stack-protector-all")) {
+                look_and_install( "__SSP_ALL__", DEF_NOARGS_PREDEF, null, "2");
+            } else if (str_eq( mcpp_optarg, "exceptions")) {
+                look_and_install( "__EXCEPTIONS", DEF_NOARGS_PREDEF, null
+                        , "1");
+            } else if (str_eq( mcpp_optarg, "no-exceptions")) {
                 no_exceptions = TRUE;
-                break;
-            } else if (str_eq( optarg, "PIC") || str_eq( optarg, "pic")
-                    || str_eq( optarg, "PIE") || str_eq( optarg, "pie")) {
-                look_and_install( "__PIC__", DEF_NOARGS, null, "1");
-                look_and_install( "__pic__", DEF_NOARGS, null, "1");
-                break;
-            } else if (str_eq( optarg, "no-show-column")) {
-                break;                      /* Ignore this option   */
+            } else if (str_eq( mcpp_optarg, "PIC")
+                    || str_eq( mcpp_optarg, "pic")
+                    || str_eq( mcpp_optarg, "PIE")
+                    || str_eq( mcpp_optarg, "pie")) {
+                look_and_install( "__PIC__", DEF_NOARGS_PREDEF, null, "1");
+                look_and_install( "__pic__", DEF_NOARGS_PREDEF, null, "1");
+            } else if (str_eq( mcpp_optarg, "no-dollars-in-identifiers")) {
+                option_flags.dollar_in_name = FALSE;
+            } else if (str_eq( mcpp_optarg, "no-show-column")) {
+                ;                           /* Ignore this option   */
             } else if (! integrated_cpp) {
                 usage( opt);
             }
             break;
 
         case 'g':
-            if (!isdigit( *optarg) && str_eq( argv[ optind - 2], "-g"))
-                optind--;   /* Neither '-g 0' nor '-ggdb' -- No argument    */
+            if (!isdigit( *mcpp_optarg)
+                    && str_eq( argv[ mcpp_optind - 2], "-g"))
+                /* Neither '-g 0' nor '-ggdb' -- No argument    */
+                mcpp_optind--;
             break;                          /* Ignore the option    */
 #elif COMPILER == LCC
         case 'g':               /* Define __LCCDEBUGLEVEL as <n>    */
-            if (*(optarg + 1) == EOS && isdigit( *optarg)) {
+            if (*(mcpp_optarg + 1) == EOS && isdigit( *mcpp_optarg)) {
                 defp = look_id( debug_name);
-                strcpy( defp->repl, optarg);
+                strcpy( defp->repl, mcpp_optarg);
             } else {
                 usage( opt);
             }
             break;
 #elif COMPILER == MSC
         case 'G':
-            if (*(optarg + 1) == EOS) {     /* -Gx                  */
+            if (*(mcpp_optarg + 1) == EOS) {    /* -Gx              */
                 char    val[ 4] = "000";
 
-                switch (*optarg) {
+                switch (*mcpp_optarg) {
                 case '3':   case '4':   case '5':   case '6':
-                    *val = *optarg; /* "300", "400", "500", "600"   */
+                    *val = *mcpp_optarg;    /* "300", "400", "500", "600"   */
                     break;
                 case 'B':                   /* -GB                  */
                     *val = '6';
                     break;
                 case 'R':
-                    look_and_install( "_CPPRTTI", DEF_NOARGS, null, "1");
+                    look_and_install( "_CPPRTTI", DEF_NOARGS_PREDEF, null
+                            , "1");
                     break;
                 case 'X':
-                    look_and_install( "_CPPUNWIND", DEF_NOARGS, null, "1");
+                    look_and_install( "_CPPUNWIND", DEF_NOARGS_PREDEF, null
+                            , "1");
                     break;
                 case 'Z':
-                    look_and_install( "__MSVC_RUNTIME_CHECKS", DEF_NOARGS
-                            , null, "1");
+                    look_and_install( "__MSVC_RUNTIME_CHECKS"
+                            , DEF_NOARGS_PREDEF, null, "1");
                     break;
                 default :
-                    mcpp_fprintf( ERR, warning, opt, optarg);
+                    mcpp_fprintf( ERR, warning, opt, mcpp_optarg);
                 }
-                if (*val)
-                    look_and_install( COMPILER_SP2, DEF_NOARGS, null, val);
+                if (*val)                   /* Redefine _M_IX86     */
+                    look_and_install( COMPILER_SP2, DEF_NOARGS_PREDEF, null
+                            , val);
             } else {
                 usage( opt);
             }
             break;
 #endif
 
+#if SYSTEM == SYS_MAC
+        case 'F':
+            framework[ num_framework++] = mcpp_optarg;
+            break;
+#endif
+
         case 'h':
-            if (*(optarg + 1) == EOS && isdigit( *optarg))      /* a digit  */
-                look_and_install( "__STDC_HOSTED__", DEF_NOARGS - 1, null
-                        , optarg);
+            if (*(mcpp_optarg + 1) == EOS && isdigit( *mcpp_optarg))
+                /* a digit  */
+                look_and_install( "__STDC_HOSTED__", DEF_NOARGS_PREDEF, null
+                        , mcpp_optarg);
             else
                 usage( opt);
             break;
@@ -589,31 +739,31 @@ plus:
                 break;
 #endif
         case 'I':                           /* Include directory    */
-            if (str_eq( optarg, "-")) {     /* -I-                  */
+            if (str_eq( mcpp_optarg, "-")) {        /* -I-                  */
 #if COMPILER == GNUC
                 sys_dirp = incend;  /* Split include directories    */
+                i_split = TRUE;
 #else
-                unset_sys_dirs = TRUE;      /* Unset pre-specified  */
-                break;                      /*   include directories*/
+                unset_sys_dirs = TRUE;
+                        /* Unset pre-specified include directories  */
 #endif
-            }
-            if (*(optarg + 1) == EOS && isdigit( *optarg)
-                    && (i = *optarg - '0') != 0
+            } else if (*(mcpp_optarg + 1) == EOS && isdigit( *mcpp_optarg)
+                    && (i = *mcpp_optarg - '0') != 0
                     && (i & ~(CURRENT | SOURCE)) == 0) {
                 search_rule = i;            /* -I1, -I2 or -I3      */
-                break;
+            } else {                        /* Not '-' nor a digit  */
+                set_a_dir( mcpp_optarg);    /* User-defined dir     */
             }
-            set_a_dir( optarg);             /* User-defined direct. */
             break;
 
 #if COMPILER == MSC
         case 'F':
-            if (str_eq( optarg, "l")) {             /* -Fl          */
+            if (str_eq( mcpp_optarg, "l")) {        /* -Fl          */
                 if (preinc_end >= &preinclude[ NPREINCLUDE]) {
                     mcpp_fputs( "Too many -Fl options.\n", ERR);
                     longjmp( error_exit, -1);
                 }
-                *preinc_end++ = argv[ optind++];
+                *preinc_end++ = argv[ mcpp_optind++];
             } else {
                 usage( opt);
             }
@@ -622,25 +772,40 @@ plus:
 
 #if COMPILER == GNUC
         case 'i':
-            if (str_eq( optarg, "nclude")) {        /* -include     */
+            if (str_eq( mcpp_optarg, "nclude")) {   /* -include     */
                 if (preinc_end >= &preinclude[ NPREINCLUDE]) {
                     mcpp_fputs( "Too many -include options.\n", ERR);
                     longjmp( error_exit, -1);
                 }
-                *preinc_end++ = argv[ optind++];
-            } else if (str_eq( optarg, "system")) { /* -isystem     */
+                *preinc_end++ = argv[ mcpp_optind++];
+            } else if (str_eq( mcpp_optarg, "system")) {    /* -isystem     */
                 if (sysdir_end >= &sysdir[ NSYSDIR]) {
                     mcpp_fputs( "Too many -isystem options.\n", ERR);
                     longjmp( error_exit, -1);
                 }
-                *sysdir_end++ = argv[ optind++];
+                *sysdir_end++ = argv[ mcpp_optind++];
                 /* Add the directory before system include directory*/
-            } else if (str_eq( optarg, "prefix")        /* -iprefix */
-                    || str_eq( optarg, "withprefix")    /* -iwithprefix     */
-                    || str_eq( optarg, "withprefixbefore")
+            } else if (str_eq( mcpp_optarg, "quote")) {     /* -iquote      */
+                if (quote_dir_end >= &quote_dir[ N_QUOTE_DIR]) {
+                    mcpp_fputs( "Too many -iquote options.\n", ERR);
+                    longjmp( error_exit, -1);
+                }
+                *quote_dir_end++ = argv[ mcpp_optind++];
+                /* Add the directory for #include "header"          */
+            } else if (memcmp( mcpp_optarg, "sysroot", 7) == 0) {
+                if (mcpp_optarg[ 7] == '=')     /* -isysroot=DIR    */
+                    sysroot = mcpp_optarg + 8;
+                else if (mcpp_optarg[ 7] == EOS)        /* -isysroot DIR    */
+                    sysroot = argv[ mcpp_optind++];
+                else
+                    usage( opt);
+            } else if (str_eq( mcpp_optarg, "prefix")       /* -iprefix     */
+                    || str_eq( mcpp_optarg, "withprefix")   /* -iwithprefix */
+                    || str_eq( mcpp_optarg, "withprefixbefore")
                                             /* -iwithprefixbefore   */
-                    || str_eq( optarg, "dirafter")) {   /* -idirafter       */
-                optind++;                   /* Skip the argument    */
+                    || str_eq( mcpp_optarg, "dirafter")     /* -idirafter   */
+                    || str_eq( mcpp_optarg, "multilib")) {  /* -imultilib   */
+                mcpp_optind++;              /* Skip the argument    */
                 /* Ignore these options */
             } else {
                 usage( opt);
@@ -649,40 +814,50 @@ plus:
 #endif
 
         case 'j':
-            no_source_line = TRUE;
+            option_flags.no_source_line = TRUE;
             break;  /* Do not output the source line in diagnostics */
 
 #if COMPILER == MSC
         case 'J':
-            look_and_install( "_CHAR_UNSIGNED", DEF_NOARGS, null, "1");
+            look_and_install( "_CHAR_UNSIGNED", DEF_NOARGS_PREDEF, null, "1");
             break;
 #endif
 
+        case 'K':
+            mcpp_debug |= MACRO_CALL;
+            /*
+             * Putout macro expansion informations embedded in comments.
+             * Same with '#pragma MCPP debug macro_call'.
+             */
+            /* Enable white spaces preservation, too    */
+            /* Fall through */
+        case 'k':
+            option_flags.k = TRUE;
+            /* Keep white spaces of input lines as they are */ 
+            break;
+
 #if COMPILER == GNUC
         case 'l':
-            if (memcmp( optarg, "ang-", 4) != 0) {
+            if (memcmp( mcpp_optarg, "ang-", 4) != 0) {
                 usage( opt);
-            } else if (str_eq( optarg + 4, "c")) {      /* -lang-c          */
-                break;                      /* Ignore this option   */
-            } else if (str_eq( optarg + 4, "c99")       /* -lang-c99*/
-                        || str_eq( optarg + 4, "c9x")) {    /* -lang-c9x    */
+            } else if (str_eq( mcpp_optarg + 4, "c")) {     /* -lang-c  */
+                ;                           /* Ignore this option   */
+            } else if (str_eq( mcpp_optarg + 4, "c99")      /* -lang-c99*/
+                        || str_eq( mcpp_optarg + 4, "c9x")) {   /* -lang-c9x*/
                 if (! sflag) {
-                    look_and_install( "__STRICT_ANSI__", DEF_NOARGS, "", "1");
                     stdc_val = 1;           /* Define __STDC__ to 1 */
                     std_val = 199901L;
                     sflag = TRUE;
                 }
-            } else if (str_eq( optarg + 4, "c89")) {    /* -lang-c89*/
+            } else if (str_eq( mcpp_optarg + 4, "c89")) {   /* -lang-c89*/
                 if (! sflag) {
-                    look_and_install( "__STRICT_ANSI__", DEF_NOARGS, "", "1");
                     stdc_val = 1;           /* Define __STDC__ to 1 */
                     sflag = TRUE;
                 }
-            } else if (str_eq( optarg + 4, "c++")) {    /* -lang-c++*/
+            } else if (str_eq( mcpp_optarg + 4, "c++")) {   /* -lang-c++*/
                 goto  plus;
-            } else if (str_eq( optarg + 4, "asm")) {    /* -lang-asm*/
-                lang_asm = TRUE;
-                break;
+            } else if (str_eq( mcpp_optarg + 4, "asm")) {   /* -lang-asm*/
+                option_flags.lang_asm = TRUE;
             } else {
                 usage( opt);
             }
@@ -690,31 +865,31 @@ plus:
 #endif  /* COMPILER == GNUC */
 
         case 'M':           /* Output source file dependency line   */
-            if (str_eq( optarg, "M")) {                     /* -MM  */
+            if (str_eq( mcpp_optarg, "M")) {                /* -MM  */
                 ;
-            } else if (str_eq( optarg, "D")) {              /* -MD  */
+            } else if (str_eq( mcpp_optarg, "D")) {         /* -MD  */
                 mkdep |= (MD_SYSHEADER | MD_FILE);
-            } else if (str_eq( optarg, "MD")) {             /* -MMD */
+            } else if (str_eq( mcpp_optarg, "MD")) {         /* -MMD */
                 mkdep |= MD_FILE;
-            } else if (str_eq( optarg, "P")) {              /* -MP  */
+            } else if (str_eq( mcpp_optarg, "P")) {          /* -MP  */
                 mkdep |= MD_PHONY;
-            } else if (str_eq( optarg, "Q")) {      /* -MQ target   */
+            } else if (str_eq( mcpp_optarg, "Q")) {  /* -MQ target   */
                 mkdep |= MD_QUOTE;
-                mkdep_mq = argv[ optind++];
-            } else if (str_eq( optarg, "T")) {      /* -MT target   */
-                mkdep_mt = argv[ optind++];
-            } else if (str_eq( optarg, "F")) {      /* -MF file     */
-                mkdep_mf = argv[ optind++];
-            } else if (argv[ optind - 1] == optarg) {       /* -M   */
+                mkdep_mq = argv[ mcpp_optind++];
+            } else if (str_eq( mcpp_optarg, "T")) {  /* -MT target   */
+                mkdep_mt = argv[ mcpp_optind++];
+            } else if (str_eq( mcpp_optarg, "F")) {  /* -MF file     */
+                mkdep_mf = argv[ mcpp_optind++];
+            } else if (argv[ mcpp_optind - 1] == mcpp_optarg) {     /* -M   */
                 mkdep |= MD_SYSHEADER;
-                optind--;
+                mcpp_optind--;
             } else {
                 usage( opt);
             }
-            if (str_eq( optarg, "D") || str_eq( optarg, "MD")) {
-                cp = argv[ optind];
+            if (str_eq( mcpp_optarg, "D") || str_eq( mcpp_optarg, "MD")) {
+                cp = argv[ mcpp_optind];
                 if (cp && *cp != '-')           /* -MD (-MMD) file  */
-                    mkdep_md = argv[ optind++];
+                    mkdep_md = argv[ mcpp_optind++];
             }
             mkdep |= MD_MKDEP;
             break;
@@ -722,7 +897,7 @@ plus:
 #if COMPILER == GNUC
         case 'm':
 #if SYSTEM == SYS_CYGWIN
-            if (str_eq( optarg, "no-cygwin")) { /* -mno-cygwin      */
+            if (str_eq( mcpp_optarg, "no-cygwin")) {    /* -mno-cygwin      */
                 no_cygwin = TRUE;
                 break;
             }
@@ -734,7 +909,7 @@ plus:
 
 #if COMPILER == GNUC
         case 'u':
-            if (! str_eq( optarg, "ndef"))  /* -undef               */
+            if (! str_eq( mcpp_optarg, "ndef"))     /* -undef       */
                 usage( opt);                /* Else fall through    */
 #endif
 
@@ -742,18 +917,18 @@ plus:
         case 'u':
 #endif
         case 'N':
-            /* No predefines:   remove "vax", "__VAX" and friends.  */
+            /* No predefines:   remove "unix", "__unix__" and friends.  */
             nflag = TRUE;
             break;
 
 #if COMPILER == GNUC
         case 'n':
-            if (str_eq( optarg, "ostdinc")) {               /* -nostdinc    */
+            if (str_eq( mcpp_optarg, "ostdinc")) {  /* -nostdinc    */
                 unset_sys_dirs = TRUE;  /* Unset pre-specified directories  */
-            } else if (str_eq( optarg, "ostdinc++")) {      /* -nostdinc++  */
+            } else if (str_eq( mcpp_optarg, "ostdinc++")) { /* -nostdinc++  */
                 set_cplus_dir = FALSE;  /* Unset C++-specific directories   */
-            } else if (str_eq( optarg, "oprecomp")) {       /* -noprecomp   */
-                mcpp_fprintf( ERR, warning, opt, optarg);
+            } else if (str_eq( mcpp_optarg, "oprecomp")) {  /* -noprecomp   */
+                mcpp_fprintf( ERR, warning, opt, mcpp_optarg);
                 break;
             } else {
                 usage( opt);
@@ -764,12 +939,16 @@ plus:
 #if COMPILER == GNUC
         case 'O':
             if (integrated_cpp) {
-                if (*optarg == '-')                 /* No argument  */
-                    optind--;
-                else if (! isdigit( *optarg))
+                if (*mcpp_optarg == '-')            /* No argument  */
+                    mcpp_optind--;
+                else if ((isdigit( *mcpp_optarg) && *mcpp_optarg != '0')
+                        || *mcpp_optarg == 's' || *mcpp_optarg == 'z')
+                                            /* -O1, -O2 -Os, -Oz    */
+                    look_and_install( "__OPTIMIZE__", DEF_NOARGS_PREDEF, ""
+                            , "1");
+                else if (! isdigit( *mcpp_optarg))
                     usage( opt);
-                else if (*optarg != '0')
-                    look_and_install( "__OPTIMIZE__", DEF_NOARGS, "", "1");
+                /* Else -O0: ignore */
             } else {
                 usage( opt);
             }
@@ -782,18 +961,19 @@ plus:
 #endif
 
         case 'o':
-            *out_pp = optarg;               /* Output file name     */
+            *out_pp = mcpp_optarg;          /* Output file name     */
             break;
 
         case 'P':                           /* No #line output      */
-            pflag = TRUE;
+            option_flags.p = TRUE;
             break;
 
 #if COMPILER == GNUC
         case 'p':
-            if (str_eq( optarg, "edantic")          /* -pedantic    */
-                    || str_eq( optarg, "edantic-errors")) {
+            if (str_eq( mcpp_optarg, "edantic")     /* -pedantic    */
+                    || str_eq( mcpp_optarg, "edantic-errors")) {
                                             /* -pedantic-errors     */
+                /* This option does not imply -ansi */
                 if (warn_level == -1)
                     warn_level = 0;
                 warn_level |= (1 | 2 | 4);
@@ -806,7 +986,8 @@ plus:
             }
             break;
         case 'q':
-            if (str_eq( optarg, "uiet"))            /* -quiet       */
+            if (str_eq( mcpp_optarg, "uiet"))
+                /* -quiet: GCC's undocumented, yet frequently specified opt */
                 break;                      /* Ignore the option    */
             else
                 usage( opt);
@@ -814,14 +995,15 @@ plus:
 #endif  /* COMPILER == GNUC */
 
         case 'Q':
-            qflag = TRUE;
+            option_flags.q = TRUE;
             break;
 
 #if COMPILER == MSC
         case 'R':               /* -RTC1, -RTCc, -RTCs, -RTCu, etc. */
-            if (memcmp( optarg, "TC", 2) == 0 && *(optarg + 2) != EOS)
-                look_and_install( "__MSVC_RUNTIME_CHECKS", DEF_NOARGS, null
-                        , "1");
+            if (memcmp( mcpp_optarg, "TC", 2) == 0
+                    && *(mcpp_optarg + 2) != EOS)
+                look_and_install( "__MSVC_RUNTIME_CHECKS", DEF_NOARGS_PREDEF
+                        , null, "1");
             else
                 usage( opt);
             break;
@@ -829,11 +1011,11 @@ plus:
 
         case 'S':
             if (cplus_val || sflag) {   /* C++ or the second time   */
-                mcpp_fprintf( ERR, warning, opt, optarg);
+                mcpp_fprintf( ERR, warning, opt, mcpp_optarg);
                 break;
             }
-            i = *optarg;
-            if (! isdigit( i) || *(optarg + 1) != EOS)
+            i = *mcpp_optarg;
+            if (! isdigit( i) || *(mcpp_optarg + 1) != EOS)
                 usage( opt);
             stdc_val = i - '0';
             sflag = TRUE;
@@ -841,17 +1023,17 @@ plus:
 
 #if COMPILER == GNUC
         case 'r':
-            if (str_eq( optarg, "emap"))
-                mcpp_fprintf( ERR, warning, opt, optarg);
+            if (str_eq( mcpp_optarg, "emap"))
+                mcpp_fprintf( ERR, warning, opt, mcpp_optarg);
                                             /* Ignore -remap option */
             else
                 usage( opt);
             break;
 
         case 's':
-            if (memcmp( optarg, "td=", 3) == 0 && strlen( optarg) > 3) {
-                /* -std=STANDARD    */
-                cp = optarg + 3;
+            if (memcmp( mcpp_optarg, "td=", 3) == 0
+                    && strlen( mcpp_optarg) > 3) {  /* -std=STANDARD*/
+                cp = mcpp_optarg + 3;
                 if (str_eq( cp, "c89")              /* std=c89      */
                         || str_eq( cp, "c90")       /* std=c90      */
                         || str_eq( cp, "gnu89")     /* std=gnu89    */
@@ -868,14 +1050,18 @@ plus:
                     cplus_val = std_val = 199711L;
                 } else if (memcmp( cp, "iso9899:", 8) == 0
                         && strlen( cp) >= 14) { /* std=iso9899:199409, etc. */
-                    optarg = cp + 8;
+                    mcpp_optarg = cp + 8;
+                    look_and_install( "__STRICT_ANSI__", DEF_NOARGS_PREDEF, ""
+                            , "1");
+                    ansi = TRUE;
                     goto Version;
                 } else if (memcmp( cp, "iso14882", 8) == 0) {
                     cp += 8;
+                    ansi = TRUE;
                     if (cp && *cp == ':' && strlen( cp) >= 7) {
                                     /* std=iso14882:199711, etc.    */
                         cplus_val = CPLUS;
-                        optarg = cp + 1;
+                        mcpp_optarg = cp + 1;
                         goto Version;
                     } else {
                         goto plus;
@@ -883,8 +1069,12 @@ plus:
                 } else {
                     usage( opt);
                 }
-                if (! cplus_val && memcmp( cp, "gnu", 3) != 0)
-                    look_and_install( "__STRICT_ANSI__", DEF_NOARGS, "", "1");
+                if (! cplus_val && memcmp( cp, "gnu", 3) != 0) {
+                    /* 'std=gnu*' does not imply -ansi  */
+                    look_and_install( "__STRICT_ANSI__", DEF_NOARGS_PREDEF, ""
+                            , "1");
+                    ansi = TRUE;
+                }
                 stdc_val = 1;
                 sflag = TRUE;
             } else {
@@ -893,13 +1083,13 @@ plus:
             break;
 
         case 't':
-            if (str_eq( optarg, "raditional")
-                    || str_eq( optarg, "raditional-cpp")) {
+            if (str_eq( mcpp_optarg, "raditional")
+                    || str_eq( mcpp_optarg, "raditional-cpp")) {
                                 /* -traditional, -traditional-cpp   */
                 trad = TRUE;
                 mcpp_mode = OLD_PREP;
-            } else if (str_eq( optarg, "rigraphs")) {
-                trig_flag = TRUE;                   /* -trigraphs   */
+            } else if (str_eq( mcpp_optarg, "rigraphs")) {
+                option_flags.trig = TRUE;           /* -trigraphs   */
             } else {
                 usage( opt);
             }
@@ -908,46 +1098,39 @@ plus:
 
 #if COMPILER == MSC
         case 'T':
-            if (strlen( optarg) > 1)
+            if (strlen( mcpp_optarg) > 1)
                 usage( opt);
-            i = tolower( *optarg);                  /* Fold case    */
+            i = tolower( *mcpp_optarg);             /* Fold case    */
             if (i == 'c') {
-                break;                      /* Ignore this option   */
+                ;                           /* Ignore this option   */
             } else if (i == 'p') {
                 cplus_val = CPLUS;
-                break;
             } else {
                 usage( opt);
             }
+            break;
 #endif
 
-        case 'U':                           /* Undefine symbol      */
-            /*
-             * We don't need to map trigraphs as they can't be part of a
-             * symbol name. (_ isn't trigraphable).
-             */
-            if ((defp = look_id( optarg)) != NULL) {
-                if (defp->nargs == DEF_NOARGS - 1) {
-                    undef_a_predef( optarg);
-                }
-                undefine( optarg);
-            } else {
-                mcpp_fprintf( ERR, "\"%s\" wasn't defined\n", optarg);
+        case 'U':                           /* Undefine macro       */
+            if (undef_cnt >= MAX_UNDEF) {
+                mcpp_fputs( "Too many -U options.\n", ERR);
+                longjmp( error_exit, -1);
             }
+            undef_list[ undef_cnt++] = mcpp_optarg;
             break;
 
         case 'V':
 #if COMPILER == GNUC
 Version:
 #endif
-            valp = eval_num( optarg);
+            valp = eval_num( mcpp_optarg);
             if (valp->sign == VAL_ERROR)
                 usage( opt);
             std_val = (long) valp->val;
             break;
 
         case 'v':
-            vflag = TRUE;
+            option_flags.v = TRUE;
             show_path = TRUE;
             break;
 
@@ -955,41 +1138,35 @@ Version:
             if (warn_level == -1)           /* Have to initialize   */
                 warn_level = 0;
 #if COMPILER == GNUC
-            if (argv[ optind - 1] == optarg) {      /* No argument  */
+            if (argv[ mcpp_optind - 1] == mcpp_optarg) {    /* No argument  */
                 /*
                  * Note: -W without argument is not officially supported.
                  *  It may cause an error.
                  */
                 warn_level |= (1 | 2 | 4 | 16);
-                optind--;
-                break;
-            } else if (str_eq( optarg, "comment")
-                        || str_eq( optarg, "comments")
-                        || str_eq( optarg, "sign-compare")) {
+                mcpp_optind--;
+            } else if (str_eq( mcpp_optarg, "comment")
+                        || str_eq( mcpp_optarg, "comments")
+                        || str_eq( mcpp_optarg, "sign-compare")) {
                 warn_level |= 1;
-                break;
-            } else if (str_eq( optarg, "undef")) {
+            } else if (str_eq( mcpp_optarg, "undef")) {
                 warn_level |= 4;
-                break;
-            } else if (str_eq( optarg, "all")) {
+            } else if (str_eq( mcpp_optarg, "all")) {
                 warn_level |= (1 | 16);     /* Convert -Wall to -W17*/
-                break;
-            } else if (str_eq( optarg, "trigraphs")) {
+            } else if (str_eq( mcpp_optarg, "trigraphs")) {
                 warn_level |= 16;
-                break;
             }
 #endif  /* COMPILER == GNUC */
 #if COMPILER == MSC
-            if (str_eq( optarg, "all")) {
+            if (str_eq( mcpp_optarg, "all")) {
                 warn_level |= (1 | 16);     /* Convert -Wall to -W17*/
-                break;
-            } else if (str_eq( optarg, "L")) {
-                no_source_line = TRUE;  /* Single-line diagnostic   */
-                break;
+            } else if (str_eq( mcpp_optarg, "L")) {
+                option_flags.no_source_line = TRUE;
+                                        /* Single-line diagnostic   */
             }
 #endif
-            if (isdigit( *optarg)) {
-                warn_level |= parse_warn_level( optarg, opt);
+            if (isdigit( *mcpp_optarg)) {
+                warn_level |= parse_warn_level( mcpp_optarg, opt);
                 if (warn_level > 31 || warn_level < 0)
                     usage( opt);
             }
@@ -1006,12 +1183,12 @@ Version:
 
 #if COMPILER == GNUC
         case 'x':
-            if (str_eq( optarg, "c")) {
+            if (str_eq( mcpp_optarg, "c")) {
                 break;                      /* -x c -- ignore this  */
-            } else if (str_eq( optarg, "c++")) {
+            } else if (str_eq( mcpp_optarg, "c++")) {
                 goto plus;
-            } else if (str_eq( optarg, "assembler-with-cpp")) {
-                lang_asm = TRUE;
+            } else if (str_eq( mcpp_optarg, "assembler-with-cpp")) {
+                option_flags.lang_asm = TRUE;
                 break;
             } else {
                 usage( opt);
@@ -1021,20 +1198,26 @@ Version:
 
 #if COMPILER == MSC
         case 'Z':
-            if (str_eq( optarg, "c:wchar_t")) {     /* -Zc:wchar_t  */
-                look_and_install( "_NATIVE_WCHAR_T_DEFINED", DEF_NOARGS, null
+            if (str_eq( mcpp_optarg, "c:wchar_t")) {        /* -Zc:wchar_t  */
+                look_and_install( "_NATIVE_WCHAR_T_DEFINED", DEF_NOARGS_PREDEF
+                        , null, "1");
+                look_and_install( "_WCHAR_T_DEFINED", DEF_NOARGS_PREDEF, null
                         , "1");
-                look_and_install( "_WCHAR_T_DEFINED", DEF_NOARGS, null, "1");
                 wchar_t_modified = TRUE;
-            } else if (str_eq( optarg, "c:wchar_t-")) {     /* -Zc:wchar_t- */
+            } else if (str_eq( mcpp_optarg, "c:wchar_t-")) {/* -Zc:wchar_t- */
                 wchar_t_modified = TRUE;        /* Do not define the macros */
-            } else if (str_eq( optarg, "l")) {
-                look_and_install( "_VC_NODEFAULTLIB", DEF_NOARGS, null, "1");
-            } else if (str_eq( optarg, "a") || str_eq( optarg, "e")) {
-                /* Ignore -Za and -Ze silently  */
+            } else if (str_eq( mcpp_optarg, "l")) {
+                look_and_install( "_VC_NODEFAULTLIB", DEF_NOARGS_PREDEF, null
+                        , "1");
+            } else if (str_eq( mcpp_optarg, "a")) {         /* -Za  */
+                undefine( "_MSC_EXTENSIONS");
+                option_flags.dollar_in_name = FALSE;
+            } else if (str_eq( mcpp_optarg, "e")) {
+                /* Ignore -Ze silently  */
                 break;
-            } else if (*(optarg + 1) == EOS) {  /* -Z followed by one char  */
-                mcpp_fprintf( ERR, warning, opt, optarg);
+            } else if (*(mcpp_optarg + 1) == EOS) {
+                /* -Z followed by one char  */
+                mcpp_fprintf( ERR, warning, opt, mcpp_optarg);
                 /* Ignore the option with warning   */
             } else {
                 usage( opt);
@@ -1043,7 +1226,7 @@ Version:
 #endif
 
         case 'z':
-            zflag = TRUE;           /* No output of included file   */
+            option_flags.z = TRUE;  /* No output of included file   */
             break;
 
         default:                            /* What is this one?    */
@@ -1053,27 +1236,71 @@ Version:
 
     }                                   /* For all arguments        */
 
-    if (optind < argc && set_files( argc, argv, in_pp, out_pp) != NULL)
+    if (mcpp_optind < argc && set_files( argc, argv, in_pp, out_pp) != NULL)
         goto  opt_search;       /* More options after the filename  */
 
     /* Check consistency of specified options, set some variables   */
-    chk_opts( sflag, std_val, ansi, trad);
+    chk_opts( sflag, trad);
 
     if (warn_level == -1)               /* No -W option             */
         warn_level = 1;                 /* Default warning level    */
     else if (warn_level == 0xFF)
         warn_level = 0;                 /* -W0 has high precedence  */
 
+#if SYSTEM == SYS_MAC
+    set_a_dir( NULL);                       /* Initialize incdir[]  */
+    to_search_framework = incend;
+                        /* Search framework[] next to the directory */
+#if COMPILER == GNUC
+    if (arch) {                     /* -arch option is specified    */
+        if (((str_eq( CPU_STD2, "__i386__") || str_eq( CPU_STD2, "__x86_64__"))
+                && (! str_eq( arch, "i386") && ! str_eq( arch, "x86_64")))
+            || ((str_eq( CPU_STD2, "__ppc__")
+                    || str_eq( CPU_STD2, "__ppc64__"))
+                && (! str_eq( arch, "ppc") && ! str_eq( arch, "ppc64")))) {
+            mcpp_fprintf( ERR, "Wrong argument of -arch option: %s\n", arch);
+            longjmp( error_exit, -1);
+        }
+        /* The CPU-specific-macros will be defined in init_gcc_macro(). */
+        undefine( CPU_STD2);
+#ifdef  CPU_OLD
+        undefine( CPU_OLD);
+#endif
+#ifdef  CPU_STD1
+        undefine( CPU_STD1);
+#endif
+#ifdef  CPU_SP_STD
+        undefine( CPU_SP_STD);
+#endif
+#ifdef  CPU_SP_OLD
+        undefine( CPU_SP_OLD);
+#endif
+    } else {
+        memcpy( ar, CPU_STD2+2, strlen( CPU_STD2) - 4);
+        ar[ strlen( CPU_STD2) - 4] = EOS;
+        arch = ar;
+    }
+#endif
+#endif
 #if COMPILER == GNUC
     if (sysdir < sysdir_end) {
         char **     dp = sysdir;
+        if (! sys_dirp || sys_dirp == incdir)
+            sys_dirp = dp;
         while (dp < sysdir_end)
             set_a_dir( *dp++);
     }
     if (*in_pp && str_eq( (*in_pp) + strlen( *in_pp) - 2, ".S"))
-        lang_asm = TRUE;                /* Input file name is *.S   */
-    if (lang_asm)
-        look_and_install( "__ASSEMBLER__", DEF_NOARGS, null, "1");
+        option_flags.lang_asm = TRUE;   /* Input file name is *.S   */
+    if (option_flags.lang_asm) {
+        look_and_install( "__ASSEMBLER__", DEF_NOARGS_PREDEF, null, "1");
+        option_flags.dollar_in_name = FALSE;        /* Disable '$' in name  */
+    }
+    if (! sys_dirp || sys_dirp == incdir)
+        sys_dirp = incend;
+#endif
+#if SYSTEM == SYS_MAC
+    init_framework();                   /* After setting sys_dirp   */
 #endif
     set_env_dirs();
     if (! unset_sys_dirs)
@@ -1089,21 +1316,22 @@ Version:
     else if (mkdep_mt)
         mkdep_target = mkdep_mt;
 
-#if COMPILER == GNUC
-    init_gcc_macro( gcc_maj_ver, gcc_min_ver);
-    chk_env();  /* Check the env-vars to specify version and dependency line*/
-#elif   COMPILER == MSC
-    init_msc_macro( wchar_t_modified);
-#endif
-
-    init_predefines( nflag, std_val);
-
-    if (vflag)
-        version();
-    if (show_path) {
-        fp_debug = stderr;
-        dump_path();
-        fp_debug = stdout;
+    /* Normalize the path-list  */
+    if (*in_pp && ! str_eq( *in_pp, "-")) {
+        char *  tmp = norm_path( null, *in_pp, FALSE, FALSE);
+        if (tmp)                        /* The file exists          */
+            *in_pp = tmp;
+            /* Else mcpp_main() will diagnose *in_pp and exit   */
+    }
+    if (! (mcpp_debug & MACRO_CALL)) {
+        /* -K option alters behavior of -v option   */
+        if (option_flags.v)
+            version();
+        if (show_path) {
+            fp_debug = stderr;
+            dump_path();
+            fp_debug = stdout;
+        }
     }
 }
 
@@ -1120,7 +1348,7 @@ static void version( void)
 #endif
 
 #ifdef  VERSION_MSG
-        "MCPP V.2.6.4 (2007/05) "
+        "MCPP V.2.7 (2008/03) "
 #else
         "MCPP V.", VERSION, " (", DATE, ") "
 #endif
@@ -1179,6 +1407,9 @@ static void usage(
 #if COMPILER == MSC
 "-arch:SSE, -arch:SSE2   Define the macro _M_IX86_FP as 1, 2 respectively.\n",
 #endif
+#if SYSTEM == SYS_MAC && COMPILER == GNUC
+"-arch <arch>        Change the target to <arch> (i386, x86_64, ppc, ppc64).\n",
+#endif
 
 #if ! STD_LINE_PREFIX
 "-b          Output #line lines in C source style.\n",
@@ -1190,6 +1421,9 @@ static void usage(
 "-e <encoding>   Change the default multi-byte character encoding to one of:\n",
 "            euc_jp, gb2312, ksc5601, big5, sjis, iso2022_jp, utf8.\n",
 
+#if SYSTEM == SYS_MAC
+"-F <framework>      Add <framework> to top of framework directory list.\n",
+#endif
 #if COMPILER == GNUC
 "-finput-charset=<encoding>      Same as -e <encoding>.\n",
 "            (Don't insert spaces around '=').\n",
@@ -1203,10 +1437,12 @@ static void usage(
 #endif
 
 "-I <directory>      Add <directory> to the #include search list.\n",
-"-I-         Unset system or site specific include directories.\n",
 
 #if COMPILER == GNUC
+"-isysroot <dir>     Change root of system header directory to <dir>.\n",
 "-include <file>     Include the <file> prior to the main input file.\n",
+#else
+"-I-         Unset system or site specific include directories.\n",
 #endif
 #if COMPILER == MSC
 "-J          Define the macro _CHAR_UNSIGNED as 1.\n",
@@ -1278,9 +1514,10 @@ static void usage(
 "-lang-c89   Same as -S1.\n",
 "-lang-c++   Same as -+.\n",
 "-pedantic, -pedantic-errors     Same as -W7.\n",
-#endif
-
+"-S <n>      Redefine __STDC__ to <n>.\n",
+#else
 "-S <n>      Redefine __STDC__ to <n>, undefine old style macros.\n",
+#endif
 
 #if COMPILER == GNUC
 "-std=<STANDARD>     Specify the standard to which the code should conform.\n",
@@ -1307,6 +1544,7 @@ static void usage(
 #else
 "-3          Enable trigraphs.\n",
 #endif
+"-K          Output macro annotations embedding in comments.\n",
 #if COMPILER == GNUC
 "-trigraphs  Enable trigraphs.\n",
 #endif
@@ -1322,6 +1560,8 @@ static void usage(
 "-a          Process \"assembler\" source.\n",
 #endif
 
+"-k          Keep white spaces of input lines as they are.\n",
+
 "\nFor further details see mcpp-manual.html.\n",
         NULL,
     };
@@ -1330,7 +1570,7 @@ static void usage(
     const char * const *    mpp = mes;
 
     if (opt != '?')
-        mcpp_fprintf( ERR, illegopt, opt, optarg ? optarg : "");
+        mcpp_fprintf( ERR, illegopt, opt, mcpp_optarg ? mcpp_optarg : "");
     version();
 #if MCPP_LIB
     mes[ 1] = argv0;
@@ -1355,21 +1595,25 @@ static void set_opt_list(
 
 #if COMPILER == GNUC
     "$A:a:cd:Ef:g:i:l:m:n:r:s:t:u:O:p:q:wx:",
-#elif   COMPILER != MSC
-    "a",
-#endif
-
-#if COMPILER == MSC
+#elif COMPILER == MSC
     "Aa:F:G:JR:T:XZ:uw",
 #elif   COMPILER == LCC
     "g:O",
 #endif
+
+#if COMPILER != GNUC && COMPILER != MSC
+    "a",
+#endif
+#if SYSTEM == SYS_MAC
+    "F:-:",
+#endif
+
     NULL
     };
 
     const char * const *    lp = & list[ 0];
 
-    strcpy( optlist, "23+@:e:h:jo:vzCD:I:M:NPQS:U:V:W:");
+    strcpy( optlist, "23+@:e:h:jko:vzCD:I:KM:NPQS:U:V:W:");
                                                 /* Default options  */
     while (*lp)
         strcat( optlist, *lp++);
@@ -1378,7 +1622,7 @@ static void set_opt_list(
 }
 
 static int  parse_warn_level(
-    const char *    optarg,
+    const char *    mcpp_optarg,
     int     opt
 )
 /*
@@ -1387,7 +1631,7 @@ static int  parse_warn_level(
  * Even spaces are allowed as ' 1 | 2|16 '.
  */
 {
-    const char *    cp = optarg;
+    const char *    cp = mcpp_optarg;
     int             w, i;
 
     w = i = 0;
@@ -1409,7 +1653,8 @@ static int  parse_warn_level(
         }
     }
     if (*cp != EOS) {               /* Not ending with digit        */
-        mcpp_fprintf( ERR, "Illegal warning level option \"%s\"\n", optarg);
+        mcpp_fprintf( ERR, "Illegal warning level option \"%s\"\n"
+                , mcpp_optarg);
         usage( opt);
     }
     w |= i;                                 /* Take the last arg    */
@@ -1417,8 +1662,8 @@ static int  parse_warn_level(
 }
 
 static void def_a_macro(
-    int     opt,
-    char *  def
+    int     opt,                            /* 'D'  */
+    char *  def                         /* Argument of -D option    */
 )
 /*
  * Define a macro specified by -D option.
@@ -1426,14 +1671,14 @@ static void def_a_macro(
  */
 {
     DEFBUF *    defp;
-    char *      definition;                 /* Argument of -D option*/
+    char *      definition;             /* Argument of -D option    */
     char *      cp;
     int         i;
 
     /* Convert trigraphs for the environment which need trigraphs   */
-    if (mcpp_mode == STD && trig_flag)
+    if (mcpp_mode == STD && option_flags.trig)
         cnv_trigraph( def);
-    if (mcpp_mode == POST_STD && dig_flag)
+    if (mcpp_mode == POST_STD && option_flags.dig)
         cnv_digraph( def);  /* Convert prior to installing macro    */
     definition = xmalloc( strlen( def) + 4);
     strcpy( definition, def);
@@ -1449,22 +1694,17 @@ static void def_a_macro(
         cp++;
     i = *cp;
     *cp = EOS;
-    if ((defp = look_id( definition)) != NULL) {    /* Pre-defined  */
-        if (defp->nargs == DEF_NOARGS - 1) {
-            undef_a_predef( definition);
-            /* Remove the name from the table of pre-defined-macros.*/
-        }
+    if ((defp = look_id( definition)) != NULL)      /* Pre-defined  */
         undefine( definition);
-    }
     *cp = i;
     /* Now, save the definition.    */
     unget_string( definition, NULL);
-    if (do_define( FALSE) == NULL)          /* Define a macro       */
+    if (do_define( FALSE, 0) == NULL)       /* Define a macro       */
         usage( opt);
     *cp = EOS;
     if (str_eq( definition, "__STDC__")) {
         defp = look_id( definition);
-        defp->nargs = DEF_NOARGS - 2;
+        defp->nargs = DEF_NOARGS_STANDARD;
                                 /* Restore Standard-predefinedness  */
     }
     free( definition);
@@ -1473,8 +1713,6 @@ static void def_a_macro(
 
 static void     chk_opts( 
     int     sflag,      /* Flag of Standard or post-Standard mode   */
-    long    std_val,                /* Value of __STDC_VERSION__    */
-    int     ansi,                   /* -ansi (GCC only)             */
     int     trad                    /* -traditional (GCC only)      */
 )
 /*
@@ -1494,23 +1732,37 @@ static void     chk_opts(
         break;
     case KR :
     case OLD_PREP   :
+#if COMPILER == GNUC
         if (sflag || cplus_val || ansi || std_val != -1L)
+#else
+        if (sflag || cplus_val || std_val != -1L)
+#endif
             incompat = TRUE;
-        if (dig_flag) {
-            if (dig_flag != DIGRAPHS_INIT)
+        if (option_flags.dig) {
+            if (option_flags.dig != DIGRAPHS_INIT)
                 incompat = TRUE;
             else
-                dig_flag = 0;
+                option_flags.dig = 0;
         }
         break;
     }
-    if (mcpp_mode == POST_STD && (lang_asm || compat_mode))
+
+    if (mcpp_mode == POST_STD
+            && (option_flags.lang_asm || compat_mode || option_flags.k))
         incompat = TRUE;
-    if (mcpp_mode != STD && trig_flag) {
-        if (trig_flag != TRIGRAPHS_INIT)
+    if (mcpp_mode != STD && option_flags.trig) {
+        if (option_flags.trig != TRIGRAPHS_INIT)
             incompat = TRUE;
         else
-            trig_flag = FALSE;
+            option_flags.trig = FALSE;
+    }
+    if (mcpp_mode != STD && (mcpp_debug & MACRO_CALL))
+        incompat = TRUE;
+    if ((mcpp_debug & MACRO_CALL)
+                && (option_flags.lang_asm || option_flags.c)) {
+            mcpp_fputs( "Disabled -K option.\n", ERR);
+            mcpp_debug &= ~MACRO_CALL;
+            /* -a and -C options do not co-exist with -K    */
     }
     if (incompat) {
         mcpp_fputs( "Incompatible options are specified.\n", ERR);
@@ -1525,18 +1777,16 @@ static void     chk_opts(
         char_type[ IN_SRC] = 0;
     if (mcpp_mode == POST_STD || mcpp_mode == KR)
         char_type[ TOK_SEP] = 0;    /* TOK_SEP equals to COM_SEP    */
+    if (mcpp_mode != STD)
+        char_type[ MAC_INF] = 0;
 
-    expand_init();
+    expand_init( compat_mode, ansi);
                 /* Set function pointer to macro expansion routine  */
 }
 
-static void init_predefines(
-    int     nflag,                  /* -N option                    */
-    long    std_val                 /* Value of __STDC_VERSION__    */
-)
+static void init_predefines( void)
 /*
  * Set or unset predefined macros.
- * This routine should be called after init_gcc_macro().
  */
 {
     char    tmp[ 16];
@@ -1553,21 +1803,18 @@ static void init_predefines(
 
     if (nflag) {
         un_predefine( TRUE);
-#if COMPILER == GNUC
-        undef_gcc_macro( TRUE);
-#endif
     } else if (stdc_val || cplus_val) {
+#if COMPILER != GNUC
         un_predefine( FALSE);           /* Undefine "unix" or so    */
-#if COMPILER == GNUC
-        undef_gcc_macro( FALSE);
 #endif
     }
     sprintf( tmp, "%ldL", cplus_val ? cplus_val : stdc_ver);
     if (cplus_val) {
-        look_and_install( "__cplusplus", DEF_NOARGS - 2, null, tmp);
+        look_and_install( "__cplusplus", DEF_NOARGS_STANDARD, null, tmp);
     } else {
         if (stdc_ver)
-            look_and_install( "__STDC_VERSION__", DEF_NOARGS - 2, null, tmp);
+            look_and_install( "__STDC_VERSION__", DEF_NOARGS_STANDARD, null
+                    , tmp);
 #ifdef  COMPILER_CPLUS
         if (! nflag)        /* Undefine pre-defined macro for C++   */
             undefine( COMPILER_CPLUS);
@@ -1576,7 +1823,7 @@ static void init_predefines(
     set_limit();
     stdc2 = cplus_val || stdc_ver >= 199901L;
     stdc3 = (cplus_val >= 199901L) || (stdc_ver >= 199901L);
-            /* (cplus_val >= 199901L) makes C++ C99-compatible specs    */
+        /* (cplus_val >= 199901L) makes C++ C99-compatible specs    */
     if (standard)
         init_std_defines();
     if (stdc3)
@@ -1586,10 +1833,10 @@ static void init_predefines(
 static void init_std_defines( void)
 /*
  * For STD and POST_STD modes.
- * The magic pre-defines (Standard predefined macros) are initialized with
- * negative argument counts.  expand_macro() notices this and calls the
- * appropriate routine.  DEF_NOARGS is one greater than the first "magic"
- * definition.  'DEF_NOARGS - n' is reserved for pre-defined macros.
+ * The magic pre-defines are initialized with magic argument counts.
+ * expand_macro() notices this and calls the appropriate routine.
+ * DEF_NOARGS is one greater than the first "magic" definition.
+ * 'DEF_NOARGS - n' are reserved for pre-defined macros.
  * __STDC_VERSION__ and __cplusplus are defined by chk_opts() and set_cplus().
  */
 {
@@ -1598,9 +1845,9 @@ static void init_std_defines( void)
     time_t  tvec;
     char *  tstring;
 
-    look_and_install( "__LINE__", DEF_NOARGS - 3, null, "-1234567890");
+    look_and_install( "__LINE__", DEF_NOARGS_DYNAMIC - 1, null, "-1234567890");
     /* Room for 11 chars (10 for long and 1 for '-' in case of wrap round.  */
-    look_and_install( "__FILE__", DEF_NOARGS - 4, null, null);
+    look_and_install( "__FILE__", DEF_NOARGS_DYNAMIC - 2, null, null);
                                             /* Should be stuffed    */
 
     /* Define __DATE__, __TIME__ as present date and time.          */
@@ -1611,9 +1858,9 @@ static void init_std_defines( void)
         *(tstring + 8) == '0' ? ' ' : *(tstring + 8),
         *(tstring + 9),
         tstring + 20);
-    look_and_install( "__DATE__", DEF_NOARGS - 2, null, timestr);
+    look_and_install( "__DATE__", DEF_NOARGS_DYNAMIC, null, timestr);
     sprintf( timestr, "\"%.8s\"", tstring + 11);
-    look_and_install( "__TIME__", DEF_NOARGS - 2, null, timestr);
+    look_and_install( "__TIME__", DEF_NOARGS_DYNAMIC, null, timestr);
 
     if (! look_id( "__STDC_HOSTED__")) {
         /*
@@ -1621,7 +1868,7 @@ static void init_std_defines( void)
          * -D option.
          */
         sprintf( tmp, "%d", STDC_HOSTED);
-        look_and_install( "__STDC_HOSTED__", DEF_NOARGS - 1, null, tmp);
+        look_and_install( "__STDC_HOSTED__", DEF_NOARGS_PREDEF, null, tmp);
     }
 #if COMPILER != GNUC        /* GCC do not undefine __STDC__ on C++  */
     if (cplus_val)
@@ -1630,9 +1877,12 @@ static void init_std_defines( void)
     /* Define __STDC__ as 1 or such for Standard conforming compiler.   */
     if (! look_id( "__STDC__")) {
         sprintf( tmp, "%d", stdc_val);
-        look_and_install( "__STDC__", DEF_NOARGS - 2, null, tmp);
+        look_and_install( "__STDC__", DEF_NOARGS_STANDARD, null, tmp);
     }
 }
+
+#define LINE90LIMIT         32767
+#define LINE_CPLUS_LIMIT    32767
 
 static void set_limit( void)
 /*
@@ -1640,32 +1890,32 @@ static void set_limit( void)
  */
 {
     if (cplus_val) {            /* Specified by C++ 1998 Standard   */
-        str_len_min = SLEN_CPLUS_MIN;
-        id_len_min = IDLEN_CPLUS_MIN;
-        n_mac_pars_min = NMACPARS_CPLUS_MIN;
-        exp_nest_min = EXP_NEST_CPLUS_MIN;
-        blk_nest_min = BLK_NEST_CPLUS_MIN;
-        inc_nest_min = INCLUDE_NEST_CPLUS_MIN;
-        n_macro_min = NMACRO_CPLUS_MIN;
-        line_limit = LINE_CPLUS_LIMIT;
+        std_limits.str_len = SLEN_CPLUS_MIN;
+        std_limits.id_len = IDLEN_CPLUS_MIN;
+        std_limits.n_mac_pars = NMACPARS_CPLUS_MIN;
+        std_limits.exp_nest = EXP_NEST_CPLUS_MIN;
+        std_limits.blk_nest = BLK_NEST_CPLUS_MIN;
+        std_limits.inc_nest = INCLUDE_NEST_CPLUS_MIN;
+        std_limits.n_macro = NMACRO_CPLUS_MIN;
+        std_limits.line_num = LINE_CPLUS_LIMIT;
     } else if (stdc_ver >= 199901L) {       /* Specified by C 1999 Standard */
-        str_len_min = SLEN99MIN;
-        id_len_min = IDLEN99MIN;
-        n_mac_pars_min = NMACPARS99MIN;
-        exp_nest_min = EXP_NEST99MIN;
-        blk_nest_min = BLK_NEST99MIN;
-        inc_nest_min = INCLUDE_NEST99MIN;
-        n_macro_min = NMACRO99MIN;
-        line_limit = LINE99LIMIT;
-    } else if (standard) {                  /* Specified by C 1990 Standard */
-        str_len_min = SLEN90MIN;
-        id_len_min = IDLEN90MIN;
-        n_mac_pars_min = NMACPARS90MIN;
-        exp_nest_min = EXP_NEST90MIN;
-        blk_nest_min = BLK_NEST90MIN;
-        inc_nest_min = INCLUDE_NEST90MIN;
-        n_macro_min = NMACRO90MIN;
-        line_limit = LINE90LIMIT;
+        std_limits.str_len = SLEN99MIN;
+        std_limits.id_len = IDLEN99MIN;
+        std_limits.n_mac_pars = NMACPARS99MIN;
+        std_limits.exp_nest = EXP_NEST99MIN;
+        std_limits.blk_nest = BLK_NEST99MIN;
+        std_limits.inc_nest = INCLUDE_NEST99MIN;
+        std_limits.n_macro = NMACRO99MIN;
+        std_limits.line_num = LINE99LIMIT;
+    } else if (standard) {          /* Specified by C 1990 Standard */
+        std_limits.str_len = SLEN90MIN;
+        std_limits.id_len = IDLEN90MIN;
+        std_limits.n_mac_pars = NMACPARS90MIN;
+        std_limits.exp_nest = EXP_NEST90MIN;
+        std_limits.blk_nest = BLK_NEST90MIN;
+        std_limits.inc_nest = INCLUDE_NEST90MIN;
+        std_limits.n_macro = NMACRO90MIN;
+        std_limits.line_num = LINE90LIMIT;
     }
     /* Else pre-Standard mode   */
 }
@@ -1686,43 +1936,101 @@ static void set_pragma_op( void)
     look_and_install( name, DEF_PRAGMA, "a", tmp);
 }
 
-void    at_start( void)
+void    init_sys_macro( void)
 /*
- * Do the commands prior to processing main source file.
+ * Define system-specific macros and some Standard required macros
+ * and undefine macros specified by -U options.
  */
 {
+    /* This order is important. */
+    def_macros();               /* Define macros specified by -D    */
+#if COMPILER == GNUC
+    chk_env();
+#endif
+    init_predefines();                  /* Define predefined macros */
+#if COMPILER == GNUC
+    init_gcc_macro();
+#elif   COMPILER == MSC
+    init_msc_macro();
+#endif
+    undef_macros();             /* Undefine macros specified by -U  */
+    if (mcpp_debug & MACRO_CALL)
+        dump_def( FALSE, TRUE);     /* Finally putout current macro names   */
+}
+
+void    at_start( void)
+/*
+ * Do the commands prior to processing main source file after do_options().
+ */
+{
+    char *  env;
+    FILEINFO *      file_saved = infile;
+
     /*
      * Set multi-byte character encoding according to environment variables
      * LC_ALL, LC_CTYPE and LANG -- with preference in this order.
      */
-    char *  env;
-
-    if (mb_changed)
-        return;                             /* -m option precedes   */
-    if ((env = getenv( "LC_ALL")) != NULL)
-        set_encoding( env, "LC_ALL", 0);
-    else if ((env = getenv( "LC_CTYPE")) != NULL)
-        set_encoding( env, "LC_CTYPE", 0);
-    else if ((env = getenv( "LANG")) != NULL)
-        set_encoding( env, "LANG", 0);
+    if (! mb_changed) {                     /* -m option precedes   */
+        if ((env = getenv( "LC_ALL")) != NULL)
+            set_encoding( env, "LC_ALL", 0);
+        else if ((env = getenv( "LC_CTYPE")) != NULL)
+            set_encoding( env, "LC_CTYPE", 0);
+        else if ((env = getenv( "LANG")) != NULL)
+            set_encoding( env, "LANG", 0);
+    }
 
 #if COMPILER == GNUC || COMPILER == MSC
-#if COMPILER == GNUC
-    /* -fworking-directory  */
-    if (gcc_work_dir && (preinclude <= --preinc_end && *preinc_end != NULL)) {
-        open_include( *preinc_end, TRUE, FALSE);
-        src_line++;
-        put_info();                 /* Putout the current directory */
-        src_line--;
-    }
-#endif
+    if (option_flags.dollar_in_name)
+        char_type[ 0x24] |= LET;    /* Enable '$' in identifiers    */
     /*
      * Do the -include (-Fl for MSC) options in the specified order.
      * Note: This functionality is implemented as nested #includes
      *   which results the same effect as sequential #includes.
      */
-    while (preinclude <= --preinc_end && *preinc_end != NULL)
-        open_include( *preinc_end, TRUE, FALSE);
+    {
+        char **         preinc;
+        /*
+         * Note: Here, 'infile' is the main input file, which is pseudo-
+         * parent file of the files to pre-include.  So, we must
+         * temporarily set the infile's directory to the current directory
+         * in order to preinclude the files relative to it.
+         */
+        preinc = preinc_end;
+        while (preinclude <= --preinc && *preinc != NULL)
+            open_file( &null, NULL, *preinc, TRUE, TRUE, FALSE);
+    }
+#endif
+
+    put_info( file_saved);
+}
+
+static void put_info(
+    FILEINFO *  sharp_file
+)
+/*
+ * Putout compiler-specific information.
+ */
+{
+    if (no_output || option_flags.p)
+        return;
+    sharp_file->line++;
+    sharp( sharp_file, 0);
+    sharp_file->line--;
+#if COMPILER == GNUC
+    if (gcc_work_dir)
+        mcpp_fprintf( OUT, "%s%ld \"%s%c\"\n"
+                , std_line_prefix ? "#line " : LINE_PREFIX
+                , 1, cur_work_dir, '/');
+        /* Putout the current directory as a #line line as: */
+        /* '# 1 "/abs-path/cur_dir//"'.                     */
+    mcpp_fprintf( OUT, "%s%ld \"<built-in>\"\n"
+                , std_line_prefix ? "#line " : LINE_PREFIX , 1);
+    mcpp_fprintf( OUT, "%s%ld \"<command line>\"\n"
+                , std_line_prefix ? "#line " : LINE_PREFIX , 1);
+    mcpp_fprintf( OUT, "%s%ld \"%s\"%s\n"
+            , std_line_prefix ? "#line " : LINE_PREFIX, 1, cur_fullname
+            , ! str_eq( cur_fullname, sharp_file->full_fname) ? " 1" : "");
+            /* Suffix " 1" for the file specified by -include   */
 #endif
 }
 
@@ -1739,24 +2047,25 @@ static char *   set_files(
     char *      cp;
 
     if (*in_pp == NULL) {                           /* Input file   */
-        cp = argv[ optind++];
+        cp = argv[ mcpp_optind++];
 #if SYS_FAMILY == SYS_WIN
         cp = bsl2sl( cp);
 #endif
         *in_pp = cp;
     }
-    if (optind < argc && argv[ optind][ 0] != '-' && *out_pp == NULL) {
-        cp = argv[ optind++];
+    if (mcpp_optind < argc && argv[ mcpp_optind][ 0] != '-'
+            && *out_pp == NULL) {
+        cp = argv[ mcpp_optind++];
 #if SYS_FAMILY == SYS_WIN
         cp = bsl2sl( cp);
 #endif
         *out_pp = cp;                               /* Output file  */
     }
-    if (optind >= argc)
+    if (mcpp_optind >= argc)
         return  NULL;           /* Exhausted command line arguments */
-    if (argv[ optind][ 0] == '-')
-        return  argv[ optind];                      /* More options */
-    cfatal( "Excessive file argument \"%s\"", argv[ optind], 0L , NULL);
+    if (argv[ mcpp_optind][ 0] == '-')
+        return  argv[ mcpp_optind];                 /* More options */
+    cfatal( "Excessive file argument \"%s\"", argv[ mcpp_optind], 0L , NULL);
     return  NULL;
 }
 
@@ -1856,36 +2165,159 @@ static void set_a_dir(
     const char *    dirname                 /* The path-name        */
 )
 /*
- * Append an include directory, checking array boundary.
+ * Append an include directory.
  * This routine is called from the following routines (in this order).
  * 1. do_options() by -I option.
  * 2. do_options() by -isystem option (for GNUC).
  * 3. set_env_dirs() by environment variables.
  * 4. set_sys_dirs() by CPLUS_INCLUDE_DIR?, C_INCLUDE_DIR? and system-
  *    specifics (unless -I- or -nostdinc option is specified).
+ * Ignore non-existent directory.
+ * Note that this routine should be called only in initializing steps,
+ *      because increase of include dirs causes reallocation of incdir[].
  * Note: a trailing PATH-DELIM is appended by norm_path().
  */
 {
     char *  norm_name;
     const char **   ip;
 
-    norm_name = norm_path( dirname, NULL);
-                            /* Normalize the pathname to compare    */
+    if (incdir == NULL) {               /* Should be initialized    */
+        max_inc = INIT_NUM_INCLUDE;
+        incdir = (const char **) xmalloc( sizeof (char *) * max_inc);
+        incend = &incdir[ 0];
+    } else if (incend - incdir >= max_inc) {        /* Buffer full  */
+#if SYSTEM == SYS_MAC
+        size_t  framework_pos = to_search_framework - incdir;
+#endif
+#if COMPILER == GNUC
+        size_t  sys_pos = 0;
+        if (sys_dirp)
+            sys_pos = sys_dirp - incdir;
+#endif
+        incdir = (const char **) xrealloc( (void *) incdir
+                , sizeof (char *) * max_inc * 2);
+        incend = &incdir[ max_inc];
+#if COMPILER == GNUC
+        if (sys_pos)
+            sys_dirp = &incdir[ sys_pos];
+#endif
+#if SYSTEM == SYS_MAC
+        to_search_framework = &incdir[ framework_pos];
+#endif
+        max_inc *= 2;                   
+    }
+
+    if (dirname == NULL)
+        return;                     /* Only to initialize incdir[]  */
+    norm_name = norm_dir( dirname, FALSE);
+    if (! norm_name)                        /* Non-existent         */
+        return;
     for (ip = incdir; ip < incend; ip++) {
-        if (str_eq( *ip, norm_name)) {
-            free( norm_name);
+        if (str_case_eq( *ip, norm_name)) {
+            if (option_flags.v && ! (mcpp_debug & MACRO_CALL))
+                mcpp_fprintf( ERR, "Duplicate directory \"%s\" is ignored\n"
+                        , norm_name);
+            free( norm_name);               /* Already registered   */
             return;
         }
     }
-    if (& incdir[ NINCLUDE - 1] < incend)
-        cfatal( "Too many include directories %s"           /* _F_  */
-                , norm_name, 0L, NULL);
+    /* Register new directory   */
     *incend++ = norm_name;
 }
 
+#if SYSTEM == SYS_MAC && COMPILER == GNUC
+/* Definitions for "header map" file of Xcode / Apple-GCC.          */
+/* These definitions were taken from cpplib.h of Apple-GCC-4.0.1    */
+
+#define HMAP_SAME_ENDIANNESS_MAGIC      \
+        (((((('h' << 8) | 'm') << 8) | 'a') << 8) | 'p')
+
+typedef unsigned short  uint16;
+typedef unsigned int    uint32;
+
+struct hmap_bucket
+{
+    uint32  key;            /* Offset (into strings) of key             */
+    struct {
+        uint32  prefix;     /* Offset (into strings) of value prefix    */
+        uint32  suffix;     /* Offset (into strings) of value suffix    */
+    } value;                /* Value (prefix- and suffix-strings)       */
+};
+
+struct hmap_header_map
+{
+    uint32  magic;          /* Magic word, also indicates byte order    */
+    uint16  version;        /* Version number -- currently 1            */
+    uint16  _reserved;      /* Reserved for future use -- zero for now  */
+    uint32  strings_offset; /* Offset to start of string pool           */
+    uint32  count;          /* Number of entries in the string table    */
+    uint32  capacity;       /* Number of buckets (always a power of 2)  */
+    uint32  max_value_length;
+                        /* Length of longest result path (excl. '\0')   */
+    struct hmap_bucket  buckets[1];
+                        /* Inline array of 'capacity' maptable buckets  */
+    /* Strings follow the buckets, at strings_offset.  */
+};
+#endif
+
+static char *   norm_dir(
+    const char *    dirname,        /* Directory path to normalize  */
+    int             framework       /* Setting a framework directory*/
+)
+/*
+ * Normalize include directory path.
+ * Handle -isysroot option for GCC, including framework directory for SYS_MAC.
+ */
+{
+    char *  norm_name;
+
+#if COMPILER == GNUC
+    if (sysroot && sys_dirp) {
+        /* Logical system root specified and dirname is system header dir   */
+        char    delim[ 2] = { EOS, EOS};
+        char *  dir;
+#if SYSTEM == SYS_MAC
+        if (! framework && memcmp( dirname, "/usr/", 5) != 0)
+            return  NULL;           /* /Developer/usr/lib/gcc/      */
+#endif
+        if (dirname[ 0] != PATH_DELIM)
+            delim[ 0] = PATH_DELIM;
+        dir = xmalloc( strlen( sysroot) + strlen( dirname) + 2);
+        sprintf( dir, "%s%s%s", sysroot, delim, dirname);
+        dirname = dir;
+    }
+#endif
+#if SYSTEM == SYS_MAC && COMPILER == GNUC
+    if (strlen( dirname) > 5
+            && str_case_eq( dirname + strlen( dirname) - 5, ".hmap")) {
+        /* "header map" file (not an include directory) */
+        norm_name = norm_path( null, dirname, FALSE, TRUE);
+        if (! norm_name && option_flags.v)
+            mcpp_fprintf( ERR, "Invalid header map file \"%s\" is ignored\n"
+                    , dirname);
+    } else 
+#endif
+    {
+        norm_name = norm_path( dirname, NULL, FALSE, FALSE);
+                            /* Normalize the pathname to compare    */
+        if (! norm_name && option_flags.v && ! (mcpp_debug & MACRO_CALL))
+            mcpp_fprintf( ERR, "Non-existent directory \"%s\" is ignored\n"
+                    , dirname);
+    }
+#if COMPILER == GNUC
+    if (sysroot && sys_dirp)
+        free( dirname);
+#endif
+
+    return  norm_name;
+}
+
 static char *   norm_path(
-    const char *    dir,    /* Include directory (maybe a pointer to "")    */
-    const char *    fname   /* Filename (possibly has directory part)       */
+    const char *    dir,        /* Include directory (maybe "", never NULL) */
+    const char *    fname,
+        /* Filename (possibly has directory part, or maybe NULL)    */
+    int     inf,    /* If TRUE, output some infs when (mcpp_debug & PATH)   */
+    int     hmap            /* "header map" file of Apple-GCC       */
 )
 /*
  * Normalize the pathname removing redundant components such as
@@ -1893,74 +2325,114 @@ static char *   norm_path(
  * Append trailing "/" if 'fname' is NULL.
  * Change relative path to absolute path.
  * Dereference a symbolic linked file (or directory) to a real directory/file.
- * Returns a malloc'ed buffer.
+ * Return a malloc'ed buffer, if the directory/file exists.
+ * Return NULL, if the specified directory/file does not exist or 'dir' is
+ * not a directory or 'fname' is not a regular file.
  * This routine is called from set_a_dir(), init_gcc_macro(), do_once() and
  * open_file().
  */
 {
-    char *  norm_name;
+    char *  norm_name;                  /* The path-list converted  */
     char *  start;
     char *  cp1;
     char *  cp2;
     char *  abs_path;
     int     len;                            /* Should not be size_t */
     size_t  start_pos = 0;
-    char    slbuf1[ FILENAMEMAX+1];
+    char    slbuf1[ PATHMAX+1];             /* Working buffer       */
 #if SYS_FAMILY == SYS_UNIX
-    char    slbuf2[ FILENAMEMAX+1];
+    char    slbuf2[ PATHMAX+1]; /* Working buffer for dereferencing */
 #endif
 #if SYSTEM == SYS_CYGWIN || SYSTEM == SYS_MINGW
     static char *   root_dir;
+                /* System's root directory in Windows file system   */
     static size_t   root_dir_len;
 #if SYSTEM == SYS_CYGWIN
-    static char *   cygdrive = "/cygdrive/";
+    static char *   cygdrive = "/cygdrive/";    /* Prefix for drive letter  */
 #else
-    static char *   mingw_dir;
+    static char *   mingw_dir;          /* "/mingw" dir in Windows  */
     static size_t   mingw_dir_len;
 #endif
 #endif
+#if HOST_COMPILER == MSC
+    struct _stat    st_buf;
+#else
+    struct stat     st_buf;
+#endif
+
+    if (! dir || (*dir && is_full_path( fname)))
+        cfatal( "Bug: Wrong argument to norm_path()"        /* _F_  */
+                , NULL, 0L, NULL);
+    inf = inf && (mcpp_debug & PATH);       /* Output information   */
 
     strcpy( slbuf1, dir);                   /* Include directory    */
     len = strlen( slbuf1);
-    if (len && slbuf1[ len - 1] != PATH_DELIM) {
+    if (fname && len && slbuf1[ len - 1] != PATH_DELIM) {
         slbuf1[ len] = PATH_DELIM;          /* Append PATH_DELIM    */
-        slbuf1[ len + 1] = EOS;
+        slbuf1[ ++len] = EOS;
+    } else if (! fname && len && slbuf1[ len - 1] == PATH_DELIM) {
+        /* stat() of some systems do not like trailing '/'  */
+        slbuf1[ --len] = EOS;
+    }
+    if (fname)
+        strcat( slbuf1, fname);
+    if (stat( slbuf1, & st_buf) != 0        /* Non-existent         */
+            || (! fname && ! S_ISDIR( st_buf.st_mode))
+                /* Not a directory though 'fname' is not specified  */
+            || (fname && ! S_ISREG( st_buf.st_mode)))
+                /* Not a regular file though 'fname' is specified   */
+        return  NULL;
+#if SYSTEM == SYS_MAC && COMPILER == GNUC
+    if (hmap) {                         /* Dirty "header map" file  */
+        struct hmap_header_map  hmap;
+        size_t      cnt;
+        FILE *      fp;
+        fp = fopen( fname, "r");
+        cnt = fread( & hmap, sizeof (struct hmap_header_map), 1, fp);
+        fclose( fp);
+        if (cnt == 0 || hmap.magic != HMAP_SAME_ENDIANNESS_MAGIC)
+            return  NULL;
+    }
+#endif
+    if (! fname) {
+        slbuf1[ len] = PATH_DELIM;          /* Append PATH_DELIM    */
+        slbuf1[ ++len] = EOS;
     }
 #if SYS_FAMILY == SYS_UNIX
     /* Dereference symbolic linked directory or file, if any    */
+    slbuf1[ len] = EOS;     /* Truncate PATH_DELIM and 'fname' part, if any */
     slbuf2[ 0] = EOS;
     if (*dir && ! fname) {      /* Registering include directory    */
         /* Symbolic link check of directories are required  */
         deref_syml( slbuf1, slbuf2, slbuf1);
-    }
-    if (fname) {
+    } else if (fname) {                             /* Regular file */
         len = strlen( slbuf1);
         strcat( slbuf1, fname);
         deref_syml( slbuf1, slbuf2, slbuf1 + len);
                                 /* Symbolic link check of directory */
-        if ((len = readlink( slbuf1, slbuf2, FILENAMEMAX)) > 0) {
+        if ((len = readlink( slbuf1, slbuf2, PATHMAX)) > 0) {
             /* Dereference symbolic linked file (not directory) */
             *(slbuf2 + len) = EOS;
-            strcpy( slbuf1, slbuf2);
+            cp1 = slbuf1;
+            if (slbuf2[ 0] != PATH_DELIM) {     /* Relative path    */
+                cp2 = strrchr( slbuf1, PATH_DELIM);
+                if (cp2)        /* Append to the source directory   */
+                    cp1 = cp2 + 1;
+            }
+            strcpy( cp1, slbuf2);
         }
     }
-    if (mcpp_debug & PATH) {
+    if (inf) {
         if (slbuf2[ 0])
             mcpp_fprintf( DBG, "Dereferenced \"%s%s\" to \"%s\"\n"
                     , dir, fname ? fname : "", slbuf1);
     }
-#else
-    if (fname)
-        strcat( slbuf1, fname);
 #endif
     len = strlen( slbuf1);
     start = norm_name = xmalloc( len + 1);  /* Need a new buffer    */
     strcpy( norm_name, slbuf1);
 #if SYS_FAMILY == SYS_WIN
     bsl2sl( norm_name);
-#endif
-#if FNAME_FOLD
-    conv_case( norm_name, norm_name + len, LOWER);
 #endif
 #if SPECIAL_PATH_DELIM                  /* ':' ?    */
     for (cp1 = norm_name; *cp1 != EOS; cp1++) {
@@ -1972,17 +2444,17 @@ static char *   norm_path(
 
 #if SYSTEM == SYS_CYGWIN
     /* Convert to "/cygdirve/x/dir" style of absolute path-list     */
-    if (memcmp( cp1, "/usr/bin", 8) == 0 || memcmp( cp1, "/usr/lib", 8) == 0) {
+    if (len >= 8 && (memcmp( cp1, "/usr/bin", 8) == 0
+                    || memcmp( cp1, "/usr/lib", 8) == 0)) {
         memmove( cp1, cp1 + 4, len - 4 + 1);    /* Remove "/usr"    */
         len -= 4;
     }
-    if (*cp1 == '/' && memcmp( cp1, cygdrive, 10) != 0) {
+    if (*cp1 == '/' && (len < 10 || memcmp( cp1, cygdrive, 10) != 0)) {
         /* /dir, not /cygdrive/     */
         if (! root_dir_len) {           /* Should be initialized    */
             /* Convert "X:\DIR-list" to "/cygdrive/x/dir-list"      */
             root_dir = xmalloc( strlen( CYGWIN_ROOT_DIRECTORY) + 1);
             strcpy( root_dir, CYGWIN_ROOT_DIRECTORY);
-            conv_case( root_dir, root_dir + strlen( root_dir), LOWER);
             *(root_dir + 1) = *root_dir;        /* "x:/" to " x/"   */
             cp1 = xmalloc( strlen( cygdrive) + strlen( root_dir));
             strcpy( cp1, cygdrive);
@@ -2012,7 +2484,6 @@ static char *   norm_path(
             mingw_dir_len = strlen( MINGW_DIRECTORY);
             mingw_dir = xmalloc( mingw_dir_len + 1);
             strcpy( mingw_dir, MINGW_DIRECTORY);
-            conv_case( mingw_dir, mingw_dir + mingw_dir_len, LOWER);
         }
         cp1 = xmalloc( mingw_dir_len + len);
         strcpy( cp1, mingw_dir);
@@ -2029,7 +2500,6 @@ static char *   norm_path(
             root_dir_len = strlen( MSYS_ROOT_DIRECTORY);
             root_dir = xmalloc( root_dir_len + 1);
             strcpy( root_dir, MSYS_ROOT_DIRECTORY);
-            conv_case( root_dir, root_dir + root_dir_len, LOWER);
         }
         cp1 = xmalloc( root_dir_len + len + 1);
         strcpy( cp1, root_dir);
@@ -2042,7 +2512,7 @@ static char *   norm_path(
 
 #if SYS_FAMILY == SYS_WIN
     if (*(cp1 + 1) == ':')
-        start = cp1 += 2;               /* Skip the drive letter    */
+        start = cp1 += 2;               /* Next to the drive letter */
     start_pos = 2;
 #endif
     if (len == 1 && *norm_name == '/')              /* Only "/"     */
@@ -2086,15 +2556,12 @@ static char *   norm_path(
             *cp1 = PATH_DELIM;
     }
 #endif
-    if (mcpp_debug & PATH) {
-        char    debug_buf[ FILENAMEMAX+1];
+    if (inf) {
+        char    debug_buf[ PATHMAX+1];
         strcpy( debug_buf, dir);
         strcat( debug_buf, fname ? fname : "");
 #if SYS_FAMILY == SYS_WIN
         bsl2sl( debug_buf);
-#endif
-#if FNAME_FOLD
-        conv_case( debug_buf, debug_buf + strlen( debug_buf), LOWER);
 #endif
         if (! str_eq( debug_buf, norm_name))
             mcpp_fprintf( DBG, "Normalized the path \"%s\" to \"%s\"\n"
@@ -2107,18 +2574,18 @@ static char *   norm_path(
 #if SYS_FAMILY == SYS_UNIX
 
 static void     deref_syml(
-    char *      slbuf1,
-    char *      slbuf2,
-    char *      chk_start
+    char *      slbuf1,                     /* Original path-list   */
+    char *      slbuf2,                     /* Working buffer       */
+    char *      chk_start                   /* Pointer into slbuf1  */
 )
 /* Dereference symbolic linked directory    */
 {
     char *      cp2;
-    int         len;            /* Should be int, not size_t    */
+    int         len;                /* Should be int, not size_t    */
 
     while ((chk_start = strchr( chk_start, PATH_DELIM)) != NULL) {
         *chk_start = EOS;
-        if ((len = readlink( slbuf1, slbuf2, FILENAMEMAX)) > 0) {
+        if ((len = readlink( slbuf1, slbuf2, PATHMAX)) > 0) {
             /* Dereference symbolic linked directory    */
             cp2 = strrchr( slbuf1, PATH_DELIM); /* Previous delimiter       */
             *chk_start = PATH_DELIM;
@@ -2141,148 +2608,84 @@ static void     deref_syml(
 }
 #endif
 
-void    conv_case(
-    char *  name,                       /* (diretory) Name          */
-    char *  lim,                        /* End of (directory) name  */
-    int     upper                       /* TRUE if to upper         */
-)
-/* Convert a string to upper-case letters or lower-case letters in-place    */
-{
-    int     c;
-    char *  sp;
-
-    for (sp = name; sp < lim; sp++) {
-        c = *sp & UCHARMAX;
-#if MBCHAR
-        if ((char_type[ c] & mbstart)) {
-            char    tmp[ FILENAMEMAX+1];
-            char *  tp = tmp;
-            *tp++ = *sp++;
-            mb_read( c, &sp, &tp);
-        } else
-#endif
-        {
-            if (upper)
-                *sp = toupper( c);
-            else
-                *sp = tolower( c);
-        }
-    }
-}
-
-void    put_info( void)
-/* Putout compiler-specific information */
-{
-#if COMPILER == GNUC
-    /*
-     * Putout the current directory as a #line line as:
-     * '# 1 "/abs-path/cur_dir//"'.
-     */
-    if (! put_info_done && ! no_output && gcc_work_dir)
-        mcpp_fprintf( OUT, "%s%ld \"%s%c\"\n"
-                , std_line_prefix ? "#line " : LINE_PREFIX
-                , src_line, cur_work_dir, '/');
-    put_info_done = TRUE;
-#endif
-}
-
 #if COMPILER == GNUC
 
-static DEFBUF * gcc_predef_std[ 128];
-static DEFBUF * gcc_predef_old[ 16];
-
-static void init_gcc_macro(
-    int     gcc_maj_ver,        /* __GNUC__         */
-    int     gcc_min_ver         /* __GNUC_MINOR__   */
-)
+static void init_gcc_macro( void)
 /*
  * Predefine GCC macros.
+ * This routine should be called after opening output file in order to putout
+ * macro informations by -K option into the file.
+ * Also this routine should be called before undef_macros() in order to
+ * permit undefining a macro by -U option.
  */
 {
-    char        fname[ 256];
-    char *      include_dir;    /* The version-specific include directory   */
+    char        fname[ BUFSIZ];
     char        lbuf[ BUFSIZ];
+    char *      include_dir;    /* The version-specific include directory   */
+    char *      tmp;
     FILE *      fp;
-    DEFBUF **   predef;
     DEFBUF *    defp;
     const char *    cp;
     char *      tp;
     int         i;
 
-#if     SYSTEM == SYS_CYGWIN
-    char        mingw_dir[ FILENAMEMAX];
+    if (nflag)                                  /* -undef option    */
+        goto  undef_special;
 
+    tmp = xmalloc( strlen( INC_DIR) + strlen( "/mcpp-gcc") + 10);
+#if     SYSTEM == SYS_CYGWIN
     if (no_cygwin) {
-        include_dir = mingw_dir;
-        sprintf( include_dir, "%s/%s", C_INCLUDE_DIR1, "mingw");
+        sprintf( tmp, "%s/%s/mcpp-gcc", INC_DIR, "mingw");
     } else {
-        include_dir = C_INCLUDE_DIR1;
+        sprintf( tmp, "%s/mcpp-gcc", INC_DIR);
     }
-#elif   SYSTEM == SYS_MINGW
-    include_dir = C_INCLUDE_DIR2;
-            /* MinGW's 2nd directory is the version-specific one    */
+#elif   SYSTEM == SYS_MAC
+    /* Apple-GCC has -arch * option which changes many predefined macros.   */
+    sprintf( tmp, "%s/mcpp-gcc-%s", INC_DIR, arch);
 #else
-#ifdef  C_INCLUDE_DIR1
-    include_dir = C_INCLUDE_DIR1;
-#else
-    include_dir = "/usr/local/include";
+    sprintf( tmp, "%s/mcpp-gcc", INC_DIR);
 #endif
-#endif
-    include_dir = norm_path( include_dir, NULL);
+    include_dir = norm_path( tmp, NULL, TRUE, FALSE);
+    free( tmp);
 
     for (i = 0; i <= 1; i++) {
+        int         nargs;
+
+        if ((mcpp_mode == POST_STD || ansi) && i == 0)
+            continue;   /* POST_STD or __STRICT_ANSI__ does not     */
+                        /*      predefine non-conforming macros     */
         /* The predefined macro file    */
         cp = i ? "std" : "old";
-        sprintf( fname, "%smcpp_g%s%d%d_predef_%s.h"
+        sprintf( fname, "%sg%s%d%d_predef_%s.h"
                 , include_dir, cplus_val ? "xx" : "cc"
                 , gcc_maj_ver, gcc_min_ver, cp);
             /* Note that norm_path() append a PATH_DELIM.   */
         if ((fp = fopen( fname, "r")) == NULL) {
             mcpp_fprintf( ERR, "Predefined macro file '%s' is not found\n"
                     , fname);
-            continue;
+            longjmp( error_exit, -1);
         }
-        predef = i ? gcc_predef_std : gcc_predef_old;
+        nargs = i ? 0 : DEF_NOARGS_PREDEF_OLD;
+            /* g*_predef_std.h has DEF_NOARGS_PREDEF or non-negative args   */
+            /* while g*_predef_old.h has only DEF_NOARGS_PREDEF_OLD args    */
         while (fgets( lbuf, BUFSIZ, fp) != NULL) {
             unget_string( lbuf, "gcc_predefine");
             if (skip_ws() == '#'
                 && scan_token( skip_ws(), (tp = work_buf, &tp), work_end)
                         == NAM
                     && str_eq( work_buf, "define")) {
-                defp = do_define( TRUE);    /* Ignore re-definition */ 
-                if (defp->nargs >= DEF_NOARGS - 1)
-                    *predef++ = defp;   /* Register only non-Standard macros*/
+                defp = do_define( TRUE, nargs);     /* Ignore re-definition */ 
             }
             skip_nl();
         }
-        *predef = NULL;                     /* Terminate the array  */
     }
+    free( include_dir);
 
+undef_special:
     if (look_id( "__OPTIMIZE__"))       /* -O option is specified   */
         undefine( "__NO_INLINE__");
     if (no_exceptions)                  /* -fno-exceptions option   */
         undefine( "__EXCEPTIONS");
-}
-
-static void undef_gcc_macro(
-    int     clearall
-)
-/*
- * Undefine GCC predefined macros.
- */
-{
-    DEFBUF **   predef;
-
-    predef = gcc_predef_old;
-    while (*predef)
-        undefine( (*predef++)->name);
-    gcc_predef_old[ 0] = NULL;
-    if (clearall) {
-        predef = gcc_predef_std;
-        while (*predef)
-            undefine( (*predef++)->name);
-        gcc_predef_std[ 0] = NULL;
-    }
 }
 
 static void chk_env( void)
@@ -2314,9 +2717,10 @@ static void chk_env( void)
 
 #elif   COMPILER == MSC
 
-static void init_msc_macro(
-    int     wchar_t_modified
-)
+static void init_msc_macro( void)
+/*
+ * Define a few MSC-specific predefined macros.
+ */
 {
     DEFBUF *    defp;
     int         i;
@@ -2324,17 +2728,48 @@ static void init_msc_macro(
     defp = look_id( "_MSC_VER");
     i = atoi( defp->repl);
     if (i >= 1400) {                        /* _MSC_VER >= 1400     */
-        look_and_install( "_MT", DEF_NOARGS - 1, null, "1");
+        look_and_install( "_MT", DEF_NOARGS_PREDEF, null, "1");
         if (cplus_val && ! wchar_t_modified) {
             /* -Zc:wchar_t- was not specified   */
-            look_and_install( "_NATIVE_WCHAR_T_DEFINED", DEF_NOARGS - 1, null
+            look_and_install( "_NATIVE_WCHAR_T_DEFINED", DEF_NOARGS_PREDEF
+                    , null, "1");
+            look_and_install( "_WCHAR_T_DEFINED", DEF_NOARGS_PREDEF, null
                     , "1");
-            look_and_install( "_WCHAR_T_DEFINED", DEF_NOARGS - 1, null, "1");
         }
     }
 }
 
 #endif
+
+static void     def_macros( void)
+/*
+ * Define macros specified by -D option.
+ * This routine should be called before undef_macros().
+ */
+{
+    int         i;
+
+    for (i = 0; i < def_cnt; i++)
+        def_a_macro( 'D', def_list[ i]);
+}
+
+static void     undef_macros( void)
+/*
+ * Undefine macros specified by -U option.
+ * This routine should be called after init_predefine().
+ */
+{
+    char *      name;
+    int         i;
+
+    for (i = 0; i < undef_cnt; i++) {
+        name = undef_list[ i];
+        if (look_id( name) != NULL)
+            undefine( name);
+        else if (warn_level & 8)
+            mcpp_fprintf( ERR, "\"%s\" wasn't defined\n", name);
+    }
+}
 
 void    put_depend(
     const char *    filename
@@ -2344,17 +2779,30 @@ void    put_depend(
  */
 {
 #define MAX_OUT_LEN     76      /* Maximum length of output line    */
-#define MKDEP_MAXLEN    (MKDEP_MAX * 0x200)
-    static char     output[ MKDEP_MAXLEN];          /* File names   */
-    static char *   pos[ MKDEP_MAX];      /* Pointers to filenames  */
-    static int      pos_num;              /* Index of pos[]         */
-    static char *   out_p;                /* Pointer to output[]    */
+#define MKDEP_INITLEN   (MKDEP_INIT * 0x100)
+#define MKDEP_MAX       (MKDEP_INIT * 0x10)
+#define MKDEP_MAXLEN    (MKDEP_INITLEN * 0x10)
+
+    static char *   output = NULL;          /* File names           */
+    static size_t * pos = NULL;             /* Offset to filenames  */
+    static int      pos_num;                /* Index of pos[]       */
+    static char *   out_p;                  /* Pointer to output[]  */
+    static size_t   mkdep_len;              /* Size of output[]     */
+    static size_t   pos_max;                /* Size of pos[]        */
     static FILE *   fp;         /* Path to output dependency line   */
     static size_t   llen;       /* Length of current physical output line   */
-    char **         pos_pp;               /* Pointer to pos         */
-    size_t          fnamlen;              /* Length of filename     */
+    size_t *        pos_p;                  /* Index into pos[]     */
+    size_t          fnamlen;                /* Length of filename   */
 
     if (fp == NULL) {   /* Main source file.  Have to initialize.   */
+#if MCPP_LIB
+        if (output != NULL) {
+            free( output);
+            free( pos);
+        }
+#endif
+        output = xmalloc( mkdep_len = MKDEP_INITLEN);
+        pos = (size_t *) xmalloc( (pos_max = MKDEP_INIT) * sizeof (size_t));
         out_p = md_init( filename, output);
         fp = mkdep_fp;
         llen = strlen( output);
@@ -2367,28 +2815,33 @@ void    put_depend(
             int     c;
 
             if (strlen( output) * 2 + (pos_num * 2) >= MKDEP_MAXLEN) {
-                cerror( "Too long dependency line\n"        /* _E_  */
+                cerror( "Too long dependency line"          /* _E_  */
                         , NULL, 0L, NULL);
                 if (fp == fp_out)
                     mcpp_fputs( output, OUT);
                 else
                     fputs( output, fp);
                 return;
+            } else if (strlen( output) * 2 + (pos_num * 2) >= mkdep_len) {
+                /* Enlarge the buffer   */
+                size_t  len = out_p - output;
+                output = xrealloc( output, mkdep_len *= 2);
+                out_p = output + len;
             }
             pos_num--;
-            for (pos_pp = &pos[ 0]; pos_pp <= &pos[ pos_num]; pos_pp++) {
-                if (pos_pp == &pos[ pos_num]) {
-                    for (cp = *pos_pp; *cp != '\n'; cp++)
+            for (pos_p = &pos[ 0]; pos_p <= &pos[ pos_num]; pos_p++) {
+                if (pos_p == &pos[ pos_num]) {      /* End of output    */
+                    for (cp = output + *pos_p; *cp != '\n'; cp++)
                         ;
-                    c = '\n';
+                    c = '\n';                       /* Append newline   */
                 } else {
-                    cp = *(pos_pp + 1) - 1;
+                    cp = output + *(pos_p + 1) - 1;
                     while( *cp == ' ' || *cp == '\\' || *cp == '\n')
-                        cp--;
+                        cp--;               /* Remove trailing spaces   */
                     c = *(++cp);
                 }
                 *cp = EOS;
-                out_p = stpcpy( out_p, *pos_pp);
+                out_p = stpcpy( out_p, output + *pos_p);
                 out_p = stpcpy( out_p, ":\n\n");
                 *cp = c;
             }
@@ -2403,8 +2856,8 @@ void    put_depend(
 
     fnamlen = strlen( filename);
     /* Check the recorded filename  */
-    for (pos_pp = pos; pos_pp < &pos[ pos_num]; pos_pp++) {
-        if (memcmp( *pos_pp, filename, fnamlen) == 0)
+    for (pos_p = pos; pos_p < &pos[ pos_num]; pos_p++) {
+        if (memcmp( output + *pos_p, filename, fnamlen) == 0)
             return;                 /* Already recorded filename    */
     }
     /* Any new header.  Append its name to output.  */
@@ -2416,8 +2869,19 @@ void    put_depend(
     if (pos_num >= MKDEP_MAX
             || out_p + fnamlen + 1 >= output + MKDEP_MAXLEN)
         cfatal( "Too long dependency line: %s", output, 0L, NULL);
+    /* Need to enlarge the buffer   */
+    if (pos_num >= pos_max) {
+        pos = (size_t *) xrealloc( (char *) pos
+                , (pos_max *= 2) * sizeof (size_t *));
+    }
+    if (output + mkdep_len <= out_p + fnamlen + 1) {
+        size_t  len = out_p - output;
+        output = xrealloc( output, mkdep_len *= 2);
+        out_p = output + len;
+    }
     *out_p++ = ' ';
-    pos[ pos_num++] = out_p;
+    pos[ pos_num++] = out_p - output;       /* Remember the offset  */
+            /* Don't use pointer, since 'output' may be reallocated later.  */
     out_p = stpcpy( out_p, filename);
 }
 
@@ -2429,7 +2893,7 @@ static char *   md_init(
  * Initialize output file and target.
  */
 {
-    char    prefix[ FILENAMEMAX];
+    char    prefix[ PATHMAX];
     char *  cp = NULL;
     size_t  len;
     char *  out_p;
@@ -2472,6 +2936,7 @@ static char *   md_init(
     }
 
     *out_p++ = ':';
+    *out_p = EOS;
     return  out_p;
 }
 
@@ -2480,7 +2945,7 @@ static char *   md_quote(
 )
 /*
  * 'Quote' $, tab and space.
- * This function was wretten referring to GCC V.3.2 source.
+ * This function was written referring to GCC V.3.2 source.
  */
 {
     char *  p;
@@ -2532,7 +2997,7 @@ int     do_include(
  */
 {
     const char * const  no_name = "No header name";         /* _E_  */
-    char    header[ FILENAMEMAX + 16];
+    char    header[ PATHMAX + 16];
     int     token_type;
     char *  fname;
     int     delim;                          /* " or <, >            */
@@ -2543,19 +3008,20 @@ int     do_include(
     }
     fname = infile->bptr - 1;       /* Current token for diagnosis  */
 
-    if (standard && char_type[ delim] & LET) {  /* Maybe a macro    */
+    if (standard && (char_type[ delim] & LET)) {    /* Maybe macro  */
         int     c;
         char    *hp;
 
         hp = header;
+        *hp = EOS;
         c = delim;
         while (get_unexpandable( c, FALSE) != NO_TOKEN) {
                                 /* Expand any macros in the line    */
-            if (header + FILENAMEMAX < hp + (int) (workp - work_buf))
+            if (header + PATHMAX < hp + (int) (workp - work_buf))
                 cfatal( toolong_fname, header, 0L, work_buf);
             hp = stpcpy( hp, work_buf);
-            while ((c = get_ch()) == ' ')
-                *hp++ = ' ';
+            while (char_type[ c = get_ch()] & HSP)
+                *hp++ = c;
         }
         *hp = EOS;                          /* Ensure to terminate  */
         if (macro_line == MACRO_ERROR)      /* Unterminated macro   */
@@ -2569,11 +3035,11 @@ int     do_include(
     }
 
     token_type = scan_token( delim, (workp = work_buf, &workp)
-            , work_buf + FILENAMEMAX);
+            , work_buf + PATHMAX);
     if (token_type == STR)                  /* String literal form  */
         goto  found_name;
     else if (token_type == OPE && openum == OP_LT)          /* '<'  */
-        workp = scan_quote( delim, work_buf, work_buf + FILENAMEMAX, TRUE);
+        workp = scan_quote( delim, work_buf, work_buf + PATHMAX, TRUE);
                                         /* Re-construct or diagnose */
     else                                    /* Any other token in-  */
         goto  not_header;                   /*   cluding <=, <<, <% */
@@ -2600,24 +3066,21 @@ found_name:
     }
 
     if (open_include( fname, (delim == '"'), next)) {
-        goto opened;
+        /* 'fname' should not be free()ed, it is used as file->         */
+        /*      real_fname and has been registered into fnamelist[]     */
+        return  TRUE;
     }
 
     cerror( "Can't open include file \"%s\"", fname, 0L, NULL);     /* _E_  */
-    goto error;
+error:
+    free( fname);
+    return  FALSE;
 
 not_header:
     cerror( "Not a header name \"%s\"", fname, 0L, NULL);   /* _E_  */
 syntax_error:
     skip_nl();
     return  FALSE;
-error:
-    free( fname);
-    return  FALSE;
-opened:
-    free( fname);
-    errno = 0;      /* Clear errno possibly set by path searching   */
-    return  TRUE;
 }
 
 static int  open_include(
@@ -2626,78 +3089,89 @@ static int  open_include(
     int     next                    /* TRUE if #include_next        */
 )
 /*
- * Open an include file.  This routine is only called from do_include()
- * above, but was written as a separate subroutine for portability.
+ * Open an include file.  This routine is only called from do_include() above.
  * It searches the list of directories via search_dir() and opens the file
  * via open_file(), linking it into the list of active files.
- * Returns TRUE if the file was opened, FALSE if open_file() fails.
+ * Returns TRUE if the file was opened, FALSE if it fails.
  */
 {
+    char    src_dir[ PATHMAX] = { EOS, };   /* Directory part of includer   */
     int     full_path;              /* Filename is full-path-list   */
     int     has_dir = FALSE;        /* Includer has directory part  */
-    char    dir[ FILENAMEMAX] = { EOS, };   /* Directory part of includer   */
+    int     has_dir_src = FALSE;
+    int     has_dir_fname = FALSE;
 
 #if SYS_FAMILY == SYS_WIN
     bsl2sl( filename);
 #endif
-#if FNAME_FOLD  /* If O.S. folds upper and lower cases of file-name */
-    /* Convert filename to lower-case-letters   */
-    conv_case( filename, filename + strlen( filename), LOWER);
-#endif
 
-#if SYS_FAMILY == SYS_UNIX
-    if (filename[0] == PATH_DELIM)
-#elif   SYS_FAMILY == SYS_WIN
-    if (filename[1] == ':' && filename[2] == PATH_DELIM)
-#elif   SYSTEM == SYS_MAC         /* I don't know.  Write by yourself */
-    if (filename[0] != PATH_DELIM && strchr( filename, PATH_DELIM))
-#elif   1
-/* For other systems you should write code here.    */
-    if (filename[0] == PATH_DELIM)
-#endif
-        full_path = TRUE;
-    else
-        full_path = FALSE;
+    full_path = is_full_path( filename);
 
-    if (!full_path && searchlocal && (search_rule & SOURCE))
-        has_dir = has_directory( infile->real_fname, dir)
+    if (!full_path && searchlocal && (search_rule & SOURCE)) {
+        has_dir_src  = has_directory( infile->src_dir, src_dir);
+        has_dir_fname = has_directory( infile->real_fname
+                , src_dir + strlen( src_dir));
+        /* Get directory part of the parent file of the file to include.*/
+        /* Note that infile->dirp of main input file is set to "" and   */
+        /* remains the same even if -include options are processed.     */
+        has_dir = has_dir_src || has_dir_fname
                 || (**(infile->dirp) != EOS);
+    }
+    if (mcpp_debug & PATH)
+        mcpp_fprintf( DBG, "filename: %s\n", filename);
 
 #if COMPILER == GNUC
-    if (!full_path) {
-        if ((!searchlocal && incdir < sys_dirp) /* -I- option is specified  */
-                || next)                        /* #include_next    */
+    if (! full_path) {
+        if (i_split                     /* -I- option is specified  */
+                || next)                        /* or #include_next */
         goto  search_dirs;
     }
 #endif
 
-    if (mcpp_debug & PATH)
-        mcpp_fprintf( DBG, "filename:%s\n", filename);
     if ((searchlocal && ((search_rule & CURRENT) || !has_dir)) || full_path) {
         /*
          * Look in local directory first.
          * Try to open filename relative to the "current directory".
          */
-        if (open_file( &null, filename, searchlocal && !full_path))
+        if (open_file( &null, NULL, filename, searchlocal && !full_path
+                , FALSE, FALSE))
             return  TRUE;
+        if (full_path)
+            return  FALSE;
     }
-    if (full_path)
-        return  FALSE;
 
     if (searchlocal && (search_rule & SOURCE) && has_dir) {
         /*
          * Look in local directory of source file.
          * Try to open filename relative to the "source directory".
          */
-        strcat( dir, filename);
-        if (open_file( infile->dirp, dir, TRUE))
+        if (open_file( infile->dirp, src_dir, filename, TRUE, FALSE, FALSE))
             return  TRUE;
     }
 
-    /* Search the system include directories    */
+#if COMPILER == MSC
+    if (searchlocal) {
+        /* Visual C searches ancestor source's directory, too.  */
+        FILEINFO *  file = infile;
+        while ((file = file->parent) != NULL) {
+            /* Search each parent includer's directory  */
+            if (open_file( file->dirp, src_dir, filename, TRUE, FALSE, FALSE))
+                return  TRUE;
+        }
+    }
+#endif
 #if COMPILER == GNUC
 search_dirs:
+    if (searchlocal) {
+        /* Search the directories specified by -iquote option, if any.  */
+        const char **   qdir;
+        for (qdir = quote_dir; qdir < quote_dir_end; qdir++) {
+            if (open_file( qdir, NULL, filename, FALSE, FALSE, FALSE))
+                return  TRUE;
+        }
+    }
 #endif
+    /* Search the include directories   */
     if (search_dir( filename, searchlocal, next))
         return  TRUE;
 
@@ -2718,19 +3192,44 @@ static int  has_directory(
     const char *    sp;
     size_t  len;
 
+    if (! source)
+        return  FALSE;
     if ((sp = strrchr( source, PATH_DELIM)) == NULL) {
         return  FALSE;
     } else {
-        len = (size_t)(sp - source) + 1;
+        len = (size_t)(sp - source) + 1;    /* With path-delimiter  */
         memcpy( directory, source, len);
         directory[ len] = EOS;
         return  TRUE;
     }
 }
 
+static int  is_full_path(
+    const char *    path
+)
+/*
+ * Check whether the path is a full (absolute) path list or not.
+ */
+{
+    if (! path)
+        return  FALSE;
+#if SYS_FAMILY == SYS_UNIX
+    if (path[0] == PATH_DELIM)
+#elif   SYS_FAMILY == SYS_WIN
+    if ((path[1] == ':' && path[2] == PATH_DELIM)   /* "C:/path"    */
+            || path[0] == PATH_DELIM)       /* Root dir of current drive    */
+#elif   1
+/* For other systems you should write code here.    */
+    if (path[0] == PATH_DELIM)
+#endif
+        return  TRUE;
+    else
+        return  FALSE;
+}
+
 static int  search_dir(
     char *  filename,               /* File name to include         */
-    int     searchlocal,            /* #include "header.h" for GNUC */
+    int     searchlocal,            /* #include "header.h"          */
     int     next                    /* TRUE if #include_next        */
 )
 /*
@@ -2740,30 +3239,28 @@ static int  search_dir(
 {
     const char **   incptr;                 /* -> inlcude directory */
 
+    incptr = incdir;
 #if COMPILER == GNUC
-    if (next && **inc_dirp != EOS) {
+    if (next && **inc_dirp != EOS)
         incptr = inc_dirp + 1;
         /* In case of include_next search after the includer's directory    */
-    } else {
-    /* If (next && **inc_dirp == EOS), it should be #include_next "header.h"*/
-        if (searchlocal || next)
-            /* #include_next does not distinguish "header.h" and <header.h> */
-            incptr = incdir;
-        else
-            incptr = sys_dirp;
-    }
-#else
-    incptr = incdir;
 #endif
 
     for ( ; incptr < incend; incptr++) {
-        if (strlen( *incptr) + strlen( filename) >= FILENAMEMAX) {
-            char *  cp;
-            cp = stpcpy( work_buf, *incptr);
-            strcpy( cp, filename);
-            cfatal( toolong_fname, work_buf, 0L, "");       /* _F_  */
+        if (strlen( *incptr) + strlen( filename) >= PATHMAX)
+            cfatal( toolong_fname, *incptr, 0L, filename);  /* _F_  */
+#if SYSTEM == SYS_MAC
+        if (incptr == to_search_framework && ! searchlocal) {
+                                /* Now search the framework dirs    */
+            if (search_framework( filename)) {          /* Found    */
+                if (in_import)  /* "#import"ed file is once only    */
+                    do_once( infile->full_fname);
+                return  TRUE;
+            }
+            /* Else continue to search incptr   */
         }
-        if (open_file( incptr, filename, FALSE))
+#endif
+        if (open_file( incptr, NULL, filename, FALSE, FALSE, FALSE))
             /* Now infile has been renewed  */
             return  TRUE;
     }
@@ -2772,9 +3269,12 @@ static int  search_dir(
 }
 
 static int  open_file(
-    const char **   dirp,           /* Pointer to directory */
-    const char *    filename,       /* The filename         */
-    int         local               /* #include "file"      */
+    const char **   dirp,           /* Pointer to include directory */
+    const char *    src_dir,        /* Source directory of includer */
+    const char *    filename,       /* Filename (possibly has directory)    */
+    int         local,                      /* #include "file"      */
+    int         include_opt,        /* Specified by -include option */
+    int         sys_frame           /* System framework header (for SYS_MAC)*/
 )
 /*
  * Open a file, add it to the linked list of open files, close the includer
@@ -2782,8 +3282,9 @@ static int  open_file(
  * This is called from open_include() and at_start().
  */
 {
+    char        dir_fname[ PATHMAX] = { EOS, };
 #if HOST_COMPILER == BORLANDC
-    /* Borland's fopen() fails to set errno to EMFILE.  */
+    /* Borland's fopen() does not set errno.    */
     static int  max_open = FOPEN_MAX - 5;
 #else
     static int  max_open;
@@ -2791,20 +3292,57 @@ static int  open_file(
     int         len;
     FILEINFO *  file = infile;
     FILE *      fp;
-    char *      cp;
-    char        fullname[ FILENAMEMAX + 1];
+    char *      fullname;
+    const char *    fname;
 
-    if (mcpp_debug & PATH)
-        mcpp_fprintf( DBG, "Searching %s\n", **dirp == EOS ? "." : *dirp);
-    if (standard && included( *dirp, filename)) /* Once included    */
-        return  TRUE;
-    cp = stpcpy( fullname, *dirp);
-    strcat( cp, filename);
-
+    errno = 0;      /* Clear errno possibly set by path searching   */
+#if SYSTEM == SYS_MAC && COMPILER == GNUC
+    if (strlen( *dirp) > 5
+            && str_case_eq( *dirp + strlen( *dirp) - 5, ".hmap")) {
+        /* Search header map file for a header  */
+        if (! search_header_map( *dirp, filename, dir_fname))
+            return  NULL;
+        fname = dir_fname;                  /* Found a path-list    */
+        dirp = &null;
+        goto  search;
+    } else
+#endif
+    {
+        if (mcpp_debug & PATH)
+            mcpp_fprintf( DBG, "Searching %s%s%s\n", *dirp
+                    , src_dir ? src_dir : null, filename);
+    }
+    /* src_dir is usually NULL.  This is specified to   */
+    /* search the source directory of the includer.     */
+    if (src_dir && *src_dir != EOS) {
+        strcpy( dir_fname, src_dir);
+        strcat( dir_fname, filename);
+        fname = dir_fname;
+    } else {
+        fname = filename;
+    }
+search:
+    fullname = norm_path( *dirp, fname, TRUE, FALSE);
+                                    /* Convert to absolute path     */
+    if (! fullname)                 /* Non-existent or directory    */
+        return  FALSE;
+    if (standard && included( fullname))        /* Once included    */
+        goto  true;
+        
     if ((max_open != 0 && max_open <= include_nest)
                             /* Exceed the known limit of open files */
             || ((fp = fopen( fullname, "r")) == NULL && errno == EMFILE)) {
                             /* Reached the limit for the first time */
+        if (mcpp_debug & PATH) {
+#if HOST_COMPILER == BORLANDC
+            if (include_nest == FOPEN_MAX - 5)
+#else
+            if (max_open == 0)
+#endif
+                mcpp_fprintf( DBG,
+    "#include nest reached at the maximum of system: %d, returned errno: %d\n"
+                    , include_nest, errno);
+        }
         /*
          * Table of open files is full.
          * Remember the file position and close the includer.
@@ -2816,13 +3354,12 @@ static int  open_file(
         if ((fp = fopen( fullname, "r")) == NULL) {
             file->fp = fopen( cur_fullname, "r");
             fseek( file->fp, file->pos, SEEK_SET);
-            return  FALSE;
+            goto  false;
         }
         if (max_open == 0)      /* Remember the limit of the system */
             max_open = include_nest;
-    } else if (fp == NULL) {    /* No file, illegal path name or so */
-        return  FALSE;
-    }
+    } else if (fp == NULL)                  /* No read permission   */ 
+        goto  false;
     /* Truncate buffer of the includer to save memory   */
     len = (int) (file->bptr - file->buffer);
     if (len) {
@@ -2830,31 +3367,55 @@ static int  open_file(
         file->bptr = file->buffer + len;
     }
 
-    if (mkdep && ((mkdep & MD_SYSHEADER) || local))
-        put_depend( fullname);          /* Output dependency line   */
-
-    add_file( fp, filename);    /* Add file-info to the linked list */
+    if (! include_opt)
+        sharp( NULL, 0);    /* Print includer's line num and fname  */
+    add_file( fp, src_dir, filename, fullname, include_opt);
+    /* Add file-info to the linked list.  'infile' has been just renewed    */
     /*
      * Remember the directory for #include_next.
      * Note: inc_dirp is restored to the parent includer's directory
      *   by get_ch() when the current includer is finished.
      */
     infile->dirp = inc_dirp = dirp;
-    strcpy( cur_fullname, fullname);
+#if 0   /* This part is only for debugging  */
+    chk_dirp( dirp);
+#endif
+#if COMPILER == GNUC
+    if ((**dirp != EOS && sys_dirp <= dirp && dirp <= incend)
+#if SYSTEM == SYS_MAC
+            || sys_frame
+#endif
+            )
+        infile->sys_header = TRUE;      /* Found in a system header dir     */
+    else
+        infile->sys_header = FALSE;
+#endif
+    cur_fullname = fullname;
 
-    if (zflag) {
+    if (option_flags.z) {
         no_output++;        /* Don't output the included file       */
-    } else {
-        src_line = 1;                       /* Working on line 1 now    */
-        sharp();            /* Print out the included file name     */
+    } else if (! include_opt) {     /* Do not sharp() on -include   */
+        src_line = 1;                   /* Working on line 1 now    */
+        sharp( NULL, 1);    /* Print out the included file name     */
     }
-    src_line = 0;                           /* To read the first line   */
+    src_line = 0;                       /* To read the first line   */
+
+    if (mkdep && ((mkdep & MD_SYSHEADER) || ! infile->sys_header))
+        put_depend( fullname);          /* Output dependency line   */
+
+true:
     return  TRUE;
+false:
+    free( fullname);
+    return  FALSE;
 }
 
 void    add_file(
     FILE *      fp,                         /* Open file pointer    */
-    const char *    filename                /* Name of the file     */
+    const char *    src_dir,                /* Directory of source  */
+    const char *    filename,               /* Name of the file     */
+    const char *    fullname,               /* Full path list       */
+    int         include_opt         /* File specified by -include option    */
 )
 /*
  * Initialize tables for this open file.  This is called from open_file()
@@ -2868,14 +3429,17 @@ void    add_file(
             "More than %.0s%ld nesting of #include";    /* _F_ _W4_ */
 
     filename = set_fname( filename);    /* Search or append to fnamelist[]  */
-    file = get_file( filename, (size_t) NBUFF); /* file == infile   */
+    fullname = set_fname( fullname);    /* Search or append to fnamelist[]  */
+    file = get_file( filename, src_dir, fullname, (size_t) NBUFF, include_opt);
+                                        /* file == infile           */
     file->fp = fp;                      /* Better remember FILE *   */
     cur_fname = filename;
 
     if (include_nest >= INCLUDE_NEST)   /* Probably recursive #include      */
         cfatal( too_many_include_nest, NULL, (long) INCLUDE_NEST, NULL);
-    if (standard && (warn_level & 4) && include_nest == inc_nest_min + 1)
-        cwarn( too_many_include_nest, NULL, (long) inc_nest_min, NULL);
+    if (standard && (warn_level & 4)
+            && include_nest == std_limits.inc_nest + 1)
+        cwarn( too_many_include_nest, NULL, (long) std_limits.inc_nest, NULL);
     include_nest++;
 }
 
@@ -2886,53 +3450,387 @@ static const char *     set_fname(
  * Register the source filename to fnamelist[].
  * Search fnamelist[] for filename or append filename to fnamelist[].
  * Returns the pointer.
+ * file->real_fname and file->full_fname points into fnamelist[].
  */
 {
-    const char **     fnamep;
+    INC_LIST *  fnamep;
+    size_t      fnamelen;
+
+    if (fnamelist == NULL) {            /* Should be initialized    */
+        max_fnamelist = INIT_NUM_FNAMELIST;
+        fnamelist = (INC_LIST *) xmalloc( sizeof (INC_LIST) * max_fnamelist);
+        fname_end = &fnamelist[ 0];
+    } else if (fname_end - fnamelist >= max_fnamelist) {
+                                /* Buffer full: double the elements */
+        fnamelist = (INC_LIST *) xrealloc( (void *) fnamelist
+                , sizeof (INC_LIST) * max_fnamelist * 2);
+        fname_end = &fnamelist[ max_fnamelist];
+        max_fnamelist *= 2;
+    }
 
     /* Register the filename in fnamelist[] */
-    fnamep = fnamelist;
-    while (fnamep < fname_end) {
-        if (str_eq( *fnamep, filename)) /* Already registered       */
-            break;
-        fnamep++;
+    fnamelen = strlen( filename);
+    for (fnamep = fnamelist; fnamep < fname_end; fnamep++) {
+        if (fnamep->len == fnamelen && str_case_eq( fnamep->name, filename))
+            return  filename;           /* Already registered       */
     }
-    if (fnamep < fname_end) {
-        filename = *fnamep;
-    } else {
-        if (fname_end - fnamelist >= FNAMELIST)
-            cfatal( "Too many include files", NULL, 0L, NULL);      /* _F_  */
-        *fname_end = xmalloc( strlen( filename) + 1);
-        filename = strcpy( *(char **)fname_end++, filename);
+    fname_end->name = xmalloc( fnamelen + 1);
+    filename = strcpy( fname_end->name, filename);
                                 /* Global pointer for get_file()    */
-    }
+    fname_end->len = fnamelen;
+    fname_end++;
+
     return  filename;
 }
 
-void cur_file( void)
+#if SYSTEM == SYS_MAC
+#if COMPILER == GNUC
+
+/* Routines to search "header map" file of Xcode / Apple-GCC.       */
+/* search_header_map() and hmap_hash() were written referring to    */
+/* c-incpath.c of Apple-GCC-4.0.1.                                  */
+
+static char *   search_header_map(
+    const char *    hmap_file,              /* Header map file      */
+    const char *    filename,               /* Filename to search   */
+    char *          pathlist        /* Buffer for a found pathlist  */
+)
 /*
- * Output current source file name.
+ * Search a table in "header map" file for a header.
  */
 {
-    FILEINFO *      file = infile;
-    const char *    name;
-    char *  cp;
+    struct stat     stat_buf;
+    FILE *          fp;
+    size_t          fsize;
+    const char *    contents;
+    struct hmap_header_map *    hmap;
+    struct hmap_bucket *        buckets;
+    const char *    strings;
+    uint32          mask;
+    uint32          key_offs;
+    uint32          i;
 
-    while (file->fp == NULL)
+    stat( hmap_file, &stat_buf);            /* Get size of the file */
+    fsize = stat_buf.st_size;
+    contents = xmalloc( fsize + 1);
+    fp = fopen( hmap_file, "r");
+    fread( contents, fsize, 1, fp);     /* Read whole of the file at once   */
+    hmap = (struct hmap_header_map *) contents;
+
+    strings = ((const char *) hmap) + hmap->strings_offset;
+    buckets = hmap->buckets;
+    mask = hmap->capacity - 1;
+    i = hmap_hash( filename) & mask;
+    while ((key_offs = buckets[ i].key) != 0) {
+        if (str_case_eq( filename, strings + key_offs)) {
+            /* The names match.  Make path-list.    */
+            char *  cp = stpcpy( pathlist, strings + buckets[ i].value.prefix);
+            strcpy( cp, strings + buckets[ i].value.suffix);
+            break;
+        }
+        i = ++i & mask;
+    }
+    free( contents);
+    return  key_offs ? pathlist : NULL;
+}
+
+static unsigned hmap_hash(
+    const char *    fname                   /* header name          */
+)
+/*
+ * Get hash value for the fname.
+ */
+{
+    const char *    sp;
+    unsigned        hash_code = 0;
+
+    for (sp = fname; *sp; sp++)
+        hash_code += tolower( *sp & 0xFF) * 13;
+    return  hash_code;
+}
+#endif  /* COMPILER == GNUC */
+
+static void     init_framework( void)
+/*
+ * Initialize framework[].
+ */
+{
+    char *  framework_dir;
+    /* Some frameworks may have been already specified by -F option.    */
+    sys_framework = num_framework;      /* These are system frameworks  */
+#ifdef  FRAMEWORK1
+    framework_dir = norm_dir( FRAMEWORK1, TRUE);
+    if (framework_dir)
+        framework[ num_framework++] = framework_dir;
+#endif
+#ifdef  FRAMEWORK2
+    framework_dir = norm_dir( FRAMEWORK2, TRUE);
+    if (framework_dir)
+        framework[ num_framework++] = framework_dir;
+#endif
+#ifdef  FRAMEWORK3
+    framework_dir = norm_dir( FRAMEWORK3, TRUE);
+    if (framework_dir)
+        framework[ num_framework++] = framework_dir;
+#endif
+    if (num_framework >= MAX_FRAMEWORK) {
+        mcpp_fputs( "Too many Framework directories.", ERR);
+        longjmp( error_exit, -1);
+    }
+}
+
+static const char *     dot_frame = ".framework";
+
+static int      search_framework(
+    char *  filename
+)
+/*
+ * Search "Framework" directories.
+ * 'frame/header.h' is converted to
+ * '/System/Library/Frameworks/frame.framework/Headers/header.h',
+ * '/System/Library/Frameworks/frame.framework/PrivateHeaders/header.h',
+ * and so on.
+ */
+{
+    char        fullname[ PATHMAX + 1];
+    FILEINFO *  file;
+    char *      frame, * fname, * cp1, * cp2;
+    int         sys_frame = FALSE;
+    int         i;
+
+    cp1 = cp2 = strchr( filename, PATH_DELIM);
+    /*
+     * 'filename' should be <frame/header> format or sometimes
+     *      <frame/dir/header>.
+     * e.g.: <Foundation/Foundation.h>, <CarbonCore/OSUtils.h>
+     *      or <IOKit/pwr_mgt/IOPMLib.h>.
+     */
+    if (! cp1)
+        return  FALSE;
+    *cp1 = EOS;
+    frame = filename;
+    fname = cp1 + 1;
+
+    /* Search framework[] directories   */
+    for (i = 0; i < num_framework; i++) {
+        cp1 = stpcpy( fullname, framework[ i]);
+                    /* 'fullname' e.g.: /System/Library/Frameworks/ */
+        if (search_subdir( fullname, cp1, frame, fname, sys_framework <= i))
+            return  TRUE;
+    }
+
+    /*
+     * Search subframework dirs searching its possible parent framework
+     * starting from current file's directory to its ancestors.
+     * Header file in subframework directories should be included only
+     * by its parent or sibling framework headers.
+     */
+    for (i = sys_framework; i < num_framework; i++) {
+        size_t  frame_len, fname_len;
+        frame_len = strlen( framework[ i]);
+        fname_len = strlen( infile->real_fname);
+        if (fname_len <= frame_len)
+            continue;
+        if (memcmp( framework[ i], infile->real_fname, frame_len) == 0) {
+            sys_frame = TRUE;
+            break;
+        }
+    }
+    for (file = infile; file; file = file->parent) {
+        const char *    dot;
+        size_t  len;
+
+        if (! file->fp)
+            continue;
+        dot = strstr( file->real_fname, dot_frame);
+        if (! dot)
+            continue;
+        len = dot - file->real_fname + strlen( dot_frame) + 1;
+        memcpy( fullname, file->real_fname, len);
+        cp1 = fullname + len;
+        cp1 = stpcpy( cp1, "Frameworks/");
+        /* 'fullname' e.g.:                                             */
+        /* /System/Library/Frameworks/Foundation.framework/Frameworks/  */
+        if (search_subdir( fullname, cp1, frame, fname, sys_frame))
+            return  TRUE;
+    }
+
+    *cp2 = PATH_DELIM;      /* Restore original include file format */ 
+
+    return  FALSE;
+}
+
+static int      search_subdir(
+    char *  fullname,               /* Buffer for path-list to open */
+    char *  cp,                     /* Latter half of 'fullname'    */
+    char *  frame,                  /* 'frame' of <frame/header>    */
+    char *  fname,                  /* 'header' of <frame/header>   */
+                /* or sometimes 'dir/header' of <frame/dir/header>  */
+    int     sys_frame               /* System framework header ?    */
+)
+/*
+ * Make path-list and try to open.
+ */
+{
+    static const char *     subdir[] = { "Headers", "PrivateHeaders", NULL};
+    int     j, n;
+
+    cp += sprintf( cp, "%s%s%c", frame, dot_frame, PATH_DELIM);
+    for (j = 0; subdir[ j] != NULL; j++) {
+        n = sprintf( cp, "%s%c%s", subdir[ j], PATH_DELIM, fname);
+        /*
+         * 'fullname' is for example:
+         * /System/Library/Frameworks/Foundation.framework/Headers/
+         *      Foundation.h,
+         * /System/Library/Frameworks/Foundation.framework/Frameworks/
+         *      CarbonCore.framework/Headers/OSUtils.h,
+         * or /System/Library/Frameworks/IOKit.framework/Headers/
+         *      pwr_mgt/IOPMLib.h.
+         * Pass this as one filename argument to open_file() rather than
+         * deviding to directory part and file part.  The first argument to
+         * open_file() which is a pointer to the directory part is remembered
+         * by FILEINFO struct.  But, 'fullname' is over-written each time,
+         * and the former path-list is lost soon.  Therefore, it cannot be
+         * passed as the first argument.  In addition, though the first
+         * argument to open_file() is needed for #include_next, this directive
+         * has no meaning in framework.
+         */
+        if ((cp - fullname) + n > PATHMAX)
+            cfatal( "Too long framework path", NULL, 0L, NULL); /* _F_  */
+        if (open_file( &null, NULL, fullname, FALSE, FALSE, sys_frame))
+            return  TRUE;
+    }
+    return  FALSE;
+}
+
+#endif  /* SYSTEM == SYS_MAC    */
+
+#if 0   /* This part is only for debugging  */
+static int  chk_dirp(
+    const char **   dirp
+)
+/*
+ * Check the validity of include directory specified for open_file().
+ * Called only from open_file().
+ */
+{
+    const char **   ip;
+
+    if (dirp == &null)
+        return  TRUE;
+
+    for (ip = incdir; ip < incend; ip++)
+        if (dirp == ip)
+            break;
+    if (ip == incend) {
+#if COMPILER == MSC
+        FILEINFO *  pfile = infile->parent;
+        if (pfile) {
+            while ((pfile = pfile->parent) != NULL) {
+                /* Search each parent includer's directory  */
+                if (dirp == pfile->dirp)
+                    break;
+            }
+        }
+        if (! pfile)
+#endif
+#if COMPILER == GNUC
+        const char **   qdir;
+        for (qdir = quote_dir; qdir < quote_dir_end; qdir++) {
+            if (dirp == qdir)
+                break;
+        }
+        if (qdir == quote_dir_end)
+#endif
+        {
+            cfatal( "Bug: *dirp:%s is invalid", *dirp, 0L, NULL);
+            return  FALSE;
+        }
+    }
+    return  TRUE;
+}
+#endif
+
+void    sharp(
+    FILEINFO *  sharp_file,
+    int         flag        /* Flag to append to the line for GCC   */
+)
+/*
+ * Output a line number line.
+ * 'file' is 'sharp_file' if specified,
+ * else (i.e. 'sharp_file' is NULL) 'infile'.
+ */
+{
+    static FILEINFO *   sh_file;
+    static int  sh_line;
+    FILEINFO *  file;
+    int         line;
+
+    file = sharp_file ? sharp_file : infile;
+    if (! file)
+        return;
+    while (! file->fp)
         file = file->parent;
-    cp = stpcpy( work_buf, *(file->dirp));
-    strcpy( cp, file->filename);
-    name = work_buf;
+    line = sharp_file ? sharp_file->line : src_line;
+    if (no_output || option_flags.p || file == NULL
+            || (file == sh_file && line == sh_line))
+        goto  sharp_exit;
+    sh_file = file;
+    sh_line = line;
+    if (keep_comments)
+        mcpp_fputc( '\n', OUT);         /* Ensure to be on line top */
+    if (std_line_prefix)
+        mcpp_fprintf( OUT, "#line %ld", line);
+    else
+        mcpp_fprintf( OUT, "%s%ld", LINE_PREFIX, line);
+    cur_file( file, sharp_file, flag);
+    mcpp_fputc( '\n', OUT);
+sharp_exit:
+    wrong_line = FALSE;
+}
+
+static void cur_file(
+    FILEINFO *  file,                   /* infile or sharp_file     */
+    FILEINFO *  sharp_file,             /* The 'file' or NULL       */
+    int         flag                    /* Flag to append for GCC   */
+)
+/*
+ * Output current source file name and line number.
+ * Called only from sharp() above.
+ */
+{
+    const char *    name;
+
+    if (mcpp_debug & MACRO_CALL) {  /* In macro notification mode   */
+        if (sharp_file)                         /* Main input file  */
+            name = file->filename;
+        else                /* Output full-path-list, normalized    */
+            name = cur_fullname;
+    } else {                /* Usually, the path not "normalized"   */
+        if (sharp_file) {                       /* Main input file  */
+            name = file->filename;
+        } else if (str_eq( file->filename, file->real_fname)) {
+            sprintf( work_buf, "%s%s", *(file->dirp), cur_fname);
+            name = work_buf;
+        } else {            /* Changed by '#line fname' directive   */
+            name = file->filename;
+        }
+    }
     if (sharp_filename == NULL || ! str_eq( name, sharp_filename)) {
         if (sharp_filename != NULL)
             free( sharp_filename);
         sharp_filename = save_string( name);
     }
-    if (! no_output)
-        mcpp_fprintf( OUT, " \"%s\"", name);
+    mcpp_fprintf( OUT, " \"%s\"", name);
 #if COMPILER == GNUC
-    if (sys_dirp <= file->dirp && file->dirp <= incend)
-        mcpp_fputs( " 3", OUT);
+    if (! std_line_prefix) {
+        if (flag) {
+            mcpp_fputc( ' ', OUT);
+            mcpp_fputc( '0' + flag, OUT);
+        }
+        if (file->sys_header)
+            mcpp_fputs( " 3", OUT);
+    }
 #endif
 }
 
@@ -2954,8 +3852,8 @@ static char *   bsl2sl(
         if (bsl_in_mbchar) {
             int     c;
             c = *cp & UCHARMAX;
-            if (char_type[ c] & mbstart) {  /* First byte of MBCHAR */
-                char    tmp[ FILENAMEMAX];
+            if (char_type[ c] & mbchk) {    /* First byte of MBCHAR */
+                char    tmp[ PATHMAX];
                 char *  tp = tmp;
                 *tp++ = *cp++;
                 mb_read( c, &cp, &tp);
@@ -2967,8 +3865,7 @@ static char *   bsl2sl(
             *cp++ = PATH_DELIM;
             if (!diagnosed && (warn_level & 2) && (warn_level != -1)) {
                             /* Backslash in source program          */
-                cwarn(
-        "Converted \\ to %s", "/", 0L, NULL);               /* _W2_ */
+                cwarn( "Converted \\ to %s", "/", 0L, NULL);        /* _W2_ */
                     diagnosed = TRUE;       /* Diagnose only once   */
             }
         } else {
@@ -3052,14 +3949,19 @@ void    do_pragma( void)
         DEFBUF *        defp;
         char *          mp;
         char *          mp_end;
+        LINE_COL        line_col = { 0L, 0};
 
         bp = mp = xmalloc( (size_t)(NMACWORK + IDMAX));
                                     /* Buffer for macro expansion   */
         mp_end = mp + NMACWORK;
         tp = stpcpy( mp, identifier);
         do {                /* Expand all the macros in the line    */
+            int     has_pragma;
             if (token_type == NAM && (defp = is_macro( &tp)) != NULL) {
-                tp = expand_macro( defp, bp, mp_end);
+                tp = expand_macro( defp, bp, mp_end, line_col, & has_pragma);
+                if (has_pragma)
+                cerror( "_Pragma operator found in #pragma line"    /* _E_  */
+                            , NULL, 0L, NULL);
                 if (! stdc3 && (warn_level & 2))
                     cwarn(
                 "\"%s\" is macro expanded in other than C99 mode"   /* _W2_ */
@@ -3083,7 +3985,7 @@ void    do_pragma( void)
             file = infile;
             while (file->fp == NULL)
                 file = file->parent;
-            do_once( *(file->dirp), file->real_fname);
+            do_once( file->full_fname);
             goto  skip_nl;
         }
     } else if (str_eq( identifier, "MCPP")) {
@@ -3093,7 +3995,7 @@ void    do_pragma( void)
         }
         if (str_eq( identifier, "put_defines")) {
             if (! is_junk())
-                dump_def( dDflag, TRUE);        /* #pragma MCPP put_defines */
+                dump_def( TRUE, FALSE); /* #pragma MCPP put_defines */
         } else if (str_eq( identifier, "preprocess")) {
             if (! is_junk())            /* #pragma MCPP preprocess  */
                 mcpp_fputs( "#pragma MCPP preprocessed\n", OUT);
@@ -3124,14 +4026,17 @@ void    do_pragma( void)
 #if COMPILER == GNUC
     /* The #pragma lines for GCC is skipped not to confuse cc1.     */
     } else if (str_eq( identifier, "GCC")) {    /* #pragma GCC *    */
-        if ((scan_token( skip_ws(), (tp = work_buf, &tp), work_end) == NAM)
-                && (str_eq( identifier, "poison")
-                    || str_eq( identifier, "dependency")
-                    || str_eq( identifier, "system_header"))) {
-            if (warn_level & 2)
-                cwarn( "Skipped the #pragma line"           /*_W2_  */
-                        , NULL, 0L, NULL);
-            goto skip_nl;
+        if (scan_token( skip_ws(), (tp = work_buf, &tp), work_end) == NAM) {
+            if (str_eq( identifier, "poison")
+                    || str_eq( identifier, "dependency")) {
+                if (warn_level & 2)
+                    cwarn( "Skipped the #pragma line"       /*_W2_  */
+                            , NULL, 0L, NULL);
+                goto skip_nl;
+            } else if (str_eq( identifier, "system_header")) {
+                infile->sys_header = TRUE;      /* Mark as a system header  */
+                goto skip_nl;
+            }
         }
 #endif
 
@@ -3183,7 +4088,7 @@ void    do_pragma( void)
 
         tmp[ 0] = c;
         tmp[ 1] = EOS;
-        look_and_install( optim_name, DEF_NOARGS - 1, null, tmp);
+        look_and_install( optim_name, DEF_NOARGS_PREDEF, null, tmp);
 #endif
 
 #if COMPILER == COMPILER_UNKNOWN
@@ -3200,7 +4105,7 @@ void    do_pragma( void)
         goto  skip_nl;                  /* Do not putout the line   */
     }
 
-    sharp();            /* Synchronize line number before output    */
+    sharp( NULL, 0);    /* Synchronize line number before output    */
     if (! no_output) {
         mcpp_fputs( "#pragma ", OUT);
         mcpp_fputs( bp, OUT);           /* Line is put out          */
@@ -3211,53 +4116,51 @@ skip_nl: /* Don't use skip_nl() which skips to the newline in source file */
 }
 
 static void do_once(
-    const char *    dir,
-    const char *    filename
+    const char *    fullname        /* Full-path-list of the header */
 )
 /*
- * Process #pragma MCPP once or #pragma once so as not to re-include the file
- * in future.
+ * Process #pragma once so as not to re-include the file later.
  * This directive has been imported from GCC V.1.* / cpp as an extension.
  */
 {
-    INC_LIST *  inc;
-    size_t      fnamlen;
-
-    filename = norm_path( dir, filename);   /* Normalize path name  */
-    fnamlen = strlen( filename);
-    inc = (INC_LIST *) xmalloc( sizeof (INC_LIST) + fnamlen + 1);
-    memcpy( inc->fname, filename, fnamlen + 1);
-    free( (void *) filename);
-    inc->next = NULL;
-    if (start_inc == NULL)
-        start_inc = last_inc = inc;         /* The first file       */
-    else
-        last_inc = last_inc->next = inc;    /* Append the file to the list  */
+    if (once_list == NULL) {                /* Should initialize    */
+        max_once = INIT_NUM_ONCE;
+        once_list = (INC_LIST *) xmalloc( sizeof (INC_LIST) * max_once);
+        once_end = &once_list[ 0];
+    } else if (once_end - once_list >= max_once) {
+                                            /* Double the elements  */
+        once_list = (INC_LIST *) xrealloc( (void *) once_list
+                , sizeof (INC_LIST) * max_once * 2);
+        once_end = &once_list[ max_once];
+        max_once *= 2;
+    }
+    once_end->name = fullname;
+    once_end->len = strlen( fullname);
+    once_end++;
 }
 
 static int  included(
-    const char *    dir,
-    const char *    filename
+    const char *    fullname
 )
 /*
  * Has the file been once included ?
- * This routine is called only from open_file().
+ * This routine is only called from open_file().
  */
 {
     INC_LIST *  inc;
-    char *      fname;
+    size_t      fnamelen;
 
-    fname = norm_path( dir, filename);
-    for (inc = start_inc; inc; inc = inc->next) {
-        if (str_eq( inc->fname, fname)) {
+    if (once_list == NULL)              /* No once file registered  */
+        return  FALSE;
+    fnamelen = strlen( fullname);
+    for (inc = once_list; inc < once_end; inc++) {
+        if (inc->len == fnamelen && str_case_eq( inc->name, fullname)) {
             /* Already included */
             if (mcpp_debug & PATH)
-                mcpp_fprintf( DBG, "Once included \"%s\"\n", fname);
-            free( fname);
+                mcpp_fprintf( DBG, "Once included \"%s\"\n", fullname);
             return  TRUE;
         }
     }
-    free( fname);
     return  FALSE;                          /* Not yet included     */
 }
 
@@ -3376,15 +4279,14 @@ void    do_old( void)
 {
     static const char * const   unknown
             = "Unknown #directive \"%s\"%.0ld%s";       /* _E_ _W8_ */
-
-#if COMPILER == GNUC
-    static const char * const   gnu_ext
+    static const char * const   ext
             = "%s is not allowed by Standard%.0ld%s";   /* _W2_ _W8_*/
 
+#if COMPILER == GNUC
     if (str_eq( identifier, "include_next")) {
         if ((compiling && (warn_level & 2))
-                || (! compiling && warn_level & 8))
-            cwarn( gnu_ext, "#include_next", 0L
+                || (! compiling && (warn_level & 8)))
+            cwarn( ext, "#include_next", 0L
                     , compiling ? NULL : " (in skipped block)");
         if (! compiling)
             return;
@@ -3394,8 +4296,8 @@ void    do_old( void)
         return;
     } else if (str_eq( identifier, "warning")) {
         if ((compiling && (warn_level & 2))
-                || (! compiling && warn_level & 8))
-            cwarn( gnu_ext, "#warning", 0L
+                || (! compiling && (warn_level & 8)))
+            cwarn( ext, "#warning", 0L
                     , compiling ? NULL : " (in skipped block)");
         if (! compiling)
             return;
@@ -3406,7 +4308,7 @@ void    do_old( void)
         return;
     } else if (str_eq( identifier, "ident") || str_eq( identifier, "sccs")) {
         if ((compiling && (warn_level & 1))
-                || (! compiling && warn_level & 8)) {
+                || (! compiling && (warn_level & 8))) {
             if (str_eq( identifier, "ident"))
                 cwarn(
     compiling ? "Ignored #ident" : "#ident (in skipped block)"  /* _W1_ _W8_*/
@@ -3436,11 +4338,26 @@ void    do_old( void)
     }
 #endif
 
+#if SYSTEM == SYS_MAC
+    if (str_eq( identifier, "import")) {
+        if ((compiling && (warn_level & 2))
+                || (! compiling && (warn_level & 8)))
+            cwarn( ext, "#import", 0L
+                    , compiling ? NULL : " (in skipped block)");
+        if (! compiling)
+            return;
+        in_import = in_include = TRUE;
+        do_include( FALSE);
+        in_import = in_include = FALSE;
+        return;
+    }
+#endif
+
     if (! standard && do_prestd_directive())
         return;
 
     if (compiling) {
-        if (lang_asm) {                     /* "Assembler" source   */
+        if (option_flags.lang_asm) {        /* "Assembler" source   */
             if (warn_level & 1)
                 cwarn( unknown, identifier, 0L, NULL);
             mcpp_fputs( infile->buffer, OUT);   /* Putout the line  */
@@ -3477,7 +4394,7 @@ static int  do_prestd_directive( void)
         if (! compiling)                    /* Only validity check  */
             return  TRUE;
         if (mcpp_mode != OLD_PREP && ! is_junk())
-            dump_def( dDflag, TRUE);        /* #put_defines         */
+            dump_def( TRUE, FALSE);         /* #put_defines         */
         skip_nl();
         unget_ch();
         return  TRUE;
@@ -3581,43 +4498,42 @@ static void do_preprocessed( void)
         if (memcmp( lbuf, "/*", 2) == 0) {
                                     /* Standard predefined macro    */
             continue;
-        } else {
-            if (memcmp( lbuf, "#define ", 8) != 0) {
-                if (memcmp( lbuf, "#line", 5) == 0)
-                    continue;
-                else
-                    cfatal( corrupted, NULL, 0L, NULL);
-            }
-            /* Filename and line-number information in comment as:  */
-            /* dir/fname:1234\t*/
-            cp = lbuf + strlen( lbuf);
-            if ((memcmp( cp - 4, "\t*/\n", 4) != 0)
-                    || (*(cp - 4) = EOS
-                            , (comment = strrchr( lbuf, '*')) == NULL)
-                    || (memcmp( --comment, "/* ", 3) != 0)
-                    || ((colon = strrchr( comment, ':')) == NULL))
-                cfatal( corrupted, NULL, 0L, NULL);
-            src_line = atol( colon + 1);    /* Pseudo line number   */
-            *colon = EOS;
-            dir = comment + 3;
-            inc_dirp = &null;
-            /* Search the include directory list    */
-            for (incptr = incdir ; incptr < incend; incptr++) {
-                if (memcmp( *incptr, dir, strlen( *incptr)) == 0) {
-                    inc_dirp = incptr;
-                    break;
-                }
-            }
-            /* Register the filename to fnamelist[] */
-            /* inc_dirp may be NULL, and cur_fname may be "(predefined)"    */
-            cur_fname = set_fname( dir + strlen( *inc_dirp));
-            strcpy( comment - 2, "\n");     /* Remove the comment   */
-            unget_string( lbuf + 8, NULL);
-            do_define( FALSE);
-            get_ch();                           /* '\n' */
-            get_ch();                           /* Clear the "file" */
-            unget_ch();                         /* infile == file   */
         }
+        if (memcmp( lbuf, "#define ", 8) != 0) {
+            if (memcmp( lbuf, "#line", 5) == 0)
+                continue;
+            else
+                cfatal( corrupted, NULL, 0L, NULL);
+        }
+        /* Filename and line-number information in comment as:  */
+        /* dir/fname:1234\t*/
+        cp = lbuf + strlen( lbuf);
+        if ((memcmp( cp - 4, "\t*/\n", 4) != 0)
+                || (*(cp - 4) = EOS
+                        , (comment = strrchr( lbuf, '*')) == NULL)
+                || (memcmp( --comment, "/* ", 3) != 0)
+                || ((colon = strrchr( comment, ':')) == NULL))
+            cfatal( corrupted, NULL, 0L, NULL);
+        src_line = atol( colon + 1);        /* Pseudo line number   */
+        *colon = EOS;
+        dir = comment + 3;
+        inc_dirp = &null;
+        /* Search the include directory list    */
+        for (incptr = incdir ; incptr < incend; incptr++) {
+            if (memcmp( *incptr, dir, strlen( *incptr)) == 0) {
+                inc_dirp = incptr;
+                break;
+            }
+        }
+        /* Register the filename to fnamelist[] */
+        /* inc_dirp may be NULL, and cur_fname may be "(predefined)"    */
+        cur_fname = set_fname( dir + strlen( *inc_dirp));
+        strcpy( comment - 2, "\n");         /* Remove the comment   */
+        unget_string( lbuf + 8, NULL);
+        do_define( FALSE, 0);
+        get_ch();                               /* '\n' */
+        get_ch();                               /* Clear the "file" */
+        unget_ch();                             /* infile == file   */
     }
     file->bptr = file->buffer + strlen( file->buffer);
 }
@@ -3638,6 +4554,7 @@ static int  do_debug(
         { "path",   PATH    },
         { "token",  TOKEN   },
         { "expand", EXPAND  },
+        { "macro_call", MACRO_CALL  },      /* Implemented only in STD mode */
         { "if",     IF      },
         { "expression", EXPRESSION  },
         { "getc",   GETC    },
@@ -3679,15 +4596,23 @@ static int  do_debug(
                     dump_path();
                 else if (num == MEMORY)
                     print_heap();
+                else if (num == MACRO_CALL)
+                    option_flags.k = TRUE;  /* This pragma needs this mode  */
             } else {
                 mcpp_debug &= ~num;
             }
         }
         c = skip_ws();
     }
-    if (c != '\n') {
-        if (warn_level & 1)
-            cwarn( not_ident, work_buf, 0L, NULL);
+    if ((mcpp_mode != STD && (mcpp_debug & MACRO_CALL)) || c != '\n') {
+        if (warn_level & 1) {
+            if (c != '\n') {
+                cwarn( not_ident, work_buf, 0L, NULL);
+            } else {
+                cwarn( unknown_arg, work_buf, 0L, NULL);
+                mcpp_debug &= ~num;                     /* Disable  */
+            }
+        }
         skip_nl();
         unget_ch();
         goto  diagnosed;
@@ -3718,6 +4643,7 @@ static void dump_path( void)
     const char **   incptr;
     const char *    inc_dir;
     const char *    dir = "./";
+    int             i;
 
     mcpp_fputs( "Include paths are as follows --\n", DBG);
     for (incptr = incdir; incptr < incend; incptr++) {
@@ -3727,11 +4653,106 @@ static void dump_path( void)
         mcpp_fprintf( DBG, "    %s\n", inc_dir);
     }
     mcpp_fputs( "End of include path list.\n", DBG);
+#if SYSTEM == SYS_MAC
+    mcpp_fputs( "Framework paths are as follows --\n", DBG);
+    for (i = 0; i < num_framework; i++ )
+        mcpp_fprintf( DBG, "    %s\n", framework[ i]);
+    mcpp_fputs( "End of framework path list.\n", DBG);
+#endif
 }
 
 /*
+ * Note: The getopt() of glibc should not be used since the specification
+ *  differs from the standard one.
+ *  Use this mcpp_getopt() for mcpp.
+ */
+
+/* Based on the public-domain-software released by AT&T.    */
+
+#define OPTERR( s, c)   if (mcpp_opterr) {  \
+    mcpp_fputs( argv[0], ERR);  \
+    mcpp_fputs( s, ERR);        \
+    mcpp_fputc( c, ERR);        \
+    mcpp_fputc( '\n', ERR);     \
+    }
+
+static int  mcpp_getopt(
+    int         argc,
+    char * const *  argv,
+    const char *    opts
+)
+/*
+ * Get the next option (and it's argument) from the command line.
+ */
+{
+    const char * const   error1 = ": option requires an argument --";
+    const char * const   error2 = ": illegal option --";
+    static int      sp = 1;
+    int             c;
+    const char *    cp;
+
+    if (sp == 1) {
+        if (argc <= mcpp_optind ||
+                argv[ mcpp_optind][ 0] != '-'
+                    || argv[ mcpp_optind][ 1] == '\0') {
+            return  EOF;
+        } else if (strcmp( argv[ mcpp_optind], "--") == 0) {
+            mcpp_optind++;
+            return  EOF;
+        }
+    }
+/*  mcpp_optopt = c = (unsigned char) argv[ mcpp_optind][ sp];  */
+    mcpp_optopt = c = argv[ mcpp_optind][ sp] & UCHARMAX;
+    if (c == ':' || (cp = strchr( opts, c)) == NULL) {
+        OPTERR( error2, c)
+        if (argv[ mcpp_optind][ ++sp] == '\0') {
+            mcpp_optind++;
+            sp = 1;
+        }
+        return  '?';
+    }
+    if (*++cp == ':') {
+        if (argv[ mcpp_optind][ sp+1] != '\0') {
+            mcpp_optarg = &argv[ mcpp_optind++][ sp+1];
+        } else if (argc <= ++mcpp_optind) {
+            OPTERR( error1, c)
+            sp = 1;
+            return  '?';
+        } else {
+            mcpp_optarg = argv[ mcpp_optind++];
+        }
+        sp = 1;
+    } else {
+        if (argv[ mcpp_optind][ ++sp] == '\0') {
+            sp = 1;
+            mcpp_optind++;
+        }
+        mcpp_optarg = NULL;
+    }
+    return  c;
+}
+
+#if ! HOST_HAVE_STPCPY
+char *  stpcpy(
+    char *          dest,
+    const char *    src
+)
+/*
+ * Copy the string and return the advanced pointer.
+ */
+{
+    const char * s;
+    char *  d;
+
+    for (s = src, d = dest; (*d++ = *s++) != '\0'; )
+        ;
+    return  d - 1;
+}
+#endif
+
+/*
  * list_heap() is a function to print out information of heap-memory.
- * See "kmmalloc-2.5.1.lzh" by kmatsui.
+ * See "kmmalloc-2.5.3.zip" by kmatsui.
  */
 #if     KMMALLOC
     int     list_heap( int);
@@ -3758,9 +4779,8 @@ void    at_end( void)
  */
 {
 #if COMPILER == GNUC
-    if (dMflag || dDflag) {
-        dump_def( dDflag, FALSE);
-    }
+    if (dMflag || dDflag)
+        dump_def( FALSE, FALSE);
 #endif
 }
 
@@ -3770,23 +4790,17 @@ void    clear_filelist( void)
  * Free malloced memory for filename-list and directory-list.
  */
 {
-    const char **   namep;
-    INC_LIST *  inc;
-    INC_LIST *  pnext;
+    const char **   incp;
+    INC_LIST *  namep;
 
+    for (incp = incdir; incp < incend; incp++)
+        free( (void *) *incp);
+    free( (void *) incdir);
     for (namep = fnamelist; namep < fname_end; namep++)
-        free( (void*) *namep);
-
-    if (standard) {
-        for (inc = start_inc; inc != NULL; inc = pnext) {
-            pnext = inc->next;
-            free( inc);
-        }
-        start_inc = NULL;
-    }
-
-    for (namep = incdir; namep < incend; namep++)
-        free( (void *) *namep);
+        free( (void *) namep->name);
+    free( (void *) fnamelist);
+    if (standard)
+        free( (void *) once_list);
 }
 #endif
 

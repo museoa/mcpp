@@ -39,9 +39,7 @@ target_triplet = @target@
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/./config/mb_sjis \
-	$(top_srcdir)/./config/mb_jis $(top_srcdir)/./config/mb_big5 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -114,6 +112,7 @@ REPLACE_CPP_TRUE = @REPLACE_CPP_TRUE@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+Target_Cpu = @Target_Cpu@
 VERSION = @VERSION@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_AS = @ac_ct_AS@
@@ -144,6 +143,7 @@ host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
+host_system = @host_system@
 host_vendor = @host_vendor@
 inc_dir = @inc_dir@
 includedir = @includedir@
@@ -162,6 +162,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target = @target@
 target_alias = @target_alias@
+target_cc = @target_cc@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
@@ -374,7 +375,7 @@ uninstall-am: uninstall-info-am
 @REPLACE_CPP_TRUE@        echo "ERROR: testsuite directory is not specified.  Do './configure --with-gcc-testsuite-dir=directory' prior to 'make check'"; \
 @REPLACE_CPP_TRUE@        exit 1; \
 @REPLACE_CPP_TRUE@    fi
-@REPLACE_CPP_TRUE@	@if test `echo '' | $(cpp_call) -v - 2>&1 | grep 'MCPP' > /dev/null; echo $$?` != 0; \
+@REPLACE_CPP_TRUE@	@if test `$(cpp_call) -v /dev/null 2>&1 | grep 'MCPP' > /dev/null; echo $$?` != 0; \
 @REPLACE_CPP_TRUE@            then \
 @REPLACE_CPP_TRUE@        echo "ERROR: Do 'make install' prior to 'make check'"; \
 @REPLACE_CPP_TRUE@        exit 1; \
@@ -385,9 +386,9 @@ uninstall-am: uninstall-info-am
 @REPLACE_CPP_TRUE@        echo '  cp -Rp $(top_srcdir)/cpp-test $(gcc_testsuite_dir)/gcc.dg'; \
 @REPLACE_CPP_TRUE@        cp -Rp $(top_srcdir)/cpp-test "$(gcc_testsuite_dir)/gcc.dg"; \
 @REPLACE_CPP_TRUE@    fi
-@REPLACE_CPP_TRUE@	@$(top_srcdir)/tests/set_test.sh '$(CC)' '$(gcc_path)' '$(gcc_testsuite_dir)' $(gcc_maj_ver) '$(LN_S)' '$(cpp_call)'
+@REPLACE_CPP_TRUE@	@$(top_srcdir)/tests/set_test.sh '$(CC)' '$(gcc_path)' '$(gcc_testsuite_dir)' $(gcc_maj_ver) '$(LN_S)' '$(cpp_call)' '$(target_cc)'
 @REPLACE_CPP_TRUE@	-$(RUNTEST) --tool gcc --srcdir $(gcc_testsuite_dir) cpp-test.exp
-@REPLACE_CPP_TRUE@	@$(top_srcdir)/tests/after_test.sh '$(CC)' '$(gcc_path)' '$(cpp_call)'
+@REPLACE_CPP_TRUE@	@$(top_srcdir)/tests/after_test.sh '$(CC)' '$(gcc_path)' '$(cpp_call)' '$(target_cc)'
 
 @REPLACE_CPP_TRUE@uninstall:
 @REPLACE_CPP_TRUE@	@if test x"$(gcc_testsuite_dir)" != x""; then \

@@ -1,5 +1,5 @@
-# makefile to compile MCPP version 2.6.3 and later for CygWIN / GCC / GNU make
-# 2007/05   kmatsui
+# makefile to compile MCPP version 2.7 and later for CygWIN / GCC / GNU make
+# 2008/03   kmatsui
 #
 # First, you must edit GCCDIR, BINDIR, INCDIR, gcc_maj_ver and gcc_min_ver.
 # To make compiler-independent-build of MCPP do:
@@ -29,7 +29,7 @@ NAME = mcpp
 # CC:   name of gcc executable
 #       e.g. cc, gcc, gcc-2.95.3, i686-pc-linux-gnu-gcc-3.4.3
 CC = gcc
-GPP = g++
+CXX = g++
 CFLAGS = -c -O2 -Wall   #-v
 CPPFLAGS =
 #CPPFLAGS = -Wp,-vQW3
@@ -40,24 +40,30 @@ LINKFLAGS = -o $(NAME)
 ifeq    ($(COMPILER), )
 # compiler-independent-build
 CPPOPTS =
-# BINDIR:   /usr/bin or /usr/local/bin
+# BINDIR:   directory to install mcpp: /usr/bin or /usr/local/bin
 BINDIR = /usr/local/bin
 # INCDIR:   empty
 INCDIR =
+
 else
 # compiler-specific-build:  Adjust for your system
 
 ifeq    ($(COMPILER), GNUC)
-CPPOPTS = -DCOMPILER=$(COMPILER)
-# BINDIR:   the directory where cpp0 or cc1 resides
-#BINDIR = /usr/lib/gcc-lib/i686-pc-cygwin/2.95.3-5
-BINDIR = /usr/lib/gcc/i686-pc-cygwin/3.4.4
-# INCDIR:   version specific include directory
-#INCDIR = /usr/lib/gcc-lib/i686-pc-cygwin/2.95.3-5/include
-INCDIR = /usr/lib/gcc/i686-pc-cygwin/3.4.4/include
+# The directory where 'gcc' (cc) command is located
+GCCDIR = /usr/bin
+#GCCDIR = /usr/local/bin
 # set GCC version
 gcc_maj_ver = 3
 gcc_min_ver = 4
+# INCDIR:   version specific include directory
+#INCDIR = /usr/lib/gcc-lib/i686-pc-cygwin/2.95.3-5/include
+INCDIR = /usr/lib/gcc/i686-pc-cygwin/3.4.4/include
+CPPOPTS = -DCOMPILER=$(COMPILER)
+
+# BINDIR:   the directory where cpp0 or cc1 resides
+#BINDIR = /usr/lib/gcc-lib/i686-pc-cygwin/2.95.3-5
+BINDIR = /usr/lib/gcc/i686-pc-cygwin/3.4.4
+target = i686-pc-cygwin
 ifeq ($(gcc_maj_ver), 2)
 cpp_call = $(BINDIR)/cpp0.exe
 else
@@ -66,11 +72,7 @@ endif
 endif
 endif
 
-# The directory where 'gcc' (cc) command is located
-GCCDIR = /usr/bin
-#GCCDIR = /usr/local/bin
-
-OBJS = main.o directive.o eval.o expand.o support.o system.o mbchar.o lib.o
+OBJS = main.o directive.o eval.o expand.o support.o system.o mbchar.o
 
 $(NAME): $(OBJS)
 	$(CC) $(OBJS) $(LINKFLAGS)
@@ -105,8 +107,9 @@ endif
 install :
 	install -s -b $(NAME).exe $(BINDIR)/$(NAME).exe
 ifeq    ($(COMPILER), GNUC)
-	./set_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)' \
-            '$(cpp_call)' '$(CC)' '$(GPP)' 'x.exe' 'ln -s' '$(INCDIR)'
+	@./set_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'        \
+            '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(CPPFLAGS)' 'x' 'ln -s'   \
+            '$(INCDIR)' SYS_CYGWIN
 endif
 
 clean	:
@@ -115,8 +118,8 @@ clean	:
 uninstall:
 	rm -f $(BINDIR)/$(NAME).exe
 ifeq    ($(COMPILER), GNUC)
-	./unset_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'   \
-            '$(cpp_call)' '$(CC)' '$(GPP)' 'x.exe' 'ln -s' '$(INCDIR)'
+	@./unset_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'   \
+        '$(cpp_call)' '$(CC)' '$(CXX)' 'x.exe' 'ln -s' '$(INCDIR)' SYS_CYGWIN
 endif
 
 ifeq    ($(COMPILER), )
@@ -132,12 +135,12 @@ mcpplib_a:  $(OBJS)
 
 # DLL
 DLL_VER = 0
-SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so lib.so
+SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so
 .SUFFIXES: .so
 .c.so   :
-	$(CC) $(CFLAGS) $(MEM_MACRO) -c -DPIC -save-temps -o$*.so $*.c
+	$(CC) $(CFLAGS) $(MEM_MACRO) -c -DPIC -o $*.so $*.c
 mcpplib_dll: $(SOBJS)
-	$(CC) -shared -ocygmcpp-$(DLL_VER).dll $(SOBJS) -Wl,--enable-auto-image-base,--out-implib,libmcpp.dll.a
+	$(CC) -shared -o cygmcpp-$(DLL_VER).dll $(SOBJS) -Wl,--enable-auto-image-base,--out-implib,libmcpp.dll.a
 
 mcpplib_install:
 	cp libmcpp.a libmcpp.dll.a $(LIBDIR)
@@ -152,7 +155,7 @@ ifeq    ($(OUT2MEM), 1)
 # output to memory buffer
 CFLAGS += -DOUT2MEM
 endif
-LINKFLAGS = $(NAME).o -o$(NAME).exe
+LINKFLAGS = $(NAME).o -o $(NAME).exe
 ifeq    ($(DLL_IMPORT), 1)
 LINKFLAGS += $(LIBDIR)/libmcpp.dll.a
 CFLAGS += -DDLL_IMPORT

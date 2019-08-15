@@ -1,5 +1,5 @@
-# makefile to compile MCPP version 2.6.3 and later for FreeBSD / GCC / UCB make
-#       2007/05 kmatsui
+# makefile to compile MCPP version 2.7 for FreeBSD / GCC / UCB make
+#       2008/03 kmatsui
 #
 # First, you must edit GCCDIR, BINDIR, INCDIR, gcc_maj_ver and gcc_min_ver.
 # To make compiler-independent-build of MCPP do:
@@ -30,8 +30,8 @@
 # NAME: name of mcpp executable
 NAME ?= mcpp
 CC = gcc
-GPP = g++
-CFLAGS = -c -O2 -Wall   # -g -v
+CXX = g++
+CFLAGS = -c -O2 -Wall   # -ggdb -v
 #CFLAGS += -fstack-protector        # for gcc 4.1 or later
 CPPFLAGS =
 #CPPFLAGS = -Wp,-v,-Q,-W3
@@ -43,25 +43,31 @@ LINKFLAGS = -o $(NAME)
 .if     empty(COMPILER)
 # compiler-independent-build
 CPPOPTS =
-# BINDIR:   /usr/bin or /usr/local/bin
+# BINDIR:   directory to install mcpp: /usr/bin or /usr/local/bin
 BINDIR = /usr/local/bin
 # INCDIR:   empty
 INCDIR =
+
 .else
 # compiler-specific-build:  Adjust for your system
 
 .if     ! empty(COMPILER) && $(COMPILER) == GNUC
-CPPOPTS = -DCOMPILER=$(COMPILER)
-# BINDIR:   the directory where cpp0 or cc1 resides
-BINDIR ?= /usr/libexec
-#BINDIR ?= /usr/local/gcc-4.1.1/lib/gcc-lib/i386-unknown-freebsd6.2/4.1.1
-# INCDIR:   the compiler's version specific include directory, if it exists,
-#       /usr/local/include, if it does not exist
-INCDIR = /usr/local/include
-#INCDIR ?= /usr/local/gcc-4.1.1/lib/gcc-lib/i386-unknown-freebsd6.2/4.1.1/include
+# The directory 'gcc' (cc) command is located (/usr/bin or /usr/local/bin)
+GCCDIR ?= /usr/bin
 # Set GCC version
 gcc_maj_ver = 3
 gcc_min_ver = 4
+# INCDIR:   the compiler's version specific include directory, if it exists,
+#       /usr/local/include or /usr/include, if it does not exist
+INCDIR = /usr/local/include
+#INCDIR ?= /usr/local/gcc-4.1.1/lib/gcc-lib/i386-unknown-freebsd6.2/4.1.1/include
+CPPOPTS = -DCOMPILER=$(COMPILER) -DINC_DIR=\"$(INCDIR)\"
+
+# BINDIR:   the directory where cpp0 or cc1 resides
+BINDIR ?= /usr/libexec
+#BINDIR ?= /usr/local/gcc-4.1.1/lib/gcc-lib/i386-unknown-freebsd6.2/4.1.1
+target = ''
+#target = i386-unknown-freebsd6.2
 .if $(gcc_maj_ver) == 2
 cpp_call = $(BINDIR)/cpp0
 .else
@@ -69,9 +75,6 @@ cpp_call = $(BINDIR)/cc1
 .endif
 .endif
 .endif
-
-# The directory 'gcc' (cc) command is located (/usr/bin or /usr/local/bin)
-GCCDIR ?= /usr/bin
 
 MALLOC =
 .if     !empty(MALLOC)
@@ -84,7 +87,7 @@ MALLOC =
     MEM_MACRO =
 .endif
 
-OBJS = main.o directive.o eval.o expand.o support.o system.o mbchar.o lib.o
+OBJS = main.o directive.o eval.o expand.o support.o system.o mbchar.o
 
 all :   $(NAME)
 $(NAME) : $(OBJS)
@@ -117,8 +120,9 @@ main.o directive.o eval.o expand.o support.o system.o mbchar.o:   \
 install :
 	install -s $(NAME) $(BINDIR)/$(NAME)
 .if ! empty(COMPILER) && $(COMPILER) == GNUC
-	./set_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)' \
-            '$(cpp_call)' '$(CC)' '$(GPP)' 'x' 'ln -s' '$(INCDIR)'
+	@./set_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'    \
+            '$(cpp_call)' '$(CC)' '$(CXX)' 'x$(CPPFLAGS)' 'x' 'ln -s'  \
+            '$(INCDIR)' SYS_FREEBSD
 .endif
 
 clean	:
@@ -127,8 +131,8 @@ clean	:
 uninstall:
 	rm -f $(BINDIR)/$(NAME)
 .if ! empty(COMPILER) && $(COMPILER) == GNUC
-	./unset_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'   \
-            '$(cpp_call)' '$(CC)' '$(GPP)' 'x' 'ln -s' '$(INCDIR)'
+	@./unset_mcpp.sh '$(GCCDIR)' '$(gcc_maj_ver)' '$(gcc_min_ver)'   \
+            '$(cpp_call)' '$(CC)' '$(CXX)' 'x' 'ln -s' '$(INCDIR)' SYS_FREEBSD
 .endif
 
 .if empty(COMPILER)
@@ -143,16 +147,19 @@ mcpplib_a:  $(OBJS)
 	ar -rv libmcpp.a $(OBJS)
 
 # shared library
-CUR = 0
-REV = 1         # mcpp 2.6.3: 0, mcpp 2.6.4: 1
-AGE = 0
-SHLIB_VER = $(CUR).$(AGE).$(REV)
-SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so lib.so
+# mcpp 2.6.*: 0, mcpp 2.7: 1
+CUR = 1
+# mcpp 2.6.3: 0, mcpp 2.6.4: 1, mcpp 2.7: 0
+REV = 0
+# mcpp 2.6.*: 0, mcpp 2.7: 1
+AGE = 1
+SHLIB_VER = 0.$(CUR).$(REV)
+SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so
 .SUFFIXES: .so
 .c.so   :
-	$(CC) $(CFLAGS) $(MEM_MACRO) -c -fpic -o$*.so $*.c
+	$(CC) $(CFLAGS) $(MEM_MACRO) -c -fpic -o $*.so $*.c
 mcpplib_so: $(SOBJS)
-	$(CC) -shared -olibmcpp.so.$(SHLIB_VER) $(SOBJS)   # -fstack-protector
+	$(CC) -shared -o libmcpp.so.$(SHLIB_VER) $(SOBJS)   # -fstack-protector
 	chmod a+x libmcpp.so.$(SHLIB_VER)
 
 mcpplib_install:
@@ -170,7 +177,7 @@ NAME = testmain
 # output to memory buffer
 CFLAGS += -DOUT2MEM
 .endif
-LINKFLAGS = $(NAME).o -o$(NAME) -L/usr/local/lib -lmcpp
+LINKFLAGS = $(NAME).o -o $(NAME) -L/usr/local/lib -lmcpp
 .if ! empty(MALLOC) && $(MALLOC) == KMMALLOC
     LINKFLAGS += -lkmmalloc_debug
 .endif

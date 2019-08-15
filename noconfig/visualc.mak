@@ -1,5 +1,5 @@
-# makefile to compile MCPP version 2.6.3 and later for Visual C / nmake
-#       2007/05 kmatsui
+# makefile to compile MCPP version 2.7 for Visual C / nmake
+#       2008/03 kmatsui
 # You must first edit BINDIR and LIBDIR according to your system.
 # To make compiler-independent-build of MCPP do:
 #       nmake
@@ -7,8 +7,8 @@
 #       nmake COMPILER=MSC
 # To re-compile MCPP using Visual-C-specific-build of MCPP do:
 #       nmake COMPILER=MSC PREPROCESSED=1
-# To link kmmalloc V.2.5.1 (malloc() package of kmatsui) or later do:
-#   (Note: Visual C 2005 cannot coexist with kmmalloc)
+# To link kmmalloc V.2.5.3 (malloc() package of kmatsui) or later do:
+#   (Note: Visual C 2005 and 2008 cannot coexist with kmmalloc)
 #       nmake [PREPROCESSED=1] KMMALLOC=1
 # To make mcpp.lib (subroutine-build of mcpp) do:
 #       nmake MCPP_LIB=1 mcpplib
@@ -24,15 +24,15 @@ CC = cl
 CFLAGS = $(CFLAGS) -Za -c	# -Zi
 	# Add -Zi for debugging on Visual C / IDE
 LINKFLAGS = -Fe$(NAME)	# -Zi
-CPPFLAGS = $(CPPFLAGS) -D_CRT_SECURE_NO_DEPRECATE
-	# -D_CRT_SECURE_NO_DEPRECATE for Visual C 2005
+CPPFLAGS = $(CPPFLAGS) -D_CRT_SECURE_NO_DEPRECATE -Za
+	# -D_CRT_SECURE_NO_DEPRECATE for Visual C 2005, 2008
 
 !if "$(COMPILER)"=="MSC"
 CPPFLAGS = $(CPPFLAGS) -DCOMPILER=MSC
 # BINDIR : Adjust to your system.
 #	for Visual C 2003
 #BINDIR = "$(MSVCDIR)"\bin
-#	for Visual C 2005
+#	for Visual C 2005, 2008
 BINDIR = "$(VCINSTALLDIR)"\bin
 !else
 # compiler-independent-build: use compiler-independent directory
@@ -48,7 +48,7 @@ MEMLIB =
 !endif
 
 OBJS = main.obj directive.obj eval.obj expand.obj support.obj system.obj \
-        mbchar.obj lib.obj
+        mbchar.obj
 
 $(NAME).exe : $(OBJS)
 	$(CC) $(LINKFLAGS) $(OBJS) $(MEMLIB)
@@ -92,7 +92,7 @@ mcpplib_lib:	$(OBJS)
 
 # DLL
 DLL_VER = 0
-SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so lib.so
+SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so
 .SUFFIXES: .so
 .c.so	:
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(MEM_MACRO) -DDLL_EXPORT -TC -Fo$*.so $<

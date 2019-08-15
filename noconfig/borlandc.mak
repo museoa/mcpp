@@ -1,5 +1,5 @@
-# makefile to compile MCPP version 2.6.3 and later for Borland C / BC make
-#       2007/05 kmatsui
+# makefile to compile MCPP version 2.7 and later for Borland C / BC make
+#       2008/03 kmatsui
 # You must first edit BINDIR, LIBDIR and LINKER according to your system.
 # To make compiler-independent-build of MCPP do:
 #       make
@@ -52,7 +52,7 @@ MEM_LIB =
 !endif
 
 OBJS = main.obj directive.obj eval.obj expand.obj support.obj system.obj  \
-		mbchar.obj lib.obj
+		mbchar.obj
 
 $(NAME).exe : $(OBJS)
 	$(CC) $(LINKFLAGS) $(OBJS) $(MEMLIB)
@@ -65,7 +65,6 @@ $(OBJS) : mcpp.H
 !else
 main.obj directive.obj eval.obj expand.obj support.obj system.obj mbchar.obj: \
 		system.H internal.H noconfig.H
-lib.obj : noconfig.H
 !endif
 
 !if 	$d( PREPROCESSED)
@@ -89,7 +88,7 @@ CFLAGS = $(CFLAGS) -DMCPP_LIB=1
 LIBDIR = \PUB\COMPILERS\BCC55\LIB
 #LINKER = tlink32   # BCC40
 LINKER = ilink32   # BCC55
-ADD_OBJS = +main +directive +eval +expand +support +system +mbchar +lib
+ADD_OBJS = +main +directive +eval +expand +support +system +mbchar
 
 mcpplib:	mcpplib_lib mcpplib_dll
 
@@ -98,10 +97,10 @@ mcpplib_lib:	$(OBJS)
 
 # DLL
 DLL_VER = 0
-SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so lib.so
+SOBJS = main.so directive.so eval.so expand.so support.so system.so mbchar.so
 .SUFFIXES: .so
 .c.so   :
-    $(CC) $(CFLAGS) $(MEM_MACRO) -DDLL_EXPORT=1 -o$*.so $<
+	$(CC) $(CFLAGS) $(MEM_MACRO) -DDLL_EXPORT=1 -o$*.so $<
 mcpplib_dll: $(SOBJS)
 	$(LINKER) -Tpd c0d32.obj $(SOBJS), mcpp$(DLL_VER).dll, , \
             cw32.lib import32.lib $(MEMLIB)

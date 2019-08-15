@@ -1,5 +1,86 @@
 ChangeLog of MCPP and its accompanying Validation Suite
 
+2008/03/23  kmatsui
+        * V.2.7
+        * Created macro notification mode, implemented -K option and '#
+        pragma MCPP debug macro_call' sub-directive to enable this mode
+        on STD mode.  Created get_src_location(), print_macro_inf(),
+        print_macro_arg(), close_macro_inf(), chk_magic_balance(),
+        remove_magics(), some MAC_* macros to define magic characters,
+        struct LINE_COL, MACRO_INF.  Revised many functions.
+        (Specifications mostly by Taras Glek, partly by Samuel,
+        implemented mostly by kmatsui and partly by Taras Glek and
+        Samuel).  (internal.H, main.c, directive.c, eval.c, expand.c,
+        support.c, system.c)
+        * Created -k option to keep horizontal white spaces as they are
+        and convert comment to spaces of the same length on STD mode.
+        (Specs by Taras Glek, implemented by kmatsui).  (internal,H,
+        main.c, directive.c, mbchar.c, support.c)
+        * Implemented GCC2-spec variadic macro on STD mode in GCC-
+        specific-build.  (by Taras Glek and kmatsui).  (directive.c)
+        * Enabled GCC-like buggy handling of macro containing 'defined'
+        token in #if directive on GCC-specific-build.  (by Taras Glek).
+        (expand.c)
+        * Reordered initialization steps and enabled undefining of not-
+        Standard-required predefined macros.  Created undef_macros().
+        Removed undef_a_predef().  (main.c, system.c)
+        * Enabled non-conforming predefined macros such as 'linux' by
+        default on GCC-specific-build for compatibility with GCC.
+        Removed undef_gcc_macros().  Created DEF_NOARGS_* macros for
+        diagnostics sake.  (internal.H, system.c)
+        * Fixed a bug of file searching failure when a file is specified
+        by relative path in -include option.  Split is_full_path() from
+        open_include().  (thanks to Benjamin Smedberg) (system.c)
+        * Fixed a bug of mcpplib initialization which caused problem on
+        CygWIN.  (main.c, system.c, lib.c)
+        * Fixed a bug of unterminated source file handling.  (thanks to
+        Phil Knight) (support.c)
+        * Made norm_path() to check existence of directory/file before
+        normalization.  As its results, non-existent directory specified
+        by -I option was disabled, "non-existent/../existent" was judged
+        as non-existent before wrongly normalizing to "existent", and #
+        include "directory" was made not to open.  Created norm_dir().
+        (thanks to Taras Glek and Dave Mandelin) (system.c)
+        * Stopped to convert path-list on Windows to lowercase-letters.
+        Changed path-list comparing function on Windows from strcmp() to
+        strcasecmp() or stricmp().  (system.c)
+        * Changed allocation of buffer for -M* options and incdir[],
+        fnamelist[], once_list[] from fixed size to dynamically
+        enlarging ones.  (system.c)
+        * Made #line output for GCC-specific-build more closer to GCC.
+        Changed FILEINFO and DEFBUF struct, moved sharp() from main.c to
+        system.c, revised many functions.  (system.c, support.c, main.c,
+        directive.c)
+        * Absorbed lib.c into system.c.  Renamed getopt() to mcpp_getopt
+        (), also variables opt* to mcpp_opt*, and made static in order
+        to prevent linking of glibc getopt().  (thanks to Dwayne Boone)
+        * Fixed a bug of UTF-8 multibyte character handling, enabled 4-
+        bytes long sequences, and enabled checking of overlong sequences
+        and UTF-16 surrogate pairs.  (by Matt Wozniski) (mbchar.c,
+        support.c)
+        * Fixed a bug of tokenization in KR and OLD modes.  (support.c)
+        * Changed FILENAME_MAX to PATH_MAX and FILENAMEMAX to PATHMAX,
+        because FILENAME_MAX of some systems are too short.  (thanks to
+        Dwayne Boone)
+        * Bundled some variables into structs (std_limits, option_flags,
+        etc.).  Tidied up the sources removing unused codes, rewriting
+        old comments.  (most of the sources)
+        * Ported to Mac OS X / Apple-GCC.  Enabled searching of
+        "framework" directories for #include.  Enabled to search "header
+        map" file.  Enabled #import, which is #include with
+        unconditional "once only" feature.  Implemented -F, -arch,
+        -isysroot options.  Created init_framework(), search_framework(),
+        search_subdir(), search_header_map(), hmap_hash().  (system.c,
+        directive.c, set_mcpp.sh, unset_mcpp.sh, configure.ac, src/
+        Makefile.am)
+        * Ported to Visual C++ 2008.  Enabled '$' in identifier by
+        default in Visual-C-specific-build and GCC-specific-build.
+        (system.H, internal.H, support.c, system.c)
+        * Added documentation on source checking of firefox 3.0pre.
+        Added comments on system headers in Mac OS X.  (mcpp-manual.html)
+        * Updated all the documents.  (mainly by kmatsui, partly by
+        Taras Glek)
+
 2007/05/19  kmatsui
         * V.2.6.4
         * Fixed memory leaks in subroutine-build related to file->
@@ -126,9 +207,9 @@ ChangeLog of MCPP and its accompanying Validation Suite
         * Revised path-list handling on CygWIN.  Enabled -mno-cygwin
         option for CygWIN GCC-specific-build.  (configure.ac, noconfig.H,
         system.c)
-        * Added porting to MinGW.  Created cc1.c to be invoked from GCC
-        and to invoke mcpp or GCC's cc1/cc1plus from it, because MinGW
-        GCC rejects to invoke a shell-script even if it is named cc1 and
+        * Ported to MinGW.  Created cc1.c to be invoked from GCC and to
+        invoke mcpp or GCC's cc1/cc1plus from it, because MinGW GCC
+        rejects to invoke a shell-script even if it is named cc1 and
         because MinGW does not support symbolic link.  (configure.ac,
         src/Makefile.am, configed.H, noconfig.H, system.c)
         * Fixed bugs in some noconfig/*.mak.
@@ -157,8 +238,8 @@ ChangeLog of MCPP and its accompanying Validation Suite
         (system.c)
         * Revised #line output and its related problem at the end of an
         included file.  (thanks to Jay Prakash).  (internal.H, support.c)
-        * Added portings to GCC V.4.0, CygWIN 1.5.18, Visual C++ 2005
-        and LCC-Win32 2006-03.  (noconfig.H, system.c)
+        * Ported to GCC V.4.0, CygWIN 1.5.18, Visual C++ 2005 and LCC-
+        Win32 2006-03.  (noconfig.H, system.c)
         * Added some options for Visual C++.  (system.c)
         * Removed settings for pre-C90 compiler (string concatenation by
         preprocessor, '\a' and '\v' handling, no unsigned long #if, no
