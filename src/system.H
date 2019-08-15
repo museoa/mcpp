@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 1998, 2002-2006 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
+ * Copyright (c) 1998, 2002-2007 Kiyoshi Matsui <kmatsui@t3.rim.or.jp>
  * All rights reserved.
  *
  * Some parts of this code are derived from the public domain software
@@ -47,6 +47,11 @@
 #include    "noconfig.H"
 #endif
 
+/* Some system has a wrong definition of UCHAR_MAX.  See cpp-test.html#5.1.3 */
+#if     UCHARMAX < -255
+#error  "The definition of UCHARMAX (possibly UCHAR_MAX too) is wrong.  Define it as signed int value as 255, not as unsigned value as 255U."
+#endif
+
 /*
  *      PART 1 and PART 2 are defined in the above header files.
  */
@@ -66,8 +71,8 @@
  */
 
 /*
- * The variable 'mode' specifies the mode of preprocessing as one of OLD_PREP,
- *           KR, STD, or POST_STD.
+ * The variable 'mcpp_mode' specifies the mode of preprocessing as one of 
+ *          OLD_PREP, KR, STD, or POST_STD.
  *      Those modes have many differences each other --
  *          i.e. handling of translation phases; handling of some
  *          preprocessing tokens; availability of some directives; way of
@@ -154,7 +159,7 @@
  *      argument of #line directive other than dicimal-digits.
  */
 
-/* The values of 'mode'.    */
+/* The values of 'mcpp_mode'.   */
 #define OLD_PREP            1           /* "Reiser" cpp mode    */
 #define KR                  2           /* K&R 1st mode         */
 #define STD                 3           /* Standard moce        */
@@ -274,7 +279,7 @@ typedef long            expr_t;
 #define INCLUDE_NEST        0x100
 #endif
 #ifndef NINCLUDE
-#define NINCLUDE            0x40
+#define NINCLUDE            0x80
 #endif
 #ifndef RESCAN_LIMIT
 #define RESCAN_LIMIT        0x40
