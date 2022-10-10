@@ -49,5 +49,6 @@ Package: mcpp-doc
 Architecture: all
 Section: doc
 Depends: ${misc:Depends}
+Multi-Arch: foreign
 Description: Alternative C/C++ preprocessor (manual)
  This package contains the manual.
