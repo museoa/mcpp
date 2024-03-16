@@ -4,3 +4,4 @@
 04-gniibe-fix-12.patch
 05-gniibe-fix-13.patch
 06-gniibe-fix-autotools.patch
+fix-implicit-function-declaration.patch

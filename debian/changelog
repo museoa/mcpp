@@ -1,3 +1,10 @@
+mcpp (2.7.2-5.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Fix FTBFS with -Werror=implicit-function-declaration (Closes: #1066506).
+
+ -- Andrey Rakhmatullin <wrar@debian.org>  Sat, 16 Mar 2024 18:23:16 +0500
+
 mcpp (2.7.2-5) unstable; urgency=medium
 
   * debian/compat: Require 10.

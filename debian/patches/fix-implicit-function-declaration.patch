@@ -1,0 +1,18 @@
+Description: Define a feature test macro
+Author: Andrey Rakhmatullin <wrar@debian.org>
+Bug-Debian: https://bugs.debian.org/1066506
+Last-Update: 2024-03-16
+
+Index: mcpp-2.7.2/src/system.c
+===================================================================
+--- mcpp-2.7.2.orig/src/system.c
++++ mcpp-2.7.2/src/system.c
+@@ -36,6 +36,8 @@
+  *      1. specify the constants in "configed.H" or "noconfig.H",
+  *      2. append the system-dependent routines in this file.
+  */
++#define _POSIX_C_SOURCE 200809L
++
+ #if PREPROCESSED
+ #include    "mcpp.H"
+ #else
