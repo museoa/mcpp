@@ -1,0 +1,28 @@
+From: John Brandwood <john.brandwood@telzey.com>
+Date: Fri, 9 May 2025 11:16:51 -0400
+Subject: Fix configure.ac failing to define LL_FORM when using GCC v15.
+Origin: https://github.com/jbrandwood/mcpp.git/commit/c326468d6c5437e0c846eabbc2f5cf501143d66d
+
+---
+ configure.ac | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 29d4452..11841df 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -207,9 +207,9 @@ AC_DEFUN([AC_CHECK_MOD_LL], [
+         [ac_cv_c_printf_modifier],
+         AC_RUN_IFELSE([AC_LANG_SOURCE([
+ #include    <stdio.h>
++#include    <stdlib.h>
++#include    <string.h>
+ #include    <assert.h>
+-    int     strcmp();
+-    void    exit();
+ $3
+ int main( void)
+ {   char    buf@<:@ 20@:>@;
+-- 
+2.51.0
+
