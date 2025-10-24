@@ -384,7 +384,7 @@ int     main
 #endif
         }
     } else {
-        in_file = stdin_name;
+        in_file = strcpy( xmalloc( strlen( stdin_name) + 1), stdin_name);
     }
     /* Open output file, "-" means stdout.  */
     if (out_file != NULL && ! str_eq( out_file, "-")) {
