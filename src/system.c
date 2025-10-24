@@ -2167,7 +2167,7 @@ static char *   set_files(
 #if SYS_FAMILY == SYS_WIN
         cp = bsl2sl( cp);
 #endif
-        *in_pp = cp;
+        *in_pp = strcpy( xmalloc( strlen( cp) + 1), cp);
     }
     if (mcpp_optind < argc && argv[ mcpp_optind][ 0] != '-'
             && *out_pp == NULL) {
