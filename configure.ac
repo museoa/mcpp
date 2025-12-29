@@ -4,7 +4,7 @@ dnl Process this file with autoconf to produce a configure script.
 dnl WARNING: This script does not assume cross-compiling.
 dnl To cross-compile you must edit here and there of this file.
 
-AC_INIT([mcpp],[2.7.2],[kmatsui@t3.rim.or.jp])
+AC_INIT([mcpp],[2.7.2.3],[kmatsui@t3.rim.or.jp])
 LT_INIT([win32-dll])
 AC_CONFIG_SRCDIR( src/main.c)
 AC_CONFIG_HEADERS( src/config.h)
